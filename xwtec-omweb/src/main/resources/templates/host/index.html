@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head	th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<script	th:src="${application.webStaticUrl}+'/static/js/adminlte-config.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+<title>掌厅应用宿主总览</title>
+<script>
+	(function($) {
+		$.fn.dropdown = function(callback) {
+			// 插件的具体内容放在这里
+			this.each(function() {
+				var $this = $(this);
+				var $dropdown = $this.find(".dropdown-toggle");
+				var $options = $this.find("ul.dropdown-menu>li");
+				$options.on("click", function() {
+					var opt = $(this);
+					$dropdown.html(opt.find("a").html()
+							+ " <i class='fa fa-angle-down'></i>");
+					$this.data("value", opt.find("a").data("value"));
+					$this.data("index", opt.index());
+					$this.data("text", opt.find("a").text());
+					$this.data("placeholder", opt.find("a").text());
+					$this.data("html", opt.find("a").html());
+					if ($.isFunction(callback)) {
+						callback({
+							index : $this.data("index"),
+							value : $this.data("value"),
+							text : $this.data("text"),
+							html : $this.data("html")
+						});
+					}
+				});
+			});
+		};
+
+	})(jQuery);
+
+	$(function() {
+		$("select").select2({
+			language : "zh-CN"
+		});
+
+		var $appGroups = $("#appGroups");
+		var $roomInfo = $("#roomInfo");
+		var $hostInfo = $("#hostInfo");
+		var $room = $("#room");
+
+		$appGroups.dropdown(function(result) {
+
+					$("#appGroup_").val(result.value);
+					var html = "<label class='btn active' id='ALL' onclick = \"query_('ALL');\"> <input type='radio' name='options'>全部</label>";
+					$.ajax({
+								type : "post",
+								url : '[[${webUrl}]]/omweb/host/room',
+								data : {
+									'appGroupId' : result.value
+								},
+								success : function(callback) {
+									$roomInfo.html("");
+									$hostInfo.html("");
+									var id = "";
+									var name = "请选择机房...";
+									addOption(id, name, $roomInfo);
+
+									name = "请选择主机...";
+									addOption(id, name, $hostInfo);
+
+									if (callback.success) {
+										$.each(callback.data,function(i, val) {
+															addOption(val.id,val.name,$roomInfo);
+															html += "<label class='btn' id='"+val.id+"'  onclick = \"query_('"+val.id+"');\"> <input type='radio' name='options'>"
+																	+ val.name+ "</label>";
+														});
+										query_('ALL');
+									} else {
+										$.notify.error("系统异常,请稍后再试...")
+									}
+
+									$room[0].innerHTML = html;
+								}
+							});
+				});
+
+		$appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+	});
+
+	//<label class="btn active"> <input type="radio" name="options"> 全部</label> 
+
+	function initHost() {
+		var roomId = $("#roomInfo").val();
+		//var appGroupId = $("#appGroup_").val();
+		var $hostInfo = $("#hostInfo");
+
+		$.ajax({
+			type : "post",
+			url : '[[${webUrl}]]/omweb/host/service',
+			data : {
+				'roomId' : roomId
+			},
+			success : function(callback) {
+				$hostInfo.html("");
+				var id = "";
+				var name = "请选择主机...";
+				addOption(id, name, $hostInfo);
+
+				if (callback.success) {
+					$.each(callback.data, function(i, val) {
+						addOption(val.serverId, val.hostNum, $hostInfo);
+					});
+				} else {
+					$.notify.error("系统异常,请稍后再试...")
+				}
+			}
+		});
+
+	}
+
+	function addOption(id, name, select) {
+		var option = new Option();
+		option.value = id;
+		option.text = name;
+		select[0].options.add(option);
+	}
+	
+	function query_(flag){
+		var appGroupId = $("#appGroup_").val();
+		if("query" == flag){
+			var roomId = $("#roomInfo").val();
+			var roomName = $("#roomInfo option:selected").text();
+			var hostIp = $("#hostInfo option:selected").text();
+			if("" ==  $("#hostInfo").val()){
+				hostIp ="";
+			}
+			if("" ==  roomId){
+				roomName ="";
+			}
+		 query(appGroupId,roomId,roomName,hostIp);
+			
+		}else if ("ALL" == flag){
+			query(appGroupId,'','','');
+		}else {
+			query(appGroupId,flag,'','');
+		}
+	}
+
+	function query(appGroupId,roomId,roomName,hostIp) {
+		var html = "";
+		var $rows = $("#rows");
+		$("#rows").html("");
+		if(roomId!=""){
+			//${"#"+roomId+""}.attr("active");
+			
+			var $a = $("#"+roomId+"");
+			
+			$('.btn').each(function(i){
+		        $(this).removeClass('active');
+		 	}); 
+			
+			$a.addClass("active");
+		}else{
+			$('.btn').each(function(i){
+		        $(this).removeClass('active');
+		 	}); 
+			
+			$("#ALL").addClass("active");
+		}
+		
+		if($("select[name=roomInfo] option").size()==1){
+			return;
+		}
+		$.ajax({
+					type : "post",
+					url : '[[${webUrl}]]/omweb/host/infos',
+					data : {
+						'appGroupId' : appGroupId,
+						'roomId' : roomId,
+						'roomName' : roomName,
+						'hostIp' : hostIp
+					},
+					success : function(callback) {
+						if (callback.success) {
+							$.each(callback.data,function(i, val) {
+
+												var linux = "";
+												var shitj = "";
+												if (val.isW == 0) {
+													linux = "[[${webUrl}]]/static/style/images/host/linux.png";
+												} else {
+													linux = "[[${webUrl}]]/static/style/images/host/windows.png";
+												}
+
+												if (val.isX = 1) {
+													shitj = "[[${webUrl}]]/static/style/images/host/shitiji.png";
+												} else {
+													shitj = "[[${webUrl}]]/static/style/images/host/xuniji.png";
+												}
+												html += "<div class='col-md-4 col-lg-3'>"
+														+ "<div class='panel panel-default'>"
+														+ "<div class='panel-heading clearfix'>"
+														+ "<div class='pull-left'>"+val.roomName+"</div>"
+														+ "<div class='pull-right text-danger'>"
+														+ val.ip
+														+ "</div>"
+														+ "</div>"
+														+ "<div class='panel-body'>"
+														+ "<table class='table'>"
+														+ "<tbody>"
+														+ "<tr>"
+														+ "<td>处理器占用</td>"
+														+ "<td class='text-right text-info'>"
+														+ val.cpu
+														+ "%</td>"
+														+ "</tr>"
+														+ "<tr>"
+														+ "<td>内存占用</td>"
+														+ "<td class='text-right text-info'>"
+														+ val.memory
+														+ "%</td>"
+														+ "</tr>"
+														+ "<tr>"
+														+ "<td>磁盘占用</td>"
+														+ "<td class='text-right text-info'>"
+														+ val.disk
+														+ "%</td>"
+														+ "</tr>"
+														+ "<tr>"
+														+ "<td>网络流入</td>"
+														+ "<td class='text-right text-info'>"
+														+ val.inCom
+														+ "KBS</td>"
+														+ "</tr>"
+														+ "<td>网络流出</td>"
+														+ "<td class='text-right text-info'>"
+														+ val.outGo
+														+ "KBS</td>"
+														+ "</tr>"
+														+ "</tbody>"
+														+ "</table>"
+														+ "<div class='monitor-computer-icons'>"
+														+ "<img src="+linux+" alt=''>"
+														+ "<img src="+shitj+" alt=''>"
+														+ "</div>"
+														+ "</div>"
+														+ "<div class='panel-footer'>"
+														+ "<i class='fa fa-clock-o'></i> "
+														+ val.time
+														+ "</div>"
+														+ "</div>" + "</div>";
+											});
+
+							$rows.append(html);
+						} else {
+						}
+					}
+				});
+
+	}
+</script>
+
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+	<div class="content-wrapper">
+		<section class="content">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="box">
+						<div class="box-body">
+							<div class="btn-group pull-left" id="appGroups">
+								<button type="button" class="btn btn-primary dropdown-toggle"
+									data-toggle="dropdown" aria-haspopup="true"
+									aria-expanded="false">
+									<i class="fa fa-angle-down"></i>
+								</button>
+								<ul class="dropdown-menu">
+									<li th:each="group,groupStat:${appGroups}"><a href="#"
+										th:data-value="${group.id}" th:text="${group.name}"></a></li>
+								</ul>
+							</div>
+							<!-- /btn-group -->
+						</div>
+						<!-- ./box-body -->
+					</div>
+					<!-- /.box -->
+					<div class="box">
+					    <form class="form-horizontal">
+						<div class="box-header  with-border">
+								<input type="hidden" id="appGroup_" name="appGroup_" value="" />
+								<div class="box-body">
+									<label for="roomInfo" class="col-sm-1 control-label">机房名称</label>
+									<div class="col-sm-2">
+										<select class="form-control" id="roomInfo" name="roomInfo"
+											onchange="initHost();">
+										</select>
+									</div>
+									<label for="hostInfo" class="col-sm-1 control-label">监控主机</label>
+									<div class="col-sm-2">
+										<select class="form-control" id="hostInfo" name="hostInfo">
+										</select>
+									</div>
+									<button class="btn btn-primary" type="button"
+										onclick="query_('query');">查询</button>
+								</div>
+						</div>
+						</form>
+						<!-- /.box-header -->
+						<div class="box-body">
+							<div class="monitor-filter">
+								<div class="btn-group btn-check-group" data-toggle="buttons"
+									id="room"></div>
+							</div>
+						</div>
+						<div class="box-body">
+							<div class="row" id="rows"></div>
+						</div>
+						<!-- ./box-body -->
+					</div>
+					<!-- /.box -->
+				</div>
+				<!-- /.col -->
+			</div>
+			<!-- /.row -->
+		</section>
+		<!-- /.content -->
+	</div>
+	<!-- /.content-wrapper -->
+</body>
+</html>

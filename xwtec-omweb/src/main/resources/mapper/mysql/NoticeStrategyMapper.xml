@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.NoticeStrategyMapper">
+    <resultMap id="NoticeStrategyMap" type="com.xwtech.omweb.model.NoticeStrategy">
+        <result property="notice_strategy_code" column="notice_strategy_code"></result>
+        <result property="notice_strategy_name" column="notice_strategy_name"></result>
+        <collection property="stakeholders" column="notice_strategy_code" select="getUserNameES">
+        </collection>
+    </resultMap>
+    <resultMap id="ContactsChannelMap" type="com.xwtech.omweb.model.ContactsChannel">
+        <result property="frequency_code" column="frequency_code"></result>
+        <result property="notice_strategy_code" column="notice_strategy_code"></result>
+        <result property="channelId" column="F_CHANNEL_ID"></result>
+    </resultMap>
+
+    <resultMap id="CropContactsMapEs" type="com.xwtech.omweb.model.CropContacts">
+        <result property="userName" column="F_USERNAME"></result>
+        <result property="contactId" column="F_CONTACT_ID"></result>
+    </resultMap>
+
+    <resultMap id="ContactsChannelMapEs" type="com.xwtech.omweb.model.ContactsChannel">
+        <result property="type" column="F_TYPE"></result>
+        <result property="address" column="F_ADDRESS"></result>
+        <result property="frequency_code" column="frequency_code"></result>
+    </resultMap>
+
+    <!--获取联系人名称-->
+    <select id="getUserNameES" parameterType="java.lang.String" resultMap="CropContactsMapEs">
+            SELECT t1.F_CONTACT_ID,t1.F_USERNAME FROM tm_da_crop_contacts t1
+            LEFT JOIN tm_dz_contacts_channel t2
+            ON t1.F_CONTACT_ID = t2.F_CONTACT_ID
+            LEFT JOIN tm_dz_notice_frequency_channel t3
+            ON t3.F_CHANNEL_ID = t2.F_CHANNEL_ID
+            WHERE t3.notice_strategy_code = #{notice_strategy_code}
+            GROUP BY t1.F_CONTACT_ID
+    </select>
+    <!--获取渠道相关信息-->
+    <select id="getChannelInfo" parameterType="java.lang.String" resultMap="ContactsChannelMapEs" >
+        SELECT t1.*,t2.frequency_code  FROM  tm_dz_contacts_channel t1
+        LEFT JOIN tm_dz_notice_frequency_channel t2
+        ON t1.F_CHANNEL_ID = t2.F_CHANNEL_ID
+        WHERE
+        t1.F_CONTACT_ID = #{contactId}
+        AND t2.	notice_strategy_code = #{notice_strategy_code}
+
+    </select>
+
+    <!--查看通知策略集合-->
+    <select id="queryNoticeStrategyList" parameterType="java.lang.String" resultMap="NoticeStrategyMap">
+        SELECT * FROM tm_da_notice_strategy WHERE  1=1
+    </select>
+    <!--查询通知策略详情-->
+    <select id="queryNoticeStrategyDetail" parameterType="java.lang.String" resultMap="NoticeStrategyMap">
+        SELECT * FROM tm_da_notice_strategy WHERE  notice_strategy_code = #{notice_strategy_code}
+    </select>
+    <!--新增通知策略-->
+    <insert id="addNoticeStrategy" parameterType="com.xwtech.omweb.model.NoticeStrategy">
+        INSERT INTO tm_da_notice_strategy(notice_strategy_code,notice_strategy_name)
+                    VALUES (#{notice_strategy_code},#{notice_strategy_name})
+    </insert>
+    <!--修改通知策略-->
+    <update id="updateNoticeStrategy" parameterType="com.xwtech.omweb.model.NoticeStrategy">
+        UPDATE tm_da_notice_strategy SET
+        notice_strategy_name = #{notice_strategy_name}
+        WHERE
+        notice_strategy_code = #{notice_strategy_code}
+    </update>
+    <!--删除通知策略-->
+    <delete id="deleteNoticeStrategy" parameterType="java.lang.String">
+        DELETE FROM tm_da_notice_strategy WHERE   notice_strategy_code = #{notice_strategy_code}
+    </delete>
+
+    <!--修改通知策略联系人对照-->
+    <insert id="insertDzNoticeChannel" parameterType="com.xwtech.omweb.model.ContactsChannel">
+        insert into  tm_dz_notice_frequency_channel(F_CHANNEL_ID,notice_strategy_code,frequency_code)
+                                                  values (#{channelId},#{notice_strategy_code},#{frequency_code});
+    </insert>
+    <!--根据通知策略编码删除对照关系-->
+    <delete id="deleteDZNoticeChannel" parameterType="java.lang.String">
+        DELETE FROM tm_dz_notice_frequency_channel WHERE  notice_strategy_code = #{notice_strategy_code}
+    </delete>
+    <!--查询选中的渠道编码和变频规则编码-->
+    <select id="getChannelFrequency" parameterType="java.lang.String" resultMap="ContactsChannelMap">
+        SELECT GROUP_CONCAT(F_CHANNEL_ID) AS F_CHANNEL_ID,GROUP_CONCAT(frequency_code) AS frequency_code
+        FROM tm_dz_notice_frequency_channel
+        WHERE notice_strategy_code = #{notice_strategy_code}
+    </select>
+
+
+
+
+
+</mapper>

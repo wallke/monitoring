@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+
+            //设置渠道选中
+            var contactArray = $("#contactArray").val();
+            var frequencyArray = $("#frequencyArray").val().split(",");
+            $(contactArray.split(",")).each(function (i,dom){
+                $(":checkbox[value='"+dom+"']").prop("checked",true);
+                //选中变频规则
+                var frequency =  $(":checkbox[value='"+dom+"']").parent().parent();
+               frequency.find("#frequency_code option[value='"+frequencyArray[i]+"']").attr("selected",true);
+            });
+
+            jQuery.validator.addMethod( "isValueNull", function( value ) {
+                if($.trim(value) == null || $.trim(value) == '')
+                { return false;}else{ return true;}
+            }, "输入值不能为空" );
+
+            $(".js-example-basic-single").select2();
+
+            $("#NextButton").show();
+
+                $("#checkAll").click(function() {
+                    $('input[name="subBox"]').prop("checked",this.checked);
+                });
+                var $subBox = $("input[name='subBox']");
+                $subBox.click(function(){
+                    $("#checkAll").prop("checked",$subBox.length == $("input[name='subBox']:checked").length ? true : false);
+                });
+
+            $(".btnSubmit").on("click",function () {
+                    if ($("form").valid()) {
+                        var notice_strategy_name = $("#notice_strategy_name").val();
+                        var checkedNum = $("input[name='subBox']:checked").length;
+                        if (checkedNum == 0) {
+                            $.notify.error("请选择至少一项！");
+                            return;
+                        }
+                        //联系人ID
+                        var checkedList = new Array();
+                        //变频编码
+                        var frequencyList = new Array();
+                        $("input[name='subBox']:checked").each(function() {
+                            checkedList.push($(this).val());
+                            var frequency =  $(this).parent().parent();
+                            var value = frequency.find("#frequency_code option:selected").val();
+                            frequencyList.push(value)
+                        });
+                    $("form").ajaxSubmit({
+                        data:{
+                            'frequencyList' : frequencyList.toString(),
+                            "channelIdList": checkedList.toString(),
+                        },
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/noticeStrategy/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+
+                    }
+                    return false;
+            });
+
+            $("form").validate({
+                rules: {
+                },
+                messages: {
+                }
+            });
+        });
+        
+        function toNextButton(but) {
+            $(but).hide();
+            $("#submitButton").show();
+        }
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            通知策略维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/noticeStrategie/index'"><i class="fa fa-users"></i> 通知策略管理中心</a></li>
+            <li class="active">通知策略详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active" onclick="gotoTable1()"><a href="#tab_1" data-toggle="tab">应用信息</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden"  name="actionType" th:value='${actionType}'/>
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <input type="hidden" id="contactArray" th:value="${channelFrequency.channelId}">
+                                    <input type="hidden" id="frequencyArray" th:value="${channelFrequency.frequency_code}">
+                                    <div class="form-group">
+                                        <label for="notice_strategy_name">通知策略名称</label>
+                                        <input type="text" name="notice_strategy_name" th:value="${noticeStrategy.notice_strategy_name}"
+                                               class="form-control" id="notice_strategy_name" placeholder="">
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                    <table class="table table-bordered m-t-sm">
+                                        <tbody>
+                                        <tr>
+                                            <th  style="width: 50px"><input id="checkAll" type="checkbox"></th>
+                                            <th style="width: 100px">联系人名称</th>
+                                            <th style="width: 100px">发送方式</th>
+                                            <th style="width: 100px">联系地址</th>
+                                            <th style="width: 100px">变频规则名称</th>
+                                        </tr>
+                                        <tr th:each="cropContact,cropContactieStat:${cropContactList}">
+                                            <td><input type="checkbox" id="subBox" name="subBox" th:value="${cropContact.channelId}"> </td>
+                                            <td th:text="${cropContact.name}"></td>
+                                            <td th:text="${cropContact.type}"></td>
+                                            <td th:text="${cropContact.address}"></td>
+                                            <td>
+                                                <select id="frequency_code" name="frequency_code"     class="js-example-basic-single form-control">
+                                                    <option th:each="frequency,frequencyStat : ${frequencyModeList}"
+                                                            th:value="${frequency.frequency_code}"
+                                                            th:text="${frequency.frequency_name}" >Credit card</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- /.tab-pane -->
+                        </form>
+                    </div>
+                    <div class="box-footer" id="box-footer">
+                        <a type="button"  href="#tab_2" id="NextButton"  onclick="toNextButton(this)" data-toggle="tab" class="btn btn-primary" style="display: none">下一步</a>
+                        <button type="button" class="btn btn-primary btnSubmit" id="submitButton" style="display: none">提交</button>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+        </div>
+
+    </section>
+
+</div>
+</body>
+</html>

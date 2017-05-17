@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/timepicker/bootstrap-timepicker.min.css'">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/timepicker/bootstrap-timepicker.min.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(document).ready(function(){
+            $(".js-example-basic-single").select2();
+
+            $("#box-footer").show();
+            $(".timepicker").timepicker({
+                minuteStep: 1,
+                secondStep: 1,
+                showInputs: false,
+                modalBackdrop: true,
+                showSeconds: true,
+                showMeridian: false
+            });
+
+        });
+
+        function gotoTable1() {
+            $("#box-footer").show();
+        }
+        function gotoTable2() {
+            $("#box-footer").hide();
+        }
+
+        $(function () {
+
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        url:"[[${webUrl}]]/omweb/grid/create",
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/grid/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    grid_name: {
+                        required: true
+                    }
+
+
+                },
+                messages: {
+                    appNum: {
+                        required: "请输入预警网格名称"
+                    }
+
+                }
+            });
+
+
+
+            $("#unitsForm").validate({
+                rules: {
+                    startTime: {
+                        required: true
+                    },
+                    endTime:{
+                        required: true
+                    },
+                    cordon:{
+                        required: true
+                    }
+
+                },
+                messages: {
+                    startTime: {
+                        required: "时间左界限不能为空"
+                    },
+                    endTime:{
+                        required: "时间右界限不能为空"
+                    },
+                    cordon:{
+                        required: "警戒线不能为空"
+                    }
+                }
+            });
+        });
+
+
+        function openModel(but) {
+            if(but != null ){
+
+                $.ajax({
+                    type: "post",
+                    url: '[[${webUrl}]]/omweb/grid/unitsDetail',
+                    data: {
+                        'units_id':but.id
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            if(callback.data !=null)
+                            {
+                               var units  = callback.data;
+                                $("#alert_level").val(units.alert_level);
+                                $("#startTime").val(units.startTime);
+                                $("#endTime").val(units.endTime);
+                                $("#cordon").val(units.cordon);
+                            }
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+                $("#units_id").val(but.id);
+            }else
+            {
+                $("#alert_level").val('');
+                $("#startTime").val('');
+                $("#endTime").val('');
+                $("#cordon").val('');
+            }
+            $('#UnitsModal').modal('show');
+        }
+        
+
+        function saveUnitsModal() {
+            var startTime  =  $("#startTime").val();
+            var endTime = $("#endTime").val();
+            startTime =  startTime.replace(":", "").replace(":", "");
+            endTime =  endTime.replace(":", "").replace(":", "");
+            console.log(startTime)
+            console.log(endTime)
+            if (startTime >= endTime){
+                $.notify.error("时间左界限不能大于时间右界限")
+                return ;
+            }
+            if ($("#unitsForm").valid()) {
+                $("#unitsForm").ajaxSubmit({
+                    url: "[[${webUrl}]]/omweb/grid/createUnits",
+                    success: function (callback) {
+                        // data 保存提交后返回的数据，一般为 json 数据
+                        // 此处可对 data 作相关处理
+                        if (callback.success) {
+                            $.notify.success(callback.message, "", function () {
+                                $("#UnitsModal").modal('hide');
+                                location.reload();
+                            });
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }
+
+            return false;
+        }
+
+        function deleteUnits(but) {
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/grid/deleteUnits',
+                        data: {
+                            'units_id': but.id,
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.reload();
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            预警网格详情维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li ><a th:href="${homeUrl}+'/omweb/grid/index'"><i class="fa fa-users"></i>预警网格管理中心</a></li>
+            <li class="active">预警网格详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active" onclick="gotoTable1()"><a href="#tab_1" data-toggle="tab">预警网格信息</a></li>
+                        <li onclick="gotoTable2()"><a href="#tab_2"  data-toggle="tab">预警单元格信息</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden"  name="actionType" th:value='${actionType}'/>
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="grid_name">预警网格名称</label>
+                                        <input type="text" name="grid_name" th:value="${grid.grid_name}"
+                                               class="form-control" id="grid_name" placeholder="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="categoryId">预警网格类别</label>
+                                        <select id="categoryId" name="categoryId"  th:field="*{grid.metric}"  class="js-example-basic-single form-control">
+                                            <option th:each="metrics,metricsStat : ${metricsList}"
+                                                    th:value="${metrics.metric}" th:text="${metrics.name}">Credit card</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                    <div class="box-body">
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <a onclick="openModel()"
+                                               class="btn btn-labeled btn-primary">
+                                                <i class="btn-label fa fa-plus"></i> 新增
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <table class="table table-bordered m-t-sm">
+                                        <tbody>
+                                        <tr>
+                                            <th style="width: 100px">序号</th>
+                                            <th style="width: 100px">预警级别</th>
+                                            <th style="width: 100px">时间左界限</th>
+                                            <th style="width: 100px">时间右界限</th>
+                                            <th style="width: 100px">警戒线</th>
+                                            <th style="width: 100px">操作</th>
+                                        </tr>
+                                        <tr th:each="units,unitsStat:${unitsList}">
+                                            <td th:text="${unitsStat.index}+1"></td>
+                                            <td th:text="${units.alert_level}"></td>
+                                            <td th:text="${units.startTime}"></td>
+                                            <td th:text="${units.endTime}"></td>
+                                            <td th:text="${units.cordon}"></td>
+                                            <td>
+                                                <a onclick="openModel(this)" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" th:id="${units.units_id}" >修改</a>
+                                                &nbsp;
+                                                <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteUnits(this)' th:id="${units.units_id}">删除</a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            </div>
+                            <!-- /.tab-pane -->
+                        </form>
+                    </div>
+                    <div class="box-footer" id="box-footer" style="display: none">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+
+            <div class="modal fade" id="UnitsModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title">预警单元格维护</h4>
+                        </div>
+                        <form id="unitsForm" method="post" class="formClass">
+                            <input type="hidden" name="grid_code" th:value="${grid_code}">
+                            <input type="hidden" name="units_id" id="units_id" value="">
+                            <div class="modal-body" >
+                                <div class="form-group">
+                                    <label for="alert_level">预警级别</label>
+                                    <select id="alert_level" name="alert_level"  class="js-example-basic-single form-control">
+                                        <option th:each="dictionaries,dictionariesStat : ${dictionariesList}"
+                                                th:value="${dictionaries.level}" th:text="${dictionaries.color}">Credit card</option>
+                                    </select>
+                                </div>
+                                <div class="bootstrap-timepicker">
+                                    <div class="form-group">
+                                        <label>时间左界限</label>
+                                        <div class="input-group">
+                                            <input type="text"  id="startTime" name="startTime"  class="form-control timepicker">
+                                            <div class="input-group-addon">
+                                                <i class="fa fa-clock-o"></i>
+                                            </div>
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+                                    <!-- /.form group -->
+                                </div>
+
+                                <div class="bootstrap-timepicker">
+                                    <div class="form-group">
+                                        <label>时间右界限</label>
+                                        <div class="input-group">
+                                            <input type="text"  id="endTime" name="endTime"  class="form-control timepicker">
+                                            <div class="input-group-addon">
+                                                <i class="fa fa-clock-o"></i>
+                                            </div>
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+                                    <!-- /.form group -->
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="cordon">警戒线</label>
+                                    <input type="text" name="cordon"
+                                           class="form-control" id="cordon">
+                                </div>
+                            </div>
+                        </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                            <button type="button"  onclick="saveUnitsModal()" class="btn btn-primary">保存</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
+            <!--结束-->
+        </div>
+    </section>
+
+</div>
+</body>
+
+</html>

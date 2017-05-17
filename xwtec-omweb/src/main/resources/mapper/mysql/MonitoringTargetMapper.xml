@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.MonitorTargetMapper">
+    <resultMap id="MonitoringTargetMap" type="com.xwtech.omweb.model.MonitorTarget">
+        <result property="target_code" column="target_code"></result>
+        <result property="target_name" column="target_name"></result>
+        <result property="template_name" column="template_name"></result>
+        <result property="monitor_template_id" column="monitor_template_id"></result>
+        <result property="stat_interval" column="stat_interval"></result>
+        <result property="application_name" column="application_name"></result>
+        <result property="application_ver" column="application_ver"></result>
+        <result property="last_application_name" column="last_application_name"></result>
+        <result property="host_ip" column="host_ip"></result>
+        <result property="host_port" column="host_port"></result>
+        <result property="node_code" column="node_code"></result>
+        <result property="last_node_code" column="last_node_code"></result>
+        <result property="alert_scheme_code" column="alert_scheme_code"></result>
+        <result property="interval" column="interval"></result>
+        <result property="status" column="status"></result>
+        <result property="envir_code" column="envir_code"></result>
+        <result property="grid_code_list" column="grid_code_list"></result>
+        <collection property="metrics" select="queryDzTargetList" column="target_code">
+        </collection>
+    </resultMap>
+    <resultMap id="GridMap" type="com.xwtech.omweb.model.Grid">
+        <result property="grid_code" column="grid_code"></result>
+        <result property="metric" column="metric"></result>
+    </resultMap>
+
+    <!--查询监听目标档案列表-->
+    <select id="queryMonitoringTargetList" resultMap="MonitoringTargetMap">
+            SELECT
+                t.target_code,
+                t1.grid_code_list,
+                t.*, t2.template_name
+            FROM
+                tm_da_montitor_target t
+            LEFT JOIN (
+                SELECT
+                    t1.target_code,
+                    GROUP_CONCAT(t1.grid_code) AS grid_code_list
+                FROM
+                    tm_dz_target_grid t1
+                GROUP BY
+                    t1.target_code
+            ) t1 ON t1.target_code = t.target_code
+            LEFT JOIN tm_da_monitor_template t2 ON t.monitor_template_id = t2.monitor_template_id
+            WHERE  1=1
+    </select>
+    <!--查询监听目标档案详情-->
+    <select id="queryMonitoringTargetDetail" parameterType="java.lang.String" resultMap="MonitoringTargetMap">
+            SELECT
+                t.target_code,
+                t1.grid_code_list,
+                t.*, t2.template_name
+            FROM
+                tm_da_montitor_target t
+            LEFT JOIN (
+                SELECT
+                    t1.target_code,
+                    GROUP_CONCAT(t1.grid_code) AS grid_code_list
+                FROM
+                    tm_dz_target_grid t1
+                GROUP BY
+                    t1.target_code
+            ) t1 ON t1.target_code = t.target_code
+            LEFT JOIN tm_da_monitor_template t2 ON t.monitor_template_id = t2.monitor_template_id
+        WHERE t.target_code = #{target_code}
+    </select>
+    <!--新增监听目标-->
+    <insert id="addMonitoringTarget" parameterType="com.xwtech.omweb.model.MonitorTarget">
+        INSERT INTO tm_da_montitor_target
+        (target_code,target_name,monitor_template_id,stat_interval,application_name,application_ver,
+        last_application_name,host_ip,host_port,node_code,last_node_code,alert_scheme_code,target_interval,status,envir_code)
+        VALUES
+        (#{target_code},#{target_name},#{monitor_template_id},#{stat_interval},#{application_name},#{application_ver},
+         #{last_application_name},#{host_ip},#{host_port},#{node_code},#{last_node_code},#{alert_scheme_code},#{target_interval},#{status},#{envir_code})
+    </insert>
+    <!--修改监听目标-->
+    <update id="updateMonitoringTarget" parameterType="com.xwtech.omweb.model.MonitorTarget">
+        UPDATE tm_da_montitor_target SET
+        target_name = #{target_name},
+        monitor_template_id = #{monitor_template_id},
+        stat_interval =#{stat_interval},
+        application_name =#{application_name},
+        application_ver = #{application_ver},
+        last_application_name = #{last_application_name},
+        host_ip = #{host_ip},
+        host_port = #{host_port},
+        node_code = #{node_code},
+        last_node_code = #{last_node_code},
+        alert_scheme_code =#{alert_scheme_code},
+        target_interval = #{target_interval},
+        status = #{status},
+        envir_code =#{envir_code}
+        WHERE
+        target_code = #{target_code}
+    </update>
+    <!--删除监听目标-->
+    <delete id="deleteMonitoringTarget" parameterType="java.lang.String">
+        DELETE FROM tm_da_montitor_target WHERE target_code = #{target_code}
+    </delete>
+    <!--新增对照关系-->
+    <insert id="addTargetDZGrid" parameterType="java.lang.String">
+        INSERT  INTO  tm_dz_target_grid (target_code,grid_code)
+                      VALUES (#{target_code},#{grid_code})
+    </insert>
+    <!--删除对照关系-->
+    <delete id="deleteTargetDZGrid" parameterType="java.lang.String">
+        DELETE FROM tm_dz_target_grid WHERE  target_code = #{target_code}
+    </delete>
+    <!--查询对照关系列表-->
+    <select id="queryDzTargetList" parameterType="java.lang.String" resultMap="GridMap">
+        SELECT t2.metric,t2.grid_code FROM tm_dz_target_grid t1
+        LEFT JOIN tm_da_grid t2 ON t1.grid_code = t2.grid_code
+        WHERE t1.target_code = #{target_code}
+    </select>
+
+
+</mapper>

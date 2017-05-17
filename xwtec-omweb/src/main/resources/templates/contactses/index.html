@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            var page =  [[${pageInfo.pages}]];
+            if(page == 0)
+            {
+                $(".table-bordered > tbody").empty().append("<tr><td colspan= '10' align='center' class='col-sm-2 control-label'>未查到相关记录</td></tr>")
+            }
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+        });
+
+        $(document).ready(function(){
+            //单选
+            $(".js-example-basic-single").select2();
+        });
+
+        function deleteContacts(but){
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/cropContacts/deleteCropContacts',
+                        data: {
+                            'contactId': but.id,
+                            'name':$(but).attr("name")
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/cropContacts/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+
+        }
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            人员信息管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">人员信息管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="name" class="col-sm-2 control-label" style="width: 100px;">姓名：</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="name" th:value="${name}"
+                                           class="form-control" id="name" placeholder="">
+                                </div>
+                                <label for="cropId" class="col-sm-2 control-label" style="width: 100px;">公司名称：</label>
+                                <div class="col-sm-3">
+                                    <select id="cropName" name="cropName"  class="js-example-basic-single form-control">
+                                        <option value="">请选择</option>
+                                        <option th:each="crop,cropListStat : ${cropList}"
+                                                th:value="${crop.cropName}" th:text="${crop.cropName}" th:selected="${crop.cropName} == ${cropName}">Credit card</option>
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            <div class="col-sm-2" style="width: 37.667%;">
+                                <button type="submit" class="btn btn-primary pull-right">查询</button>
+                            </div>
+                        </form>
+
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/cropContacts/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                                <thead>
+                                <tr>
+                                    <th style="width: 50px">序号</th>
+                                    <th style="width: 120px">联系人账号</th>
+                                    <th style="width: 120px">联系人姓名</th>
+                                    <th style="width: 280px">公司名称</th>
+                                    <th style="width: 100px">电话</th>
+                                    <th style="width: 160px">手机</th>
+                                    <th style="width: 160px">邮箱</th>
+                                    <th style="width: 160px">QQ</th>
+                                    <th style="width: 160px">微信</th>
+                                    <th style="width: 250px">操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                               <tr th:each="cropContactses,cropContactsesStat:${cropContactsesList}">
+                                   <td th:text="${cropContactsesStat.index+1}"></td>
+                                   <td th:text="${cropContactses.userName}"></td>
+                                   <td th:text="${cropContactses.name}"></td>
+                                   <td th:text="${cropContactses.cropName}"></td>
+                                   <td th:text="${cropContactses.phone}"></td>
+                                   <td th:text="${cropContactses.mobile} "></td>
+                                   <td th:text="${cropContactses.email}"></td>
+                                   <td th:text="${cropContactses.wechat}"></td>
+                                   <td th:text="${cropContactses.qq}"></td>
+                                   <td>
+                                       <a th:href="${webUrl} + '/omweb/cropContacts/createAppContact?contactId=' + ${cropContactses.contactId}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail">维护应用</a>
+                                       &nbsp;
+                                       <a th:href="${webUrl} + '/omweb/cropContacts/create?contactId=' + ${cropContactses.contactId}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail">修改</a>
+                                       &nbsp;
+                                       <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteContacts(this)' th:name="${cropContactses.name}"   th:id="${cropContactses.contactId}"  >删除</a>
+                                   </td>
+
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer clearfix paginateWrapper">
+                       <!--<ul class="pagination pagination-sm no-margin pull-right">
+                        <li><a href="#">«</a></li>
+                        <li><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">»</a></li>
+                        </ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

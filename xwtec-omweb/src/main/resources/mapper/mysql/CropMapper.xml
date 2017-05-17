@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.CropMapper">
+
+    <!--所有企业信息-->
+    <resultMap id="CropMap" type="com.xwtech.omweb.model.Crop">
+        <result property="cropId" column="F_CROP_ID"></result>
+        <result property="cropName" column="F_CROP_NAME"></result>
+        <result property="cropIndustry" column="F_CROP_INDUSTRY"></result>
+        <result property="cropScale" column="F_CROP_SCALE"></result>
+        <result property="cropAddress" column="F_CROP_ADDRESS"></result>
+        <result property="isUse" column="F_IS_USE" ></result>
+        <result property="isEnabled" column="F_IS_ENABLED" ></result>
+        <result property="desc" column="F_DESC" ></result>
+        <result property="memo" column="F_MEMO" ></result>
+        <result property="createManCode" column="F_CREATE_MANCODE" ></result>
+        <result property="createManName" column="F_CREATE_MANNAME" ></result>
+        <result property="createTime" column="F_CREATE_TIME" ></result>
+        <result property="createMemo" column="F_CREATE_MEMO" ></result>
+        <result property="lastManCode" column="F_LAST_MANCODE" ></result>
+        <result property="lastManName" column="F_LAST_MANNAME" ></result>
+        <result property="lastTime" column="F_LAST_TIME" ></result>
+        <result property="lastMemo" column="F_LAST_MEMO" ></result>
+
+    </resultMap>
+
+    <!--所有公司信息-->
+    <select id="queryCorpList" parameterType="java.lang.String" resultMap="CropMap">
+        SELECT
+            CROP.*
+        FROM
+            TM_DA_CROP CROP
+        WHERE
+            CROP.F_IS_USE = '1'
+        <if test="cropName !=null and cropName !=''">
+            AND CROP.F_CROP_NAME LIKE CONCAT(CONCAT('%', #{cropName}), '%')
+        </if>
+        ORDER BY
+            CROP.F_LAST_TIME DESC
+    </select>
+
+    <select id="getCorpList" resultMap="CropMap">
+        SELECT
+        CROP.*
+        FROM
+        TM_DA_CROP CROP
+        WHERE
+        CROP.F_IS_USE = '1'
+        AND CROP.F_IS_ENABLED = '1'
+
+    </select>
+    <!--新增公司信息-->
+    <insert id="addCorp" parameterType="com.xwtech.omweb.model.Crop">
+        INSERT INTO TM_DA_CROP (F_CROP_ID,F_CROP_NAME,F_CROP_INDUSTRY,F_CROP_SCALE,F_CROP_ADDRESS, F_IS_USE,F_IS_ENABLED,F_DESC,F_MEMO,
+        F_CREATE_MANCODE,F_CREATE_MANNAME,F_CREATE_TIME,F_CREATE_MEMO,F_LAST_MANCODE,F_LAST_MANNAME,F_LAST_TIME,F_LAST_MEMO)
+        VALUES(#{cropId},#{cropName},#{cropIndustry},#{cropScale},#{cropAddress},'1',#{isEnabled},#{desc},#{memo},
+        #{createManCode},#{createManName},now(),#{createMemo},#{lastManCode},#{lastManName},now(),#{lastMemo})
+    </insert>
+    <!--修改公司信息-->
+    <update id="updateCrop" parameterType="com.xwtech.omweb.model.Crop">
+        UPDATE TM_DA_CROP SET
+        <if test="cropName !=null and cropName !=''">
+            F_CROP_NAME =#{cropName},
+        </if>
+        <if test="isEnabled !=null and isEnabled !=''">
+            F_IS_ENABLED = #{isEnabled}
+        </if>
+        <if test="cropIndustry!=null and cropIndustry !=''">
+            F_CROP_INDUSTRY =#{cropIndustry},
+        </if>
+        <if test="cropScale !=null and cropScale !=''">
+            F_CROP_SCALE =#{cropScale},
+        </if>
+        <if test="cropAddress!=null and cropAddress !=''">
+            F_CROP_ADDRESS =#{cropAddress},
+        </if>
+        <if test="isUse !=null and isUse!=''">
+            F_IS_USE = #{isUse},
+        </if>
+        <if test="desc !=null and desc !=''">
+            F_DESC =#{desc},
+        </if>
+        <if test="memo !=null and memo !=''">
+            F_MEMO = #{memo},
+        </if>
+        <if test="lastManCode!=null and lastManCode!=''">
+            F_LAST_MANCODE =#{lastManCode},
+        </if>
+        <if test="lastManName !=null and lastManName!=''">
+            F_LAST_MANNAME =#{lastManName},
+        </if>
+        <if test="lastMemo !=null and lastMemo !=''">
+            F_LAST_MEMO =#{lastMemo},
+        </if>
+        F_LAST_TIME =now()
+        WHERE
+        F_CROP_ID =#{cropId}
+    </update>
+
+    <!--删除公司信息-->
+    <update id="deleteCrop" parameterType="java.lang.String">
+         UPDATE TM_DA_CROP SET
+        F_IS_USE = '0',
+        F_IS_ENABLED ='0'
+        WHERE
+        F_CROP_ID =#{cropId}
+    </update>
+
+    <!--查看公司详情-->
+    <select id="queryCropById" parameterType="java.lang.String" resultMap="CropMap">
+
+            SELECT
+            CROP.*
+        FROM
+            TM_DA_CROP CROP
+        WHERE
+            CROP.F_IS_USE = '1'
+        AND
+        F_CROP_ID =#{cropId}
+    </select>
+
+    <!--查询公司名称是否存在-->
+    <select id="queryCropNameIsExist" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*) FROM  TM_DA_CROP
+        WHERE
+        F_CROP_NAME =#{cropName}
+        <if test="cropId !=null and cropId != ''">
+          AND F_CROP_ID =#{cropId}
+        </if>
+    </select>
+
+</mapper>

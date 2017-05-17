@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/css/jquery.treegrid.css'">
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/js/jquery.treegrid.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+    <script>
+        $(function () {
+            $("select").select2({
+                language: "zh-CN"
+            });
+
+            var $appGroups = $("#appGroups"),
+                $app = $("#app"),
+                $host = $("#host"),
+                $port = $("#port");
+
+            $appGroups.dropdown(function (result) {
+                $.ajax({
+                    type: "get",
+                    url: '[[${webUrl}]]/omweb/env/apps',
+                    data: {
+                        'appGroupId': result.value
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            var tempOptions = [];
+//                            [{
+//                                value: "",
+//                                text: "请选择应用...",
+//                                code: ""
+//                            }];
+                            $.each(callback.data, function (i, val) {
+                                val && tempOptions.push({
+                                    value: val.appId,
+                                    text: val.appName,
+                                    code: val.appNum
+                                });
+                            });
+                            var result = juicer($("#selectTemplate").html(), {
+                                options: tempOptions
+                            });
+                            if (tempOptions.length > 0) {
+                                $app.html(result);
+                                initHosts($app.val());
+                            } else {
+                                $app.val(null).trigger("change");
+                                $app.html("");
+                            }
+
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            });
+
+            $appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+
+
+            $app.on("change", function (e) {
+
+                initHosts($(this).val());
+
+            });
+
+            function initHosts(appId) {
+                var tempOptions = [];
+                tempOptions.push({
+                    value: "",
+                    text: "请选择主机...",
+                    code: ""
+                });
+                if (appId) {
+                    $.get('[[${webUrl}]]/omweb/env/hosts', {appId: appId}, function (callback) {
+                        if (callback.success) {
+
+                            $.each(callback.data, function (i, val) {
+                                val && tempOptions.push({
+                                    value: val.serverId,
+                                    text: val.hostNum,
+                                    code: val.hostNum
+                                });
+                            });
+                            var result = juicer($("#selectTemplate").html(), {
+                                options: tempOptions
+                            });
+
+                            $host.html(result);
+                            initPorts($app.val(), $host.val());
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+                } else {
+                    var result = juicer($("#selectTemplate").html(), {
+                        options: tempOptions
+                    });
+                    $host.val(null).trigger("change");
+                    $host.html(result);
+                }
+
+            }
+
+            $host.on("change", function (e) {
+
+                initPorts($app.val(), $(this).val());
+
+            });
+
+            function initPorts(appId, serverId) {
+                var tempOptions = [];
+                tempOptions.push({
+                    value: "",
+                    text: "请选择端口...",
+                    code: ""
+                });
+
+                if (serverId) {
+                    $.get('[[${webUrl}]]/omweb/env/ports', {appId: appId, serverId: serverId}, function (callback) {
+                        if (callback.success) {
+                            $.each(callback.data, function (i, val) {
+                                val && tempOptions.push({
+                                    value: val.id,
+                                    text: val.port,
+                                    code: val.port
+                                });
+                            });
+                            var result = juicer($("#selectTemplate").html(), {
+                                options: tempOptions
+                            });
+                            $port.html(result);
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+                } else {
+                    var result = juicer($("#selectTemplate").html(), {
+                        options: tempOptions
+                    });
+                    $port.html(result);
+                }
+
+
+            }
+
+            moment.locale('zh-cn');
+            var dateInput = $('#js-datetime-range');
+            var valueSpan = $('#js-datetime-value');
+            var label = dateInput.parent();
+            dateInput
+                .daterangepicker({
+                    timePicker: true,
+                    timePicker24Hour: true,
+                    autoUpdateInput: true,
+                    opens: 'left',
+                    applyClass: 'btn-info',
+                    locale: {
+                        format: 'YYYY-MM-DD HH:mm:ss',
+                        applyLabel: '确认',
+                        cancelLabel: '取消',
+                    }
+                });
+            dateInput.on('change', function () {
+                if (this.value && this.value !== 'on') {
+                    valueSpan.text(this.value);
+                }
+            });
+
+            //异常类型 总数列表
+            function getErrorsData(index, size) {
+
+                $.get('[[${webUrl}]]/omweb/env/exceptions_type',
+                    {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        appCode: $app.find("option:selected").data("code"),
+                        appId: $app.find("option:selected").val(),
+                        host: $host.find("option:selected").data("code"),
+                        port: $port.find("option:selected").data("code"),
+                        key: $("#key").val(),
+                        pn: index || 1,
+                        ps: size || 50,
+                    },
+                    function (callback) {
+                        if (callback.success) {
+                            var result ="";
+                            if($.isArray(callback.data) && callback.data.length > 0){
+                                result = juicer($("#errorTemplate").html(), callback);
+                            }
+                            $("#js-error-table").html(result);
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+
+
+            }
+            //查询按钮 查询数据
+            $(".btnQuery").on("click", function () {
+                getErrorsData();
+            });
+
+
+            function getErrorsChartData(type) {
+
+                $.get('[[${webUrl}]]/omweb/env/exceptions_date_metrics',
+                    {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        appCode: $app.find("option:selected").data("code"),
+                        appId: $app.find("option:selected").val(),
+                        host: $host.find("option:selected").data("code"),
+                        port: $port.find("option:selected").data("code"),
+                        key: $("#key").val(),
+                        type: type
+                    },
+                    function (callback) {
+                        if (callback.success) {
+//                            var page = callback.data;
+//                            var result = juicer($("#transTemplate").html(), callback);
+
+//                            $("#js-list-table").html(result);
+
+                            window.envChart = {};
+                            window.envChart.count = [];
+                            window.envChart.category = [];
+
+
+                            $.each(callback.data, function (i, v) {
+
+                                window.envChart.count.push(v.count)
+                                //echarts.format.formatTime('yyyy-MM-dd HH:mm', new Date(v.key.millis))
+                                window.envChart.category.push(v.key);
+
+                            });
+
+
+                            drawChart1(window.envChart.category, window.envChart.count,type);
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+
+
+            }
+
+
+            function drawChart1(category, count,type) {
+                // 基于准备好的dom，初始化echarts实例
+                var myChart = echarts.init($('#chart1')[0], 'macarons');
+
+                // 指定图表的配置项和数据
+                option = {
+//                    title: {
+//                        text: '折线图堆叠'
+//                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+//                    legend: {
+//                        data:['邮件营销']
+//                    },
+                    grid: {
+                        left: '5%',
+                        right: '5%',
+                        bottom: '5%',
+                        top: '5%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: true,
+                        data: category
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        }
+                    },
+                    series: [
+                        {
+                            name: type,
+                            type: 'line',
+                            stack: '总量',
+                            symbolSize:8,
+                            data: count
+                        }
+                    ]
+                };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+
+                myChart.on("dblclick",function (params) {
+
+                   getErrorDetail(params.name,params.seriesName);
+
+                });
+
+            };
+
+
+            function getErrorDetail(currentDate,seriesName,index, size) {
+
+                $.get('[[${webUrl}]]/omweb/env/exceptions_date_metrics_detail',
+                    {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        currentDate:currentDate,
+                        appCode: $app.find("option:selected").data("code"),
+                        appId: $app.find("option:selected").val(),
+                        host: $host.find("option:selected").data("code"),
+                        port: $port.find("option:selected").data("code"),
+                        key: $("#key").val(),
+                        type: seriesName,
+                        pn: index || 1,
+                        ps: size || 50
+                    },
+                    function (callback) {
+                        if (callback.success) {
+
+                            var page = callback.data.page;
+                            $("#page-content").page({
+                                index: page.pn,
+                                maxIndex: page.pages,
+                                total: page.total,
+                                size: page.ps,
+                                parameter: 'pn',
+                                callback: function (pn, size) {
+                                    getErrorDetail(currentDate,seriesName,pn, size);
+                                }
+                            });
+                            var result = juicer($("#transTemplate").html(), callback.data);
+                            $("#js-list-table").html(result);
+
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+
+
+            }
+
+
+            var details = $('#js-details');
+            var list = $('#js-list');
+            var backBtn = $('#js-details-close');
+            list.on('dblclick', '#js-error-table tr', function () {
+                details.removeClass('hidden');
+                list.addClass('hidden');
+                $("#js-list-table").empty();
+                getErrorsChartData($(this).data("type"));
+
+
+                //                location.href = '[[${webUrl}]]/omweb/env/exceptions_metrics?' +
+//                        'dateType=' + $(".dateType:checked").data("value") +
+//                        '&date=' + $(".dateType:checked").val() +
+//                        '&appCode=' +  $app.find("option:selected").data("code") +
+//                        '&host=' + $host.find("option:selected").data("code") +
+//                        '&port=' + $port.find("option:selected").data("code") +
+//                        '&key=' + $("#key").val() +
+//                        '&type=' + $(this).data("type");
+            });
+            backBtn.on('click', function () {
+                list.removeClass('hidden');
+                details.addClass('hidden');
+                $("#transAllLogs").empty();
+            });
+
+
+            $("#js-list-table").on("click",".show_error",function () {
+                $(this).parents("tr").next().toggleClass("hide");
+                $(this).parents("tr").next().find("td").html($(this).data("info"));
+            });
+
+
+        });
+
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <script id="selectTemplate" type="text/template">
+        {@each options as item,index}
+        <option value="${item.value}" data-code="${item.code}">${item.text}</option>
+        {@/each}
+    </script>
+    <!-- Main content -->
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <div class="btn-group pull-left" id="appGroups">
+                            <button type="button"
+                                    class="btn btn-primary dropdown-toggle"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"><i class="fa fa-angle-down"></i></button>
+                            <ul class="dropdown-menu">
+                                <li th:each="group,groupStat:${appGroups}">
+                                    <a href="#" th:data-value="${group.id}" th:text="${group.name}"></a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="h4 pull-left">
+                            <div class="container-fluid">错误和异常</div>
+                        </div>
+                        <div class="pull-right">
+                            <div class="btn-group btn-check-group" data-toggle="buttons">
+                                <label class="btn btn-default active">
+                                    <input class="dateType" data-value="1" type="radio" name="options"
+                                           checked="checked"/>1H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="2" type="radio" name="options"/>6H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="3" type="radio" name="options"/>12H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="4" type="radio" name="options"/>1D
+                                </label>
+                                <label class="btn btn-default ">
+                                    <input class="dateType" data-value="5" type="radio" name="options"/>7D
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="6" type="radio" name="options"/>14D
+                                </label>
+                                <label class="btn btn-default check-datetime">
+                                    <input class="dateType" data-value="0" type="radio" name="options"
+                                           id="js-datetime-range"/>
+                                    <span class="check-datetime-placeholder">指定时间</span>
+                                    <span class="check-datetime-value" id="js-datetime-value">指定时间</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box -->
+                <div class="box" id="js-list">
+                    <div class="box-header with-border">
+
+                        <form class="form-horizontal">
+                            <div class="box-body">
+                                <div class="form-group no-margin">
+                                    <label for="app" class="col-sm-1 control-label">应用</label>
+                                    <div class="col-sm-2">
+                                        <select class="form-control" id="app">
+
+                                        </select>
+                                    </div>
+                                    <label for="host" class="col-sm-1 control-label">主机</label>
+                                    <div class="col-sm-2">
+                                        <select class="form-control" id="host">
+                                            <option>请选择主机...</option>
+                                        </select>
+                                    </div>
+
+                                    <label for="port" class="col-sm-1 control-label">端口</label>
+
+                                    <div class="col-sm-2">
+                                        <select class="form-control" id="port">
+                                            <option>请选择端口...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <input type="text" class="form-control" id="key" placeholder="关键词"/>
+                                    </div>
+                                    <button type="button" class="btn btn-info btnQuery">查询</button>
+                                </div>
+
+                            </div>
+                            <!-- /.box-footer -->
+                        </form>
+
+                    </div>
+                    <div class="box-body">
+                        <script id="errorTemplate" type="text/template">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>错误类型</th>
+                                <th>发生次数</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {@each data as item,index}
+                            <tr data-code="${item.service_ID}" data-type="${item.errorType}">
+                                <td>${parseInt(index)+1}</td>
+                                <td>${item.errorType}</td>
+                                <td>${item.count}</td>
+                            </tr>
+                            {@/each}
+                            </tbody>
+
+                        </script>
+                        <table class="table table-hover table-striped table-primary" id="js-error-table">
+
+                        </table>
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
+                <div class="box hidden" id="js-details">
+                    <div class="box-header">
+                        <button class="btn btn-success" type="button" id="js-details-close"><i class="fa fa-reply"></i>
+                            返回
+                        </button>
+                    </div>
+                    <div class="box-body">
+
+                        <div id="chart1" style="height: 200px; width: 100%;">
+
+                        </div>
+
+                        <script id="transTemplate" type="text/template">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>应用名称</th>
+                                <th>日志类型</th>
+                                <th>节点名称</th>
+                                <th class="hide">关键字</th>
+                                <th>时长</th>
+                                <th>时间</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {@each data as item,index}
+                            <tr data-code="${item.service_ID}">
+                                <td>${parseInt(index)+1}</td>
+                                <td>${item.system_name}</td>
+                                <td>${item.log_type}</td>
+                                <td>${item.node_code}
+                                    {@if item.result_type}
+                                    <a class="tooltip-danger show_error" data-toggle="tooltip"
+                                       data-placement="top" title="${item.result_type}" data-info="${item.result_info }"><i class="fa fa-warning"></i></a>
+                                    {@/if}
+                                </td>
+                                <td class="hide">${item.custm_property}</td>
+                                <td>${item.interval}</td>
+                                <td>${item.time}</td>
+                                <td><a target="_blank" class="btn btn-xs" th:href="${webUrl} +'/omweb/env/trans_all?serviceId=${item.service_ID}'">调用链</a></td>
+                            </tr>
+                            <tr class="hide">
+                                <td colspan="6" style="padding: 8px 20px;">
+
+                                </td>
+                            </tr>
+                            {@/each}
+                            </tbody>
+
+                        </script>
+                        <table class="table table-hover table-striped table-primary" id="js-list-table">
+
+                        </table>
+                        <nav class="clearfix" id="page-content" aria-label="Page navigation">
+
+                        </nav>
+
+                    </div>
+                </div>
+
+
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+</body>
+</html>

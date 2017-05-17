@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".js-example-basic-single").select2();
+        });
+    </script>
+
+    <script>
+        $(function () {
+            var page =  [[${pageInfo.pages}]];
+            if(page == 0)
+            {
+                $(".table-bordered > tbody").empty().append("<tr><td colspan= '5' align='center' class='col-sm-2 control-label'>未查到相关记录</td></tr>")
+            }
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+
+            $("form").validate({
+                rules: {
+                },
+                messages: {
+                }
+            });
+        });
+
+        function deleteAppGroup(but){
+            var msg = "确定要删除吗？";
+            //var url = [[${webUrl}]];
+            // alert([[${webUrl}]]);
+            //  $.notify.error("TODO")
+            $.notify.confirm(msg,function(sure){
+                if(sure){
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/appGroup/delete' ,
+                        data: {
+                            'id' : but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/appGroup/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            应用系统管理
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">应用系统管理</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <!--<label for="num" class="col-sm-2 control-label" style="width: 100px;">应用组编码</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="num" th:value="${appGroup.num}"
+                                           class="form-control" id="num" placeholder="">
+                                </div>-->
+
+                                <label for="name" class="col-sm-2 control-label" style="width: 100px;">应用系统名称</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="name" th:value="${appGroup.name}"
+                                           class="form-control" id="name" placeholder="">
+                                </div>
+                                <div class="col-sm-2">
+                                    <button type="submit" class="btn btn-primary pull-right">查询</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/appGroup/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                              <thead>
+                                <tr>
+                                    <th style="width: 100px">序号</th>
+                                  <!--  <th style="width: 100px">应用组编码</th>-->
+                                    <th style="width: 100px">应用系统名称</th>
+                                    <th style="width: 100px">说明</th>
+                                    <th style="width: 60px">是否启用</th>
+                                    <th style="width: 160px">操作</th>
+                                </tr>
+                              </thead>
+                                <tbody>
+                                <tr th:each="appGroup,appGroupStat:${appGroupList}">
+                                    <td th:text="${appGroupStat.index}+1"></td>
+                                    <!--<td th:text="${appGroup.num}"></td>-->
+                                    <td th:text="${appGroup.name}"></td>
+                                    <td th:text="${appGroup.desc}"></td>
+                                    <td th:text="${appGroup.isEnabled} == 1 ? '是' : '否'"></td>
+                                    <td>
+                                        <a th:href="${webUrl} + '/omweb/appGroup/create?id=' + ${appGroup.id}" class=" pointer btn btn-default btn-xs purple btnDetail">修改</a>
+                                        &nbsp;
+                                        <a th:href="${webUrl} + '/omweb/appGroup/maintain?groupId=' + ${appGroup.id}" class=" pointer btn btn-default btn-xs purple btnDetail">添加应用</a>
+                                        &nbsp;
+                                        <a onclick='deleteAppGroup(this)' th:id = "${appGroup.id}" class=" pointer btn btn-default btn-xs purple btnDetail">删除</a>
+                                        &nbsp;
+                                        <a th:href="${webUrl} + '/omweb/appGroup/app_connector?groupId=' + ${appGroup.id}" class=" pointer btn btn-default btn-xs purple btnDetail">拓扑维护</a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer clearfix paginateWrapper">
+                        <!--<ul class="pagination pagination-sm no-margin pull-right">-->
+                        <!--<li><a href="#">«</a></li>-->
+                        <!--<li><a href="#">1</a></li>-->
+                        <!--<li><a href="#">2</a></li>-->
+                        <!--<li><a href="#">3</a></li>-->
+                        <!--<li><a href="#">»</a></li>-->
+                        <!--</ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

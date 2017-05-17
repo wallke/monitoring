@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<title>分布式缓存概况</title>
+<link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.css'">
+<link rel="stylesheet"	th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.min.js'"></script>
+<script th:src="${application.webStaticUrl}+'/static/js/adminlte-config.js'"></script>
+<script>
+	(function($) {
+		$.fn.dropdown = function(callback) {
+			// 插件的具体内容放在这里
+			this.each(function() {
+				var $this = $(this);
+				var $dropdown = $this.find(".dropdown-toggle");
+				var $options = $this.find("ul.dropdown-menu>li");
+				$options.on("click", function() {
+					var opt = $(this);
+					$dropdown.html(opt.find("a").html()
+							+ " <i class='fa fa-angle-down'></i>");
+					$this.data("value", opt.find("a").data("value"));
+					$this.data("index", opt.index());
+					$this.data("text", opt.find("a").text());
+					$this.data("placeholder", opt.find("a").text());
+					$this.data("html", opt.find("a").html());
+					if ($.isFunction(callback)) {
+						callback({
+							index : $this.data("index"),
+							value : $this.data("value"),
+							text : $this.data("text"),
+							html : $this.data("html")
+						});
+					}
+				});
+			});
+		};
+
+	})(jQuery);
+
+	$(function() {
+		$("select").select2({
+			language : "zh-CN"
+		});
+		
+		var $appGroups = $("#appGroups");
+		var $hostInfo = $("#hostInfo");
+
+		$appGroups.dropdown(function(result) {
+			$("#appGroup_").val(result.value);
+			
+			$.ajax({
+				type : "post",
+				url : '[[${webUrl}]]/omweb/redis/service',
+				data : {
+					'appGroupId' : result.value
+				},
+				success : function(callback) {
+					$hostInfo.html("");
+					var id = "";
+					name = "请选择主机...";
+					addOption(id, name, $hostInfo);
+
+					if (callback.success) {
+						$.each(callback.data,function(i, val) {
+							addOption(val.serverId, val.hostNum, $hostInfo);
+						});
+					} else {
+						$.notify.error("系统异常,请稍后再试...")
+					}
+				}
+			});
+		});
+
+		$appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+		query_();
+	});
+	
+	function addOption(id, name, select) {
+		var option = new Option();
+		option.value = id;
+		option.text = name;
+		select[0].options.add(option);
+	}
+	
+	
+	function query_(){
+		var hostIp = $("#hostInfo option:selected").text();
+		if("" ==  $("#hostInfo").val()){
+			hostIp ="";
+		}
+		
+		//内存占用率
+		var memoryData = [];
+		//系统CPU占用
+		var sysCpu = [];
+		//用户CPU占用
+		var userCpu = [];
+		//后台系统CPU占用
+		var backSysCpu = [];
+		//后台用户CPU占用
+		var backUserCpu = [];
+		//总连接数
+		var totalConn = [];
+		//已连接客户端数
+		var conning = [];
+		//被拒绝连接数
+		var refConn = [];
+		//被删键数量
+		var delConn = [];
+		//被驱逐键数量
+		var expelConn = [];
+		//成功查找键次数
+		var succFind = [];
+		//查找键失败次数
+		var failFind = [];
+		
+		var time = [];
+		
+		$.ajax({
+			type : "post",
+			url : '[[${webUrl}]]/omweb/redis/redisMonitor',
+			data : {
+				'hostIp' : hostIp
+			},
+			success : function(callback) {
+				if (callback.success) {
+					$.each(callback.data,function(i, val) {
+						memoryData.push(val.mem_fragmentation_ratio);
+						sysCpu.push(val.used_cpu_sys);
+						userCpu.push(val.used_cpu_user)
+						//后台系统CPU占用
+						backSysCpu.push(val.used_cpu_sys_children);
+						//后台用户CPU占用
+					    backUserCpu.push(val.used_cpu_user_children);
+						//总连接数
+						totalConn.push(val.total_connections_received);
+						//已连接客户端数
+						conning.push(val.connected_clients);
+						//被拒绝连接数
+						refConn.push(val.rejected_connections);
+						//被删键数量
+						delConn.push(val.expired_keys);
+						//被驱逐键数量
+						expelConn.push(val.evicted_keys);
+						//成功查找键次数
+						succFind.push(val.keyspace_hits);
+						//查找键失败次数
+						failFind.push(val.keyspace_misses);
+						
+						time.push(val.time);
+					});
+					
+					drawnOption1(time,memoryData);
+					drawnOption2(time,sysCpu,userCpu,backSysCpu,backUserCpu);
+					drawnOption3(time,totalConn,conning,refConn,delConn,expelConn,succFind,failFind);
+				} else {
+					$.notify.error("系统异常,请稍后再试...")
+				}
+			}
+		});
+	}
+	
+	
+	function drawnOption1(time,memoryData){
+		var myChart = echarts.init(document.getElementById('monitor1'),'macarons');
+		var option= {
+				color: ['#ff3d3d'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10,20,0,20],
+					data:['内存占用'],
+					selected: {
+						'内存占用': true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					 name: '(%)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'内存占用',
+						type:'line',
+						data:memoryData,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					}
+				]
+			};
+		 myChart.setOption(option);
+	}
+	
+	
+	function drawnOption2(time,sysCpu,userCpu,backSysCpu,backUserCpu){
+		var myChart2 = echarts.init(document.getElementById('monitor2'),'macarons');
+		var option= {
+				color: ['#ff3d3d','#00a0e9', '#f603ff','#00b419'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10, 20,0,20],
+					data:['系统CPU占用','用户CPU占用','后台系统CPU占用','后台用户CPU占用'],
+					selected: {
+						'系统CPU占用': true,
+						'用户CPU占用': true,
+						'后台系统CPU占用': true,
+						'后台用户CPU占用': true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'系统CPU占用',
+						type:'line',
+						data:sysCpu,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					},
+					{
+						name:'用户CPU占用',
+						type:'line',
+						data:userCpu,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'后台系统CPU占用',
+						type:'line',
+						data:backSysCpu,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'后台用户CPU占用',
+						type:'line',
+						data:backUserCpu,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					}
+				]
+			};
+		 myChart2.setOption(option);
+	}
+	
+	
+	function drawnOption3(time,totalConn,conning,refConn,delConn,expelConn,succFind ,failFind ){
+		var myChart3 = echarts.init(document.getElementById('monitor3'),'macarons');
+		var option= {
+				color: ['#ff3d3d','#00a0e9','#f603ff','#00b419'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10, 20,0,20],
+					data:['总连接数','已连接客户端数','被拒绝连接数','被删键数量','被驱逐键数量','成功查找键次数','查找键失败次数'],
+					selected: {
+						'总连接数': true,
+						'已连接客户端数': true,
+						'被拒绝连接数': true,
+						'被删键数量': true,
+						'被驱逐键数量' : true,
+						'成功查找键次数' : true,
+						'查找键失败次数' : true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					 name: '(个)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'总连接数',
+						type:'line',
+						data:totalConn,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					},
+					{
+						name:'已连接客户端数',
+						type:'line',
+						data:conning,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'被拒绝连接数',
+						type:'line',
+						data:refConn,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'被删键数量',
+						type:'line',
+						data:delConn,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'被驱逐键数量',
+						type:'line',
+						data:expelConn,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'成功查找键次数',
+						type:'line',
+						data:succFind,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'查找键失败次数',
+						type:'line',
+						data:failFind,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					}
+					
+					
+				]
+			};
+		 myChart3.setOption(option);
+	}
+	
+</script>
+
+</head>
+<body class="hold-transition skin-blue skin-xwblue sidebar-mini fixed" th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+	<div class="wrapper">
+		<div class="content-wrapper">
+		<input type="hidden" id="appGroup_" name="appGroup_" value="" />
+			<!-- Main content -->
+			<section class="content">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="box">
+							<div class="box-header with-border">
+							 <div class="btn-group pull-left" id="appGroups">
+								<button type="button" class="btn btn-primary dropdown-toggle"
+									data-toggle="dropdown" aria-haspopup="true"
+									aria-expanded="false">
+									<i class="fa fa-angle-down"></i>
+								</button>
+								<ul class="dropdown-menu">
+									<li th:each="group,groupStat:${appGroups}"><a href="#"
+										th:data-value="${group.id}" th:text="${group.name}"></a></li>
+								</ul>
+							  </div>
+							</div>
+						</div>
+						<!-- /.box -->
+						<div class="box">
+							<div class="box-header  with-border">
+							  <form class="form-horizontal">
+								<input type="hidden" id="appGroup_" name="appGroup_" value="" />
+								<div class="box-body">
+									<label for="hostInfo" class="col-sm-1 control-label">监控主机</label>
+									<div class="col-sm-2">
+										<select class="form-control" id="hostInfo" name="hostInfo">
+										</select>
+									</div>
+									<button class="btn btn-primary" type="button"
+										onclick="query_();">查询</button>
+								</div>
+								</form>
+						  </div>
+							<div class="box-body">
+								<div class="panel panel-monitor">
+									<div class="panel-heading">
+										<button class="btn btn-help">
+											<i class="fa fa-question"></i>
+										</button>
+										内存占用
+									</div>
+									<div class="panel-body">
+									  <div id="monitor1" style="width: 100%;height: 360px;">
+									</div>
+								</div>
+								<div class="panel panel-monitor">
+									<div class="panel-heading">
+										<button class="btn btn-help">
+											<i class="fa fa-question"></i>
+										</button>
+										CPU占用
+									</div>
+									<div class="panel-body">
+								<div id="monitor2" style="width: 100%;height: 360px;">
+									</div>
+								</div>
+								<div class="panel panel-monitor">
+									<div class="panel-heading">
+										<button class="btn btn-help">
+											<i class="fa fa-question"></i>
+										</button>
+										连接数
+									</div>
+									<div class="panel-body">
+								<div id="monitor3" style="width: 100%;height: 360px;">
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- /.col -->
+				</div>
+				<!-- /.row -->
+			</section>
+			<!-- /.content -->
+		</div>
+	</div>
+</body>
+</html>

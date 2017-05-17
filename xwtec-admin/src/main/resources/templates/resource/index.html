@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.css'" />
+<link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/style/jquery.treeview.css'" />
+<title>欣网管理后台</title>
+
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.full.min.js'"></script>
+<script th:src="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/js/jquery.cookie.js'" type="text/javascript"></script>
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jQuery/jquery.treeview.js'" type="text/javascript"></script>
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		$("#browser").treeview();
+		
+		$("#btn1").click(function(){
+			var c = $("input[name='ids']:checked");
+			for(var i = 0; i < c.length; i++){
+				alert(c[i].id);
+			}
+		})
+	});
+	
+	function findParent(p,checked) {
+		 $("input[id='"+p+"']").prop("checked",true);
+		 var ppId = $("input[id='"+p+"']").attr("pId");
+		 $("input[id='"+ppId+"']").prop("checked",true);
+		 var pppId =  $("input[id='"+ppId+"']").attr("pId");
+		 $("input[id='"+pppId+"']").prop("checked",true);
+	}
+	function child(e) {
+		var pId = e.id;  //本ID
+		var checked = e.checked;
+		var p = $("#"+pId+"").attr("pId");  //本的PID
+		if(checked) {
+			findParent(p,checked);
+			var children = $("input[pId='"+pId+"']"); //根据本ID，找子菜单
+			for(var i = 0; i < children.length; i++){
+				$(children[i]).prop("checked",true);
+				threeChild(children[i].id,true);
+			}
+		}else {
+			var children = $("input[pId='"+pId+"']");
+			for(var i = 0; i < children.length; i++){
+				$(children[i]).removeAttr("checked",false);
+				threeChild(children[i].id,false);
+			}
+		}
+	}
+	function threeChild(id,boolen){
+		var children = $("input[pId='"+id+"']");
+		if(boolen){
+			for(var i = 0; i < children.length; i++){
+				$(children[i]).prop("checked",true);
+				fourChild(children[i].id,true);
+			}
+		}else{
+			for(var i = 0; i < children.length; i++){
+				$(children[i]).removeAttr("checked",false);
+				fourChild(children[i].id,false);
+			}
+		}
+	}
+	function fourChild(id,boolen){
+		var children = $("input[pId='"+id+"']");
+		if(boolen){
+			for(var i = 0; i < children.length; i++){
+				$(children[i]).prop("checked",true);
+			}
+		}else{
+			for(var i = 0; i < children.length; i++){
+				$(children[i]).removeAttr("checked",false);
+			}
+		}
+	}
+	
+	
+	 $(function () {
+         $(".btnSubmit").on("click", function () {
+        	   var platIdHi = $("#platIdHi").val();
+        	   var roleIdHi = $("#roleIdHi").val();
+        	   
+        	   var platId = $("#platId").val();
+        	   var roleId = $("#roleId").val();
+        	   
+        	   var resources = new Array();
+        	   
+        	   var c = $("input[name='ids']:checked");
+   			   for(var i = 0; i < c.length; i++){
+   				  resources.push(c[i].id);
+   			   }
+        	   
+        	   if(platIdHi != platId){
+        		   $.notify.alert("平台名称更改，请重新查询后调整权限！");
+        	   }
+        	   if(roleIdHi != roleId){
+        		   $.notify.alert("角色名称更改，请重新查询后调整权限！");
+        	   }
+        	   
+        	   $.ajax({
+   		        type: "post",
+   		        url: '[[${webUrl}]]/resource/submit' ,
+   		        data: {
+   		        	'roleId'    : roleId,
+   		        	'resources' : resources
+   		        },
+   		        traditional: true,
+   		        success: function (callback) {
+   		        	 if (callback.success) {
+                            $.notify.success(callback.message, "", function () {
+                            	 location.href = "[[${webUrl}]]/resource/index?platId="+platId+"&roleId="+roleId;
+                            });
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+   		        }
+   		    });
+         });
+     });
+
+	</script>
+
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+	<div class="content-wrapper">
+		<section class="content-header">
+			<h1>权限管理中心</h1>
+			<ol class="breadcrumb">
+				<li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+				<li class="active">权限管理中心</li>
+			</ol>
+		</section>
+
+		<section class="content">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="box box-primary">
+						<div class="box-header with-border">
+							<form class="form-horizontal">
+							    <input type="hidden"   id="platIdHi" th:value="${platId}"/>
+							     <input type="hidden"  id="roleIdHi"  th:value="${roleId}"/>
+								<div class="form-group">
+								    
+								    <label for="code" class="col-sm-2 control-label"
+										style="width: 120px;">角色名称：</label>
+
+									<div class="col-sm-3">
+										<select id="roleId" name="roleId" class="form-control">
+											<option selected="selected" value="">请选择</option>
+											<option th:each="role,roleStat:${roleList}" th:selected = "${role.id} == ${roleId}"
+												th:value="${role.id}" th:text="${role.name}"</option>
+										</select>
+									</div>
+								  
+									<label for="platId" class="col-sm-2 control-label"
+										style="width: 120px;">平台名称：</label>
+
+									<div class="col-sm-3">
+										<select id="platId" name="platId" class="form-control">
+											<option selected="selected" value="">请选择</option>
+											<option th:each="plat,platStat:${platList}" th:selected = "${plat.id} == ${platId}"
+												th:value="${plat.id}" th:text="${plat.name}"</option>
+										</select>
+									</div>
+									
+									<div class="col-sm-2">
+										<button type="submit" class="btn btn-primary pull-right">查询</button>
+									</div>
+								</div>
+							</form>
+
+						</div>
+						<!-- /.box-header -->
+						<!-- /.box-body -->
+						<div class="box-footer clearfix paginateWrapper">
+							<ul th:if="${not #lists.isEmpty(currentMenuList)}"  id='browser' class='filetree' >
+							<!-- 一级菜单 -->
+							  <li th:each="menu,menuStat:${currentMenuList}">
+								<span class='folder'>
+								  <input type="checkbox"  name="ids" th:checked="${menu.isChecked == 1}" th:id="${menu.id}" th:pId="${menu.parentId}" onchange="child(this)"/>[[${menu.name}]]
+							    </span>
+							      <!--二级菜单 -->
+									<ul th:if="${not #lists.isEmpty(menu.subMenus)}" >
+									   <li th:each="sub,subStat:${menu.subMenus}">
+										 <span th:class="${not #lists.isEmpty(sub.subMenus)} ? 'folder' : 'file' ">
+										  <input type="checkbox" name="ids" th:checked="${sub.isChecked == 1}" th:id="${sub.id}" th:pId="${sub.parentId}"  onchange="child(this)"/>[[${sub.name}]]
+										 </span>
+										   <!--三级菜单 -->
+										   <ul th:if="${not #lists.isEmpty(sub.subMenus)}">
+											   <li th:each="subT,subTStat:${sub.subMenus}">
+												 <span  th:class="${not #lists.isEmpty(sub.subMenus)} ? 'folder' : 'file' ">
+												  <input type="checkbox" name="ids" th:checked="${subT.isChecked == 1}" th:id="${subT.id}"  th:pId="${subT.parentId}"  onchange="child(this)"/>[[${subT.name}]]
+												 </span>
+												      <!--四级按钮 -->
+												      <ul th:if="${not #lists.isEmpty(subT.subMenus)}">
+														   <li th:each="subT2,subT2Stat:${subT.subMenus}">
+															 <span class='file'>
+															  <input type="checkbox" name="ids" th:checked="${subT2.isChecked == 1}" th:id="${subT2.id}"  th:pId="${subT2.parentId}"  onchange="child(this)"/>[[${subT2.name}]]
+															 </span>
+															</li>
+													 </ul>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+								 <div class="box-footer">
+                       				 <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    			</div>
+							</ul>
+						</div>
+						   
+					</div>
+				</div>
+			</div>
+		</section>
+
+	</div>
+
+
+</body>
+</html>

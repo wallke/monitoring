@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            jQuery.validator.addMethod( "isValueNull", function( value ) {
+                if($.trim(value) == null || $.trim(value) == '')
+                { return false;}else{ return true;}
+            }, "输入值不能为空" );
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/metrics/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    metric: {
+                        required: true,
+                        isValueNull:true,
+                        maxlength:100
+                    },
+                    name: {
+                        required: true,
+                        isValueNull:true,
+                        maxlength:100
+                    }
+                },
+                messages: {
+                    metric: {
+                        required: "类型不能为空"
+                    },
+                    name: {
+                        required: "名称不能为空",
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            统计指标维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/metrics/index'"><i class="fa fa-users"></i> 统计指标管理中心</a></li>
+            <li class="active">统计指标详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-6">
+                <!-- general form elements -->
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">统计指标详情维护</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+
+                    <div class="box-body">
+                        <form role="form" method="post">
+                            <input type="hidden" name="actionType" th:value="${actionType}">
+                            <div class="form-group">
+                                <label for="metric">类型</label>
+                                <input type="text" name="metric" th:value="${metrics.metric}"
+                                       class="form-control" id="metric" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label for="name">名称</label>
+                                <input type="text" name="name" th:value="${metrics.name}"
+                                       class="form-control" id="name">
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+
+                </div>
+                <!-- /.box -->
+
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

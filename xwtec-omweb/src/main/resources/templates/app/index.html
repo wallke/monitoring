@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            var page =  [[${pageInfo.pages}]];
+            if(page == 0)
+            {
+                $(".table-bordered > tbody").empty().append("<tr><td colspan= '8' align='center' class='col-sm-2 control-label'>未查到相关记录</td></tr>")
+            }
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+        });
+
+        $(document).ready(function(){
+            $(".js-example-basic-single").select2();
+        });
+        function deleteApp(but){
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/app/deleteApp',
+                        data: {
+                            'appId': but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/app/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+
+        }
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+             应用管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">应用管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="appNum" class="col-sm-2 control-label" style="width: 100px;">应用编码：</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="appNum" th:value="${appNum}"
+                                           class="form-control" id="appNum" placeholder="">
+                                </div>
+                                <label for="appName" class="col-sm-2 control-label" style="width: 100px;">应用名称：</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="appName" th:value="${appName}"
+                                           class="form-control" id="appName" placeholder="">
+                                </div>
+
+                            </div>
+
+                            <div class="form-group">
+                                <label for="categoryId" class="col-sm-2 control-label" style="width: 100px;">应用类型：</label>
+                                <div class="col-sm-3">
+                                    <select id="categoryId" name="categoryId"    class="form-control js-example-basic-single">
+                                        <option selected="selected" value="">请选择</option>
+                                        <option th:each="appCategories,appCategoriesStat : ${appCategoriesList}"
+                                                th:value="${appCategories.categoryId}"
+                                                th:text="${appCategories.categoryName}"
+                                                th:selected="${appCategories.categoryId} == ${categoryId}">Credit card</option>
+                                    </select>
+                                </div>
+
+                                <label for="cropId" class="col-sm-2 control-label" style="width: 100px;">公司名称：</label>
+                                <div class="col-sm-3">
+                                    <select id="cropId" name="cropId"   class="form-control js-example-basic-single">
+                                        <option selected="selected" value="">请选择</option>
+                                        <option th:each="crop,cropListStat : ${cropList}"
+                                                th:value="${crop.cropId}" th:text="${crop.cropName}"
+                                                th:selected="${crop.cropId}==${cropId}">Credit card</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-2" style="width: 37.667%;">
+                                <button type="submit" class="btn btn-primary pull-right">查询</button>
+                            </div>
+                        </form>
+
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/app/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 100px">序号</th>
+                                        <th style="width: 100px">应用编码</th>
+                                        <th style="width: 100px">应用名称</th>
+                                        <th style="width: 100px">应用类别</th>
+                                        <th style="width: 280px">公司名称</th>
+                                        <th style="width: 100px">节点数量</th>
+                                        <th style="width: 100px">是否启用</th>
+                                        <th style="width: 160px">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                               <tr th:each="app,appStat:${appList}">
+                                   <td th:text="${appStat.index+1}"></td>
+                                   <td th:text="${app.appNum}"></td>
+                                   <td th:text="${app.appName}"></td>
+                                   <td th:text="${app.categoryName}"></td>
+                                   <td th:text="${app.cropName} "></td>
+                                   <td th:text="${app.nodeCount}"></td>
+                                   <td th:text="${app.isEnabled}=='0'?'否':'是'"></td>
+                                   <td>
+                                       <a th:href="${webUrl} + '/omweb/app/create?appId=' + ${app.appId}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail">修改</a>
+                                       &nbsp;
+                                      <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteApp(this)'   th:id="${app.appId}"  >删除</a>
+                                       &nbsp;
+                                        <a th:href="${webUrl} + '/omweb/app/appDetail?appId=' + ${app.appId}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail">查看</a>
+                                   </td>
+
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer clearfix paginateWrapper">
+                       <!--<ul class="pagination pagination-sm no-margin pull-right">
+                        <li><a href="#">«</a></li>
+                        <li><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">»</a></li>
+                        </ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

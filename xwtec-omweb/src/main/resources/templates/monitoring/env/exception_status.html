@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.css'">
+
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.min.js'"></script>
+    <script>
+
+        $(function () {
+
+
+            var $appGroups = $("#appGroups"),
+                $app = $("#app"),
+                $host = $("#host"),
+                $port = $("#port");
+
+            $appGroups.dropdown(function (result) {
+                $.ajax({
+                    type: "get",
+                    url: '[[${webUrl}]]/omweb/env/exception_status_metrics',
+                    data: {
+                        'appGroupId': result.value
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            console.log(callback)
+                            var result = juicer($("#appErrorTemplate").html(), callback);
+                            $("#appErrorList").html(result);
+                            $("#appErrorList").find(".monitor-error-summary:eq(0)").trigger("click");
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            });
+
+            $appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+
+            $("#appErrorList").on("click",".monitor-error-summary",function () {
+                var code = $(this).data("code");
+                $(this).addClass("active").siblings().removeClass("active");
+                getNodeError(code);
+            });
+
+
+            window.envChart = {};
+            window.envChart1 = {};
+
+            function getNodeError(appCode) {
+                $.ajax({
+                    type: "get",
+                    url: '[[${webUrl}]]/omweb/env/exception_status_node',
+                    data: {
+                        'appCode': appCode
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            console.log(callback)
+                            window.envChart1.category = [];
+                            window.envChart1.count = [];
+                            window.envChart.category = [];
+                            window.envChart.count = [];
+                            $.each(callback.data.method, function (i, v) {
+                                window.envChart1.category.push(v.nodeCode);
+                                window.envChart1.count.push({value: v.count, name: v.nodeCode})
+
+                            });
+
+                            $.each(callback.data.host, function (i, v) {
+                                window.envChart.category.push(v.nodeCode);
+                                window.envChart.count.push({value: v.count, name: v.nodeCode})
+
+                            });
+
+                            drawEnvChart($("#envChart"),window.envChart.category, window.envChart.count);
+
+                            drawEnvChart1($("#envChart1"),window.envChart1.category, window.envChart1.count);
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }
+
+
+            function drawEnvChart(co,category, count) {
+                // 基于准备好的dom，初始化echarts实例
+                var myChart = echarts.init(co[0], 'macarons');
+                // 指定图表的配置项和数据
+                var option = {
+                    title:{
+                        text:"主机错误数",
+                        show:true
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    legend: {
+                        bottom: "0%",
+                        data: category
+                    },
+                    series: [
+                        {
+                            name: '错误数',
+                            type: 'pie',
+                            radius: '50%',
+                            center: ['50%', '45%'],
+                            data: count,
+                            itemStyle: {
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            }
+
+
+
+            function drawEnvChart1(co,category, count) {
+                // 基于准备好的dom，初始化echarts实例
+                var myChart = echarts.init(co[0], 'macarons');
+                // 指定图表的配置项和数据
+                var option = {
+                    title:{
+                        text:"方法错误数TOP5",
+                        show:true
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    legend: {
+                        bottom: "0%",
+                        data: category
+                    },
+                    series: [
+                        {
+                            name: '错误数',
+                            type: 'pie',
+                            radius: '50%',
+                            center: ['50%', '45%'],
+                            data: count,
+                            itemStyle: {
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            }
+
+
+
+            function scrollSider(input, slider) {
+                var value = +input.val();
+                var left = (value - 10) / 60 * 100;
+                if (left < 0) {
+                    left = 0;
+                }
+                if (left > 20 / 30 * 100) {
+                    left = 20 / 30 * 100;
+                }
+                slider.css({
+                    left: '-' + left + '%'
+                });
+            }
+            $('#js-range-input').ionRangeSlider({
+                onChange: function (irs) {
+                    scrollSider(irs.input, irs.slider);
+                }
+            }).each(function () {
+                scrollSider($(this), $(this).prev());
+            });
+
+        });
+
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <script id="selectTemplate" type="text/template">
+        {@each options as item,index}
+        <option value="${item.value}" data-code="${item.code}">${item.text}</option>
+        {@/each}
+    </script>
+    <!-- Main content -->
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <div class="box-header with-border">
+                        <div class="btn-group pull-left" id="appGroups">
+                            <button type="button"
+                                    class="btn btn-primary dropdown-toggle"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"><i class="fa fa-angle-down"></i></button>
+                            <ul class="dropdown-menu">
+                                <li th:each="group,groupStat:${appGroups}">
+                                    <a href="#" th:data-value="${group.id}" th:text="${group.name}"></a>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- /btn-group -->
+                        <div class="pull-right hide">
+                            选择剖析的时间(s)：
+                            <div class="range-slider">
+                                <div class="range-slider-inner">
+                                    <input type="text" data-type="single" data-min="0" data-max="60" data-step="1" data-hide-min-max="true" data-grid="true"
+                                           data-grid-margin="false" data-grid-num="60" value="30" id="js-range-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box -->
+                <div class="box">
+                    <div class="box-body">
+                        <script id="appErrorTemplate" type="text/template">
+                            {@each data as item,index}
+                            <div class="monitor-error-summary" data-code="${item.appCode}">
+                                <img class="monitor-error-icon" th:src="${application.webStaticUrl}+'/static/style/images/icon-cloud.png'">
+                                <div class="monitor-error-name">${item.appName}</div>
+                                <div class="monitor-error-num">${item.count}</div>
+                            </div>
+                            {@/each}
+                        </script>
+
+                        <div class="monitor-error-list" id="appErrorList">
+
+                        </div>
+                        <div class="monitor-error-chart" style="height: 500px;">
+                            <div id="envChart" style="width: 45%;height: 400px; " class="pull-left">
+
+                            </div>
+                            <div id="envChart1" style="width: 45%;height: 400px; " class="pull-left m-l">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+</body>
+</html>

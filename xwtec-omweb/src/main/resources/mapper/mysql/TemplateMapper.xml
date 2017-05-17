@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.TemplateMapper">
+
+    <resultMap id="TemplateMap" type="com.xwtech.omweb.model.Template">
+        <result property="template_id" column="template_id"></result>
+        <result property="name" column="name"></result>
+        <result property="template_channel_id" column="template_channel_id"></result>
+        <result property="channel" column="channel"></result>
+        <result property="message_template" column="message_template"></result>
+       <!-- <collection property="templates" column="template_id" select="queryTemplateChannelList">
+        </collection>-->
+    </resultMap>
+    <resultMap id="TemplateDetailMap" type="com.xwtech.omweb.model.Template">
+        <result property="template_id" column="template_id"></result>
+        <result property="name" column="name"></result>
+        <result property="template_channel_id" column="template_channel_id"></result>
+        <result property="channel" column="channel"></result>
+        <result property="message_template" column="message_template"></result>
+        <collection property="templates" column="template_id" select="queryTemplateChannelList">
+         </collection>
+    </resultMap>
+    <resultMap id="TemplateChannelMap" type="com.xwtech.omweb.model.TemplateChannel">
+        <result property="template_channel_id" column="template_channel_id"></result>
+        <result property="channel" column="channel"></result>
+        <result property="message_template" column="message_template"></result>
+    </resultMap>
+    <select id="queryTemplateList" resultMap="TemplateMap">
+       select t1.template_id,t1.`name`, GROUP_CONCAT(t2.channel) as channel, GROUP_CONCAT(t2.message_template) as message_template from tm_da_template t1
+        LEFT JOIN tm_da_template_channel t2
+        ON t1.template_id = t2.template_id
+        GROUP BY t1.template_id
+    </select>
+    <select id="queryTemplateChannelList" parameterType="java.lang.String" resultMap="TemplateChannelMap">
+        SELECT * FROM  tm_da_template_channel WHERE  template_id = #{template_id}
+    </select>
+
+    <select id="queryTemplateDetail" parameterType="java.lang.String" resultMap="TemplateDetailMap">
+        SELECT  * FROM  tm_da_template WHERE  1=1 AND  template_id = #{template_id}
+    </select>
+
+    <insert id="addTemplate" parameterType="com.xwtech.omweb.model.Template">
+        INSERT INTO tm_da_template(template_id,name)
+        VALUES(#{template_id},#{name})
+    </insert>
+    <insert id="addTemplateChannel" parameterType="com.xwtech.omweb.model.TemplateChannel">
+        INSERT INTO tm_da_template_channel(template_id,template_channel_id,channel,message_template)
+        VALUES (#{template_id},#{template_channel_id},#{channel},#{message_template})
+    </insert>
+
+    <update id="updateTemplate" parameterType="com.xwtech.omweb.model.Template">
+        UPDATE tm_da_template SET
+        name =#{name}
+        WHERE
+        template_id = #{template_id}
+    </update>
+
+    <update id="updateTemplateChannel">
+       UPDATE tm_da_template_channel SET
+       channel =#{channel},
+       message_template =#{message_template}
+       WHERE
+       template_id = #{template_id}
+       AND
+       channel = #{channel}
+    </update>
+
+    <delete id="deleteTemplateById" parameterType="java.lang.String">
+        DELETE FROM tm_da_template  WHERE  template_id = #{template_id}
+    </delete>
+    <delete id="deleteTemplateChannel" parameterType="java.lang.String">
+        DELETE FROM tm_da_template_channel  WHERE  template_id = #{template_id}
+    </delete>
+
+
+</mapper>

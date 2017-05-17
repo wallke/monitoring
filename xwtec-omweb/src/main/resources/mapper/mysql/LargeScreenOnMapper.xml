@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.LargeScreenOnMapper">
+
+    <!--根据应用组ID查询所有应用信息-->
+    <select id="queryEnvirName" parameterType="java.lang.String" resultType="java.lang.String">
+      SELECT A.envir_name FROM t_sdk_conf_env A WHERE A.envir_ID  = #{envir_ID} LIMIT 1
+    </select>
+    
+    
+     <select id="queryInterFaceName" parameterType="java.lang.String" resultType="java.lang.String">
+      SELECT A.F_Description FROM tm_da_service_description A WHERE A.F_Service = #{interFace_id} LIMIT 1
+    </select>
+</mapper>

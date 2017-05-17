@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script>
+
+        $(function () {
+
+            function getErrorsData(index, size) {
+
+                $.get('[[${webUrl}]]/omweb/env/exceptions_date_metrics',
+                    {
+                        dateType: '[[${dateType}]]',
+                        date: '[[${date}]]',
+                        appCode: '[[${appCode}]]',
+                        appId: '[[${appId}]]',
+                        host: '[[${host}]]',
+                        port: '[[${port}]]',
+                        key: '[[${key}]]',
+                        type: '[[${type}]]'
+                    },
+                    function (callback) {
+                        if (callback.success) {
+//                            var page = callback.data;
+//                            var result = juicer($("#transTemplate").html(), callback);
+
+//                            $("#js-list-table").html(result);
+
+                            window.envChart = {};
+                            window.envChart.count = [];
+                            window.envChart.category = [];
+
+
+                            $.each(callback.data, function (i, v) {
+
+                                window.envChart.count.push(v.count)
+                                //echarts.format.formatTime('yyyy-MM-dd HH:mm', new Date(v.key.millis))
+                                window.envChart.category.push(v.key);
+
+                            })
+
+
+                            drawEnvChart(window.envChart.category, window.envChart.count);
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+
+
+            }
+
+            function drawEnvChart(category, count) {
+                // 基于准备好的dom，初始化echarts实例
+                var myChart = echarts.init(document.getElementById('envChart'), 'macarons');
+
+                // 指定图表的配置项和数据
+                var option = {
+                    "legend": {
+                        bottom: "2%",
+                        "data": ['平均时长']
+                    },
+
+                    "tooltip": {
+                        "trigger": "axis",
+                        "axisPointer": {
+                            "type": "shadow",
+                            textStyle: {
+                                color: "#fff"
+                            }
+
+                        },
+                    },
+                    "xAxis": [{
+                        "type": "category",
+                        data: category
+                    }],
+                    "yAxis": [
+                        {
+                            type: 'value',
+                            name: '平均时长',
+                            min: 0,
+                            position: 'right',
+                            splitLine: {
+                                show: false
+                            },
+                            splitArea: {
+                                show: false
+                            },
+                            offset: 0,
+                            axisLabel: {
+                                formatter: '{value} ms'
+                            }
+                        }],
+                    "series": [ {
+                            "name": "平均时长",
+                            "type": "line",
+                            "stack": "总量",
+                            symbolSize: 10,
+                            symbol: 'circle',
+                            yAxisIndex: 1,
+                            z: 10,
+                            "itemStyle": {
+                                "normal": {
+                                    "label": {
+                                        "show": true,
+                                        "textStyle": {
+                                            "color": "#666"
+                                        },
+                                        "position": "insideTop",
+                                        formatter: function (p) {
+                                            return p.value > 0 ? (p.value) : '';
+                                        }
+                                    }
+                                }
+                            },
+                            "data": count
+                        },
+                    ]
+                };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            };
+
+
+//            function getTransAllLogs(serviceId) {
+//                $.get('[[${webUrl}]]/omweb/env/trans_all_logs',
+//                    {
+//                        appId: $app.find("option:selected").val(),
+//                        serviceId: serviceId
+//                    },
+//                    function (callback) {
+//                        if (callback.success) {
+//                            var page = callback.data.page;
+//                            var result = juicer($("#transAllLogsTemplate").html(), callback);
+//                            $("#transAllLogs").html(result);
+//                            $('.tree').treegrid();
+//                        } else {
+//                            $.notify.error(callback.message)
+//                        }
+//                    });
+//            }
+
+
+//            var details = $('#js-details');
+//            var list = $('#js-list');
+//            var backBtn = $('#js-details-close');
+//            list.on('dblclick', '#js-list-table tr', function () {
+//                details.removeClass('hidden');
+//                list.addClass('hidden');
+//                getTransAllLogs($(this).data("code"));
+//
+//            });
+//            backBtn.on('click', function () {
+//                list.removeClass('hidden');
+//                details.addClass('hidden');
+//                $("#transAllLogs").empty();
+//            });
+
+
+        });
+
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <script id="selectTemplate" type="text/template">
+        {@each options as item,index}
+        <option value="${item.value}" data-code="${item.code}">${item.text}</option>
+        {@/each}
+    </script>
+    <!-- Main content -->
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <div class="box-body">
+                        <div id="chart1" style="width: 100%;height: 200px;"></div>
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
+                <div class="box hidden" id="js-details">
+                    <div class="box-header">
+                        <button class="btn btn-default btnChangeTreeStatus" data-code="expandAll">展开所有</button>
+                        <button class="btn btn-default btnChangeTreeStatus" data-code="collapseAll">收起所有</button>
+                        <button class="btn btn-success" type="button" id="js-details-close"><i class="fa fa-reply"></i>
+                            返回
+                        </button>
+                    </div>
+                    <div class="box-body">
+                        <script id="transAllLogsTemplate" type="text/template">
+                            <thead>
+                            <tr>
+                                <th>主机</th>
+                                <th>应用</th>
+                                <th>微环境名称</th>
+                                <th>类型</th>
+                                <th>名称</th>
+                                <th>时长</th>
+                                <th>时间</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {@each data as item,index}
+                            <tr class="treegrid-${item.node_ID} treegrid-parent-${item.last_node_ID}">
+                                <td>${item.server_ip}{@if item.server_port}:${item.server_port}{@/if}</td>
+                                <td>${item.system_name}</td>
+                                <td>${item.envir_name}</td>
+                                <td>${item.log_type}</td>
+                                <td>${item.node_code}
+                                    {@if item.result_type}
+                                    <a class="tooltip-danger" data-toggle="tooltip"
+                                       data-template='<div class="tooltip tooltip-danger" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>'
+                                       data-placement="top" title="${item.result_type}"><i
+                                            class="fa fa-warning"></i></a>
+                                    {@/if}
+                                </td>
+                                <td>${item.interval}</td>
+                                <td>${item.time}</td>
+                            </tr>
+                            {@/each}
+                            </tbody>
+
+                        </script>
+                        <table class="table table-hover table-striped table-primary tree " id="transAllLogs">
+
+                        </table>
+                        <nav class="clearfix" id="page-content" aria-label="Page navigation">
+
+                        </nav>
+                    </div>
+                </div>
+
+
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+</body>
+</html>

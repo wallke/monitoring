@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.AppMapper">
+
+    <!--App信息-->
+    <resultMap id="AppMap" type="com.xwtech.omweb.model.App">
+        <result property="appId" column="F_APP_ID"></result>
+        <result property="appNum" column="F_NUM"></result>
+        <result property="appName" column="F_NAME"></result>
+        <result property="categoryId" column="F_CATEGORY_ID"></result>
+        <result property="cropId" column="F_CROP_ID"></result>
+        <result property="cropName" column="F_CROP_NAME"></result>
+        <result property="categoryName" column="F_CATEGORY_NAME"></result>
+        <result property="serverName" column="F_SERVER_NAME"></result>
+        <result property="isUse" column="F_IS_USE" ></result>
+        <result property="isEnabled" column="F_IS_ENABLED" ></result>
+        <result property="desc" column="F_DESC" ></result>
+        <result property="memo" column="F_MEMO" ></result>
+        <result property="createManCode" column="F_CREATE_MANCODE" ></result>
+        <result property="createManName" column="F_CREATE_MANNAME" ></result>
+        <result property="createTime" column="F_CREATE_TIME" ></result>
+        <result property="createMemo" column="F_CREATE_MEMO" ></result>
+        <result property="lastManCode" column="F_LAST_MANCODE" ></result>
+        <result property="lastManName" column="F_LAST_MANNAME" ></result>
+        <result property="lastTime" column="F_LAST_TIME" ></result>
+        <result property="lastMemo" column="F_LAST_MEMO" ></result>
+        <result property="groupId" column="F_GROUP_ID"></result>
+        <result property="groupName" column="F_GROUP_NAME"></result>
+    </resultMap>
+
+    <!--根据条件查询应用列表-->
+    <select id="queryAppList" parameterType="java.lang.String" resultMap="AppMap">
+            SELECT
+                APP.*, CROP.F_CROP_NAME,
+                CATE.F_NAME as F_CATEGORY_NAME,
+               (SELECT COUNT(*) FROM TM_DA_NODE NODE WHERE NODE.F_APP_ID = APP.F_APP_ID) AS nodeCount
+            FROM
+                TM_DA_APP APP
+            LEFT JOIN TM_DA_APP_CATEGORY CATE ON APP.F_CATEGORY_ID = CATE.F_CATEGORY_ID
+            LEFT JOIN TM_DA_CROP CROP ON APP.F_CROP_ID = CROP.F_CROP_ID
+            WHERE
+                APP.F_IS_USE = '1'
+            <if test="appNum !=null and appNum !=''">
+                AND APP.F_NUM LIKE CONCAT(CONCAT('%', #{appNum}), '%')
+            </if>
+            <if test="appName !=null and appName !=''">
+                AND APP.F_NAME LIKE CONCAT(CONCAT('%', #{appName}), '%')
+            </if>
+            <if test="categoryId !=null and categoryId !=''">
+                AND APP.F_CATEGORY_ID = #{categoryId}
+            </if>
+            <if test="cropId !=null and cropId !=''">
+                AND CROP.F_CROP_ID = #{cropId}
+            </if>
+            ORDER BY
+                APP.F_LAST_TIME DESC
+    </select>
+
+    <!---->
+    <select id="getAppList"  resultMap="AppMap">
+        SELECT
+                APP.*, CROP.F_CROP_NAME,
+                CATE.F_NAME as F_CATEGORY_NAME,
+               (SELECT COUNT(*) FROM TM_DA_NODE NODE WHERE NODE.F_APP_ID = APP.F_APP_ID) AS nodeCount
+            FROM
+                TM_DA_APP APP
+            LEFT JOIN TM_DA_APP_CATEGORY CATE ON APP.F_CATEGORY_ID = CATE.F_CATEGORY_ID
+            LEFT JOIN TM_DA_CROP CROP ON APP.F_CROP_ID = CROP.F_CROP_ID
+            WHERE
+                APP.F_IS_USE = '1'
+              AND    APP.F_IS_ENABLED ='1'
+    </select>
+    <!--根据应用组ID查询所有应用信息-->
+    <select id="queryAppListByGroupId" parameterType="java.lang.String" resultMap="AppMap">
+               SELECT T3.*,T1.*,T2.F_NAME AS F_GROUP_NAME,T4.F_NAME AS F_CATEGORY_NAME FROM TM_DZ_APP_GROUP T1
+            LEFT JOIN TM_DA_APP_GROUP T2 ON T1.F_GROUP_ID =T2.F_GROUP_ID
+            LEFT JOIN TM_DA_APP T3 ON T1.F_APP_ID = T3.F_APP_ID
+            LEFT JOIN tm_da_app_category T4 ON T3.F_CATEGORY_ID = T4.F_CATEGORY_ID
+                WHERE T1.F_GROUP_ID = #{groupId}
+                AND T3.F_IS_USE = '1' AND T3.F_IS_ENABLED ='1'
+
+    </select>
+    <!--查询所有未绑定的应用组的应用列表-->
+    <select id="queryAppListNotGroup" resultMap="AppMap">
+            SELECT * from tm_da_app t1
+            LEFT JOIN tm_dz_app_group t2 on t1.F_APP_ID = t2.F_APP_ID
+            WHERE t2.F_APP_ID is  null AND  t1.F_IS_USE = '1' AND T1.F_IS_ENABLED ='1'
+    </select>
+    <!--根据ID查询主机详情-->
+    <select id="queryAppDeatil" parameterType="java.lang.String" resultMap="AppMap">
+            SELECT
+                APP.*, CROP.F_CROP_NAME,
+                CATE.F_NAME as F_CATEGORY_NAME
+            FROM
+                TM_DA_APP APP
+            LEFT JOIN TM_DA_APP_CATEGORY CATE ON APP.F_CATEGORY_ID = CATE.F_CATEGORY_ID
+            LEFT JOIN TM_DA_CROP CROP ON APP.F_CROP_ID = CROP.F_CROP_ID
+            WHERE
+                APP.F_IS_USE = '1'
+			AND APP.F_APP_ID =#{appId}
+
+    </select>
+
+    <!--新增APP应用-->
+    <insert id="addApp" parameterType="com.xwtech.omweb.model.App">
+        INSERT  INTO TM_DA_APP(
+         F_APP_ID,F_NUM, F_NAME, F_CATEGORY_ID, F_CROP_ID, F_IS_USE, F_IS_ENABLED,
+         F_DESC, F_MEMO, F_CREATE_MANCODE, F_CREATE_MANNAME, F_CREATE_TIME,
+         F_CREATE_MEMO, F_LAST_MANCODE, F_LAST_MANNAME, F_LAST_TIME, F_LAST_MEMO)
+         VALUES
+         (#{appId},#{appNum},#{appName},#{categoryId},#{cropId}
+         ,'1',#{isEnabled},#{desc},#{memo},
+        #{createManCode},#{createManName},now(),#{createMemo},#{lastManCode},#{lastManName},now(),#{lastMemo})
+    </insert>
+
+    <!--修改App应用-->
+    <update id="updateApp" parameterType="com.xwtech.omweb.model.App">
+        UPDATE TM_DA_APP SET
+        <if test="appNum !=null and appNum!=''">
+            F_NUM=#{appNum},
+        </if>
+        <if test="appName !=null and appName !=''">
+            F_NAME=#{appName},
+        </if>
+        <if test="isEnabled !=null and isEnabled!=''">
+            F_IS_ENABLED = #{isEnabled},
+        </if>
+        <if test="categoryId !=null and categoryId!=''">
+            F_CATEGORY_ID =#{categoryId},
+        </if>
+        <if test="cropId!=null and cropId !=''">
+            F_CROP_ID=#{cropId},
+        </if>
+        <if test="isUse !=null and isUse!=''">
+            F_IS_USE = #{isUse},
+        </if>
+        <if test="desc !=null and desc !=''">
+            F_DESC =#{desc},
+        </if>
+        <if test="memo !=null and memo !=''">
+            F_MEMO = #{memo},
+        </if>
+        <if test="lastManCode!=null and lastManCode!=''">
+            F_LAST_MANCODE =#{lastManCode},
+        </if>
+        <if test="lastManName !=null and lastManName!=''">
+            F_LAST_MANNAME =#{lastManName},
+        </if>
+        <if test="lastMemo !=null and lastMemo !=''">
+            F_LAST_MEMO =#{lastMemo},
+        </if>
+        F_LAST_TIME =now()
+        WHERE
+        F_APP_ID =#{appId}
+    </update>
+
+    <!--删除App应用-->
+    <update id="deleteAppById" parameterType="java.lang.String">
+          UPDATE TM_DA_APP SET
+            F_IS_USE = '0',
+            F_IS_ENABLED ='0'
+            WHERE
+            F_APP_ID =#{appId}
+    </update>
+
+    <!--根据联系人ID查询所有应用信息列表-->
+    <select id="queryAllContactList" parameterType="java.lang.String" resultMap="AppMap">
+           SELECT T3.*,T4.F_NAME AS F_CATEGORY_NAME  FROM TM_DZ_APP_CONTACT T1
+            LEFT JOIN TM_DA_CROP_CONTACTS T2 ON T1.F_CONTACT_ID = T2.F_CONTACT_ID
+            LEFT JOIN TM_DA_APP T3 ON T1.F_APP_ID = T3.F_APP_ID
+            LEFT JOIN tm_da_app_category T4 ON T4.F_CATEGORY_ID = T3.F_CATEGORY_ID
+            WHERE T1.F_CONTACT_ID =#{contactId}
+            AND T3.F_IS_USE = '1' AND T3.F_IS_ENABLED ='1'
+    </select>
+
+    <!--查询应用名称是否存在-->
+    <select id="queryAppName" parameterType="java.lang.String"  resultType="int">
+        SELECT COUNT(*) FROM TM_DA_APP T1
+        <choose>
+            <when test="appId !=null and appId !=''">
+                WHERE  T1.F_NAME =#{appName} AND T1.F_APP_ID !=#{appId}
+            </when>
+            <otherwise>
+                WHERE  T1.F_NAME =#{appName}
+            </otherwise>
+        </choose>
+        AND  T1.F_IS_USE = '1'
+    </select>
+    <!--查询应用编码是否存在-->
+    <select id="queryAppNum" parameterType="java.lang.String"  resultType="int">
+        SELECT COUNT(*) FROM TM_DA_APP T1
+        <choose>
+            <when test="appId !=null and appId !=''">
+               WHERE  T1.F_NUM =#{appNum} AND T1.F_APP_ID !=#{appId}
+            </when>
+            <otherwise>
+                WHERE  T1.F_NUM = #{appNum}
+            </otherwise>
+        </choose>
+        AND  T1.F_IS_USE = '1'
+    </select>
+
+    <!--查询未绑定的联系人应用-->
+    <select id="queryAppListNoBindContacts" parameterType="java.lang.String" resultMap="AppMap">
+        SELECT
+            *
+        FROM
+            tm_da_app t1
+        WHERE
+            t1.F_APP_ID NOT IN (
+                SELECT
+                    F_APP_ID
+                FROM
+                    tm_dz_app_contact t2
+                WHERE
+                    t2.F_CONTACT_ID =#{contactId}
+            )
+            AND  T1.F_IS_USE = '1'
+            AND  T1.F_IS_ENABLED ='1'
+    </select>
+
+
+
+</mapper>

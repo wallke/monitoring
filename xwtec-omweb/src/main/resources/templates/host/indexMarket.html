@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<title>掌厅应用宿主资源概况</title>
+<link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.css'">
+<link rel="stylesheet"	th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.min.js'"></script>
+<script th:src="${application.webStaticUrl}+'/static/js/adminlte-config.js'"></script>
+<script>
+	(function($) {
+		$.fn.dropdown = function(callback) {
+			// 插件的具体内容放在这里
+			this.each(function() {
+				var $this = $(this);
+				var $dropdown = $this.find(".dropdown-toggle");
+				var $options = $this.find("ul.dropdown-menu>li");
+				$options.on("click", function() {
+					var opt = $(this);
+					$dropdown.html(opt.find("a").html()
+							+ " <i class='fa fa-angle-down'></i>");
+					$this.data("value", opt.find("a").data("value"));
+					$this.data("index", opt.index());
+					$this.data("text", opt.find("a").text());
+					$this.data("placeholder", opt.find("a").text());
+					$this.data("html", opt.find("a").html());
+					if ($.isFunction(callback)) {
+						callback({
+							index : $this.data("index"),
+							value : $this.data("value"),
+							text : $this.data("text"),
+							html : $this.data("html")
+						});
+					}
+				});
+			});
+		};
+
+	})(jQuery);
+
+	$(function() {
+		$("select").select2({
+			language : "zh-CN"
+		});
+		
+		var $appGroups = $("#appGroups");
+		var $hostInfo = $("#hostInfo");
+
+		$appGroups.dropdown(function(result) {
+			$("#appGroup_").val(result.value);
+			
+			$.ajax({
+				type : "post",
+				url : '[[${webUrl}]]/omweb/host/serviceById',
+				data : {
+					'appGroupId' : result.value
+				},
+				success : function(callback) {
+					$hostInfo.html("");
+					var id = "";
+					name = "请选择主机...";
+					addOption(id, name, $hostInfo);
+					if (callback.success) {
+						$.each(callback.data,function(i, val) {
+							addOption(val.serverId, val.hostNum, $hostInfo);
+						});
+						query_();
+					} else {
+						$.notify.error("系统异常,请稍后再试...")
+					}
+				}
+			});
+		});
+
+		$appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+	
+	});
+	
+	function addOption(id, name, select) {
+		var option = new Option();
+		option.value = id;
+		option.text = name;
+		//option.selected = true;
+		select[0].options.add(option);
+	}
+	
+	
+	function query_(){
+		var hostIp = $("#hostInfo option:selected").text();
+		if("" ==  $("#hostInfo").val()){
+			hostIp ="";
+		}
+		
+		window.timeData = [];
+		window.cupData  = [];
+		window.diskData = [];
+		window.memoryData = [];
+		window.ioData = [];
+		window.outData = [];
+		
+		$.ajax({
+			type : "post",
+			url : '[[${webUrl}]]/omweb/host/marketinfo',
+			data : {
+				'hostIp' : hostIp
+			},
+			success : function(callback) {
+				if (callback.success) {
+					$.each(callback.data,function(i, val) {
+						window.timeData.push(val.key);
+						window.cupData.push(val.load5Avg);
+						window.diskData.push(val.freeDiskAvg);
+						window.memoryData.push(val.uMemoryAvg);
+						window.ioData.push(val.inAvg);
+						window.outData.push(val.outAvg);
+					});
+					
+					drawnCpuOption(window.timeData,window.cupData);
+					drawnDiskOption(window.timeData,window.diskData);
+					drawnMemoryOption(window.timeData,window.memoryData);
+					drawnIOption(window.timeData,window.ioData,window.outData);
+				} else {
+					$.notify.error("系统异常,请稍后再试...")
+				}
+			}
+		});
+		
+	}
+	
+	
+	function drawnDiskOption(time,diskData){
+		var myChart = echarts.init(document.getElementById('monitorDisk'),'macarons');
+		var option= {
+				color: ['#f603ff'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10,20,0,20],
+					data:['磁盘占用'],
+					selected: {
+						'磁盘占用': true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					 name: '(%)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'磁盘占用',
+						type:'line',
+						data:diskData,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					}
+				]
+			};
+		 myChart.setOption(option);
+	}
+	
+	
+	function drawnCpuOption(time,cpuData){
+		var myChart = echarts.init(document.getElementById('monitorCpu'),'macarons');
+		var option= {
+				color: ['#00b419'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10,20,0,20],
+					data:['处理器占用'],
+					selected: {
+						'处理器占用': true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					 name: '(%)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'处理器占用',
+						type:'line',
+						data:cpuData,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					}
+				]
+			};
+		 myChart.setOption(option);
+	}
+	
+	
+	
+	function drawnMemoryOption(time,memoryData){
+		var myChart = echarts.init(document.getElementById('monitorMemory'),'macarons');
+		var option= {
+				color: ['#5f52a0'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10,20,0,20],
+					data:['内存占用'],
+					selected: {
+						'内存占用': true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					 name: '(%)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'内存占用',
+						type:'line',
+						data:memoryData,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					}
+				]
+			};
+		 myChart.setOption(option);
+	}
+	
+	
+	
+	function drawnIOption(timeData,ioData,outData){
+		var myChart = echarts.init(document.getElementById('monitorI'),'macarons');
+		var option= {
+				color: ['#ff3d3d', '#00a0e9'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10, 20,0,20],
+					data:['网络流入速率','网络流出速率'],
+					selected: {
+						'网络流入速率': true,
+						'网络流出速率': true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: timeData
+				},
+				yAxis: {
+					name: '(KBS)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'网络流入速率',
+						type:'line',
+						data:ioData,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					},
+					{
+						name:'网络流出速率',
+						type:'line',
+						data:outData,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					}
+				]
+			};
+		 myChart.setOption(option);
+	}
+	
+</script>
+
+</head>
+<body class="hold-transition skin-blue skin-xwblue sidebar-mini fixed" th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+	<div class="wrapper">
+		<div class="content-wrapper">
+		<input type="hidden" id="appGroup_" name="appGroup_" value="" />
+			<!-- Main content -->
+			<section class="content">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="box">
+							<div class="box-header with-border">
+							 <div class="btn-group pull-left" id="appGroups">
+								<button type="button" class="btn btn-primary dropdown-toggle"
+									data-toggle="dropdown" aria-haspopup="true"
+									aria-expanded="false">
+									<i class="fa fa-angle-down"></i>
+								</button>
+								<ul class="dropdown-menu">
+									<li th:each="group,groupStat:${appGroups}"><a href="#"
+										th:data-value="${group.id}" th:text="${group.name}"></a></li>
+								</ul>
+							  </div>
+							</div>
+						</div>
+						<!-- /.box -->
+						<div class="box">
+							<div class="box-header  with-border">
+							  <form class="form-horizontal">
+								<input type="hidden" id="appGroup_" name="appGroup_" value="" />
+								<div class="box-body">
+									<label for="hostInfo" class="col-sm-1 control-label">监控主机</label>
+									<div class="col-sm-2">
+										<select class="form-control" id="hostInfo" name="hostInfo">
+										</select>
+									</div>
+									<button class="btn btn-primary" type="button"
+										onclick="query_();">查询</button>
+								</div>
+								</form>
+						  </div>
+							  <div class="box-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">处理器占用曲线图</div>
+                      <div class="panel-body">
+                        <div style="height: 290px;"  id = "monitorCpu">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">内存占用曲线图</div>
+                      <div class="panel-body">
+                        <div style="height: 290px;" id="monitorMemory">
+                        
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">磁盘占用曲线图</div>
+                      <div class="panel-body">
+                        <div style="height: 290px;" id = "monitorDisk">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">网络流入/出曲线图</div>
+                      <div class="panel-body">
+                        <div style="height: 290px;" id = "monitorI">
+                       
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+					<!-- /.col -->
+				</div>
+				<!-- /.row -->
+			</section>
+			<!-- /.content -->
+		</div>
+	</div>
+</body>
+</html>

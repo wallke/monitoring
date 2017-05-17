@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.DictionariesMapper">
+
+    <resultMap id="DictionariesMap" type="com.xwtech.omweb.model.Dictionaries">
+        <result property="level" column="level"></result>
+        <result property="color" column="color"></result>
+    </resultMap>
+
+    <select id="queryDictionariesList" resultMap="DictionariesMap">
+        SELECT * FROM  tm_da_dictionaries WHERE  1=1
+    </select>
+
+    <update id="updateDictionaries" parameterType="com.xwtech.omweb.model.Dictionaries">
+      UPDATE  tm_da_dictionaries
+      SET
+      color = #{color}
+      WHERE
+      level = #{level}
+    </update>
+
+</mapper>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<link rel="stylesheet"  th:href="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/css/jquery.treegrid.css'">
+<link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/css/jquery.contextMenu.css'" />
+<title>欣网管理后台</title>
+
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.full.min.js'"></script>
+<script th:src="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/js/jquery.cookie.js'" type="text/javascript"></script>
+<script th:src="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/js/jquery.treegrid.min.js'"></script>
+<script th:src="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/js/jquery.contextMenu.js'" type="text/javascript"></script>
+<script type="text/javascript" class="showcase">
+
+	$(document).ready(function(){
+		$(".js-example-basic-single").select2();
+		$('.tree-2').treegrid({
+			expanderExpandedClass: 'fa fa-minus-square-o',
+			expanderCollapsedClass: 'fa fa-plus-square-o',
+			initialState:'collapsed',
+			saveState:true
+		});
+
+	});
+
+	$(function () {
+		$(".btnSubmit").on("click", function () {
+			if ($("form").valid()) {
+				var accountType = $("#accountType").val();
+				if(accountType == 'add')
+				{
+					var jb = $("#JB").val();
+					if (jb = 4)
+					{
+						$.notify.error("此节点不能再新增节点");
+						return;
+					}
+				}
+
+				$("form").ajaxSubmit({
+					url:"[[${webUrl}]]/omweb/appCategoryry/addAppCategoryry",
+					success: function (callback) {
+						// data 保存提交后返回的数据，一般为 json 数据
+						// 此处可对 data 作相关处理
+						if (callback.success) {
+							$.notify.success(callback.message, "", function () {
+							location.reload();
+							});
+
+						} else {
+							$.notify.error(callback.message)
+						}
+					}
+				});
+			}
+			return false;
+		});
+
+		$("form").validate({
+			rules: {
+				categoryName: {
+					required: true,
+					maxlength:100
+				},
+				desc: {
+					maxlength:300
+				},
+				memo:{
+					maxlength:300
+				}
+
+			},
+			messages: {
+				categoryName: {
+					required: "分类名称不能为空 ！"
+				}
+			}
+		});
+	});
+
+	$(function(){
+		$.contextMenu({
+			selector: '.context-menu-one',
+			callback: function(key, options) {
+				var JBNum = this.attr("id");  //本ID
+				$("#JB").val($("#"+JBNum+"").attr("jb"));
+				if(key == "新增")
+				{
+					$("#submitForm").show();
+					//新增时候父节点ID为本节点ID
+//					$("#"+JBNum+"").attr("JBNum")
+					$("#JBNum").val(JBNum);
+					$("#categoryName").val('').removeAttr("readOnly","readOnly") ;
+					$("#desc").val('').removeAttr("readOnly","readOnly") ;
+					$("#memo").val('').removeAttr("readOnly","readOnly");
+					$("#accountType").val("add");
+				}
+				else if (key == "编辑")
+				{
+					$("#submitForm").show();
+					$("#categoryName").val($("#"+JBNum+"").attr("categoryName")).removeAttr("readOnly","readOnly") ;
+					$("#isEnabled").val($("#"+JBNum+"").attr("isEnabled")).removeAttr("readOnly","readOnly");
+					$("#desc").val($("#"+JBNum+"").attr("desc")).removeAttr("readOnly","readOnly") ;
+					$("#memo").val($("#"+JBNum+"").attr("memo")).removeAttr("readOnly","readOnly");
+					$("#accountType").val("update");
+					$("#categoryId").val(JBNum);
+				}else  if(key = "删除")
+				{
+					var msg = "确定要删除吗？";
+					$.notify.confirm(msg,function(sure){
+						if (sure) {
+							$.ajax({
+								type: "post",
+								url: '[[${webUrl}]]/omweb/appCategoryry/deleteCategoryry',
+								data: {
+									'categoryId': JBNum
+								},
+								success: function (callback) {
+									if (callback.success) {
+										$.notify.success(callback.message, "", function () {
+											location.reload();
+										});
+
+									} else {
+										$.notify.error(callback.message)
+									}
+								}
+							});
+						}
+					});
+				}
+			},
+			items: {
+				"新增": {name: "新增", icon: "add"},
+				"编辑": {name: "编辑", icon: "edit"},
+				"删除": {name: "删除", icon: "delete"},
+			}
+		});
+
+		$('.context-menu-one').on('click', function(e){
+			var JBNum = this.id;  //本ID
+			 $("#"+JBNum+"").attr("JBNum");//父节点ID
+			$("#categoryName").val($(this).attr("categoryName")).attr("readOnly","readOnly") ;
+			$("#isEnabled").val($(this).attr("isEnabled")).attr("readOnly","readOnly");
+			$("#desc").val($(this).attr("desc")).attr("readOnly","readOnly") ;
+			$("#memo").val($(this).attr("memo")).attr("readOnly","readOnly");
+			$("#JB").val($(this).attr("jb"));
+			$("#submitForm").hide();
+		});
+	});
+
+
+
+	</script>
+
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+	<div class="content-wrapper">
+		<section class="content-header">
+			<h1>应用分类管理中心</h1>
+			<ol class="breadcrumb">
+				<li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+				<li class="active">应用分类管理中心</li>
+			</ol>
+		</section>
+
+
+
+
+		<section class="content">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="box box-primary">
+						<div class="box-header with-border">
+						</div>
+
+
+						<!-- /.box-header -->
+						<!-- /.box-body -->
+						<div class="box-body paginateWrapper container-fluid">
+							<div class="row">
+								<div class="col-md-5">
+									<table class="tree-2">
+										<!--一级菜单-->
+										<th:block th:each="appCategoryry,appCategoryryStat:${arrayList}">
+											<tr th:class="'treegrid-' + ${appCategoryry.categoryId}">
+												<td style="curosr: pointer" class="context-menu-one" th:id="${appCategoryry.categoryId}" th:JBNum="${appCategoryry.JBNum}"  th:jb="${appCategoryry.JB}" th:categoryName="${appCategoryry.categoryName}" th:isEnabled="${appCategoryry.isEnabled}"  th:memo="${appCategoryry.memo}" th:desc="${appCategoryry.desc}" th:text="${appCategoryry.categoryName}"></td>
+											</tr>
+											<!--二级菜单-->
+											<th:block th:each="sub1,sub1Stat:${appCategoryry.subAppCategory}">
+												<tr th:class="'treegrid-' + ${sub1.categoryId}"
+													th:classappend="' treegrid-parent-' + ${sub1.JBNum}">
+													<td  style="curosr: pointer" class="context-menu-one" th:id="${sub1.categoryId}" th:JBNum="${sub1.JBNum}"  th:jb="${sub1.JB}" th:categoryName="${sub1.categoryName}" th:isEnabled="${sub1.isEnabled}"  th:memo="${sub1.memo}" th:desc="${sub1.desc}" th:text="${sub1.categoryName}"></td>
+												</tr>
+												<!--	三级菜单-->
+												<th:block th:each="sub2,sub2Stat:${sub1.subAppCategory}">
+													<tr th:class="'treegrid-' + ${sub2.categoryId}"
+														th:classappend="' treegrid-parent-' + ${sub2.JBNum}">
+														<td style="curosr: pointer" class="context-menu-one" th:id="${sub2.categoryId}" th:JBNum="${sub2.JBNum}"  th:jb="${sub2.JB}" th:categoryName="${sub2.categoryName}" th:isEnabled="${sub2.isEnabled}"  th:memo="${sub2.memo}" th:desc="${sub2.desc}" th:value="${sub2Stat}" th:text="${sub2.categoryName}"></td>
+													</tr>
+													<!--四级菜单&ndash-->
+													<th:block th:each="sub3,sub3Stat:${sub2.subAppCategory}">
+														<tr th:class="'treegrid-' + ${sub3.categoryId}"
+															th:classappend="' treegrid-parent-' + ${sub3.JBNum}">
+															<td style="curosr: pointer" class="context-menu-one"  th:id="${sub3.categoryId}" th:JBNum="${sub3.JBNum}"  th:jb="${sub3.JB}" th:categoryName="${sub3.categoryName}" th:isEnabled="${sub3.isEnabled}"  th:memo="${sub3.memo}" th:desc="${sub3.desc}" th:text="${sub3.categoryName}"></td>
+														</tr>
+													</th:block>
+												</th:block>
+											</th:block>
+										</th:block>
+									</table>
+								</div>
+								<div class="col-md-5">
+									<form role="form"  method="post" class="formClass">
+										<div class="tab-content " >
+											<input type="hidden" id="accountType" name="accountType" value="">
+											<input type="hidden" id="JBNum" name="JBNum" value="">
+											<input type="hidden" id="JB" name="JB" value="">
+											<input type="hidden" id="categoryId" name="categoryId" value="">
+											<div id="tab_1" class="tab-pane active">
+												<div class="form-group">
+													<label for="categoryName">分类名称</label>
+													<input type="text" name="categoryName"
+														   class="form-control" id="categoryName" placeholder="">
+												</div>
+
+
+												<div class="form-group">
+													<label for="isEnabled">是否启用</label>
+													<select id="isEnabled" name="isEnabled"  class="js-example-basic-single form-control">
+														<option th:value="1">启用</option>
+														<option th:value="0">不启用</option>
+													</select>
+												</div>
+
+												<div class="form-group">
+													<label for="desc">说明</label>
+													<input type="text" name="desc"
+														   class="form-control" id="desc">
+												</div>
+
+												<div class="form-group">
+													<label for="memo">备注</label>
+													<input type="text" name="memo"
+														   class="form-control" id="memo">
+												</div>
+
+												<div class="form-group">
+													<button type="submit" id="submitForm" class="btn btn-primary btnSubmit" style="display: none;">保存</button>
+												</div>
+											</div>
+										</div>
+									</form>
+								</div>
+
+						</div>
+
+
+						   
+					</div>
+				</div>
+			</div>
+		</section>
+
+	</div>
+
+
+</body>
+</html>

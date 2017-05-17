@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            jQuery.validator.addMethod( "isValueNull", function( value ) {
+                if($.trim(value) == null || $.trim(value) == '')
+                { return false;}else{ return true;}
+            }, "输入值不能为空" );
+            $(".js-example-basic-single").select2();
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/monitorTemplate/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    template_name: {
+                        required: true,
+                        isValueNull:true,
+                        maxlength:100
+                    },
+                    log_type: {
+                        required: true,
+                    },
+                    es_index:{
+                        required: true,
+                        isValueNull:true,
+                        maxlength:100
+                    },
+                    es_type:{
+                        required: true,
+                        isValueNull:true,
+                        maxlength:100
+                    }
+                },
+                messages: {
+                    template_name: {
+                        required: "监听模板名称不能为空"
+                    },
+                    log_type: {
+                        required: "监听日志类型不能为空",
+                    },
+                    es_index:{
+                        required: "ES索引不能为空",
+                    },
+                    es_type:{
+                        required: "ES类型不能为空",
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            监听模板维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/monitorTemplate/index'"><i class="fa fa-users"></i> 监听模板管理中心</a></li>
+            <li class="active">监听模板详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-6">
+                <!-- general form elements -->
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">监听模板详情维护</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+
+                    <div class="box-body">
+                        <form role="form" method="post">
+                            <input type="hidden" name="actionType" th:value="${actionType}">
+                            <div class="form-group">
+                                <label for="template_name">监听模板名称</label>
+                                <input type="text" name="template_name" th:value="${monitorTemplate.template_name}"
+                                       class="form-control" id="template_name" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label for="log_type">日志</label>
+                                <select id="log_type" name="log_type"  th:field="*{monitorTemplate.log_type}"  class="js-example-basic-single form-control">
+                                    <option value="transaction">事务日志</option>
+                                    <option value="chain">调用链日志</option>
+                                    <option value="z_host">主机日志</option>
+                                    <option value="z_redis">redis运行日志</option>
+                                    <option value="z_nginx">nginx运行日志</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="es_index">日志索引(elasticsearch中index索引)</label>
+                                <input type="text" name="es_index" th:value="${monitorTemplate.es_index}"
+                                          class="form-control" id="es_index">
+                            </div>
+                            <div class="form-group">
+                                <label for="es_type">日志类型(elasticsearch中type类型)</label>
+                                <input type="text" name="es_type" th:value="${monitorTemplate.es_type}"
+                                          class="form-control" id="es_type">
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+
+                </div>
+                <!-- /.box -->
+
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

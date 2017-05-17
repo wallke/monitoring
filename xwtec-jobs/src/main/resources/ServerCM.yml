@@ -1,0 +1,11 @@
+## ServerCM服务端采集初始化信息
+---
+log_ver: 1.0
+esIPs: !java.lang.String[]
+    - 192.168.1.200
+esPort: 9200
+esIndex: .xwtec
+esType: cm
+esConfigID: servercm
+application_name: app_xwtec_jobs
+application_ver: 1.0

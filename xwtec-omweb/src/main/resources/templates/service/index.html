@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+
+
+            $("a.btn-submit").on("click",function(){
+                var $this = $(this);
+                $.post($this.attr("href"),function (callback) {
+                    if (callback.success) {
+                        $.notify.success(callback.message, "", function () {
+                            location.reload();
+                        });
+
+                    } else {
+                        $.notify.error(callback.message)
+                    }
+                });
+                return false;
+            });
+
+        });
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            服务名称
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">服务名称</li>
+        </ol>
+    </section>
+
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="group" class="col-sm-2 control-label" style="width: 100px;">服务名：</label>
+
+                                <div class="col-sm-3">
+                                    <input type="text" name="service"
+                                           th:value="${service}"
+                                           class="form-control" id="service" placeholder="">
+                                </div>
+                                <div class="col-sm-2">
+                                    <button type="submit" class="btn btn-primary pull-right">查询</button>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/service/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table tree-2 table-bordered table-striped table-condensed  m-t-sm">
+                                <tr>
+                                    <th style="width: 240px;">服务名称</th>
+                                    <th style="width: 155px;">服务简述</th>
+                                    <th style="width: 155px;" colspan="2">操作</th>
+                                </tr>
+                                <th:block th:each="item,itemStat:${list}">
+                                    <tr>
+                                        <td th:text="${item.service}"></td>
+                                        <td th:text="${item.description}"></td>
+                                        <td colspan="2">
+                                            <a class="btn-submit"
+                                               th:href="${webUrl} + '/omweb/service/delete?id=' + ${item.id}" >
+                                                 删除
+                                            </a>
+                                        </td>
+                                    </tr>
+
+                                </th:block>
+
+                            </table>
+                        </div>
+
+
+                    </div>
+                    <!-- ./box-body -->
+
+                    <div class="box-footer clearfix paginateWrapper">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+
+</body>
+</html>
+

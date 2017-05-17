@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".js-example-basic-single").select2();
+        });
+    </script>
+
+    <script>
+        $(function () {
+
+           var page =  [[${pageInfo.pages}]];
+            if(page == 0)
+            {
+                $(".table-bordered > tbody").empty().append("<tr><td colspan= '6' align='center' class='col-sm-2 control-label'>未查到相关记录</td></tr>")
+            }
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right",
+            });
+        });
+
+        function deleteRoom(but){
+            var msg = "确定要删除吗？";
+            //var url = [[${webUrl}]];
+            // alert([[${webUrl}]]);
+            //  $.notify.error("TODO")
+            $.notify.confirm(msg,function(sure){
+                if(sure){
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/room/delete' ,
+                        data: {
+                            'id' : but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/room/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            机房管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">机房管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="num" class="col-sm-2 control-label" style="width: 100px;">机房编码</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="num" th:value="${room.num}"
+                                           class="form-control" id="num" placeholder="">
+                                </div>
+
+                                <label for="name" class="col-sm-2 control-label" style="width: 100px;">机房名称</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="name" th:value="${room.name}"
+                                           class="form-control" id="name" placeholder="">
+                                </div>
+                                <div class="col-sm-2">
+                                    <button type="submit" class="btn btn-primary pull-right">查询</button>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/room/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                              <thead>
+                                <tr>
+                                    <th style="width: 100px">序号</th>
+                                    <th style="width: 100px">机房编码</th>
+                                    <th style="width: 100px">机房名称</th>
+                                    <th style="width: 160px">是否启用</th>
+                                    <th style="width: 160px">说明</th>
+                                    <th style="width: 100px">操作</th>
+                                </tr>
+                              </thead>
+                                <tbody>
+                                <tr th:each="room,roomStat:${roomList}" >
+                                    <td th:text="${roomStat.index}+1"></td>
+                                    <td th:text="${room.num}"></td>
+                                    <td th:text="${room.name}"></td>
+                                    <td th:text="${room.isEnabled} == 1 ? '是' : '否'"></td>
+                                    <td th:title="${room.desc}" th:text="${#strings.length(room.desc) > 10 ? (#strings.substring(room.desc,0,10)+'...') : room.desc}">
+                                    </td>
+                                    <td>
+                                        <a th:href="${webUrl} + '/omweb/room/create?roomId=' + ${room.id}" class=" pointer btn btn-default btn-xs purple btnDetail">修改</a>
+                                        &nbsp;
+                                        <a onclick='deleteRoom(this)' th:id = "${room.id}"   class=" pointer btn btn-default btn-xs purple btnDetail">删除</a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer clearfix paginateWrapper">
+                        <!--<ul class="pagination pagination-sm no-margin pull-right">-->
+                        <!--<li><a href="#">«</a></li>-->
+                        <!--<li><a href="#">1</a></li>-->
+                        <!--<li><a href="#">2</a></li>-->
+                        <!--<li><a href="#">3</a></li>-->
+                        <!--<li><a href="#">»</a></li>-->
+                        <!--</ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/css/jquery.treegrid.css'">
+    <script th:src="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/js/jquery.treegrid.min.js'"></script>
+    <script>
+        $(function () {
+            $('.tree-2').treegrid({
+                expanderExpandedClass: 'fa fa-minus-square-o',
+                expanderCollapsedClass: 'fa fa-plus-square-o'
+            });
+
+            $("a.btn-submit").on("click",function(){
+                var $this = $(this);
+                $.post($this.attr("href"),function (callback) {
+                    if (callback.success) {
+                        $.notify.success(callback.message, "", function () {
+                            location.reload();
+                        });
+
+                    } else {
+                        $.notify.error(callback.message)
+                    }
+                });
+                return false;
+            });
+
+        });
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            Dashboard
+        </h1>
+        <ol class="breadcrumb hide">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">Dashboard</li>
+        </ol>
+    </section>
+
+
+    <section class="content">
+        <div class="row">
+
+        </div>
+    </section>
+
+</div>
+
+
+</body>
+</html>
+

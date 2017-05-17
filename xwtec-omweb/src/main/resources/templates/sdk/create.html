@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(document).ready(function() {
+             $(".js-example-basic-single").select2().on("change",function () {
+             });
+        });
+
+        $(function () {
+
+            $(".btnSubmit").on("click", function () {
+               var appServer =  $("#appServerName").find("option:selected");
+                var appId = $(appServer).attr("id");
+                $("#appId").val(appId);
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        url:"[[${webUrl}]]/omweb/sdk/addSDK",
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/sdk/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    logVer:{
+                        number:true,
+                        required: true,
+                    },
+                    hostNum: {
+                        required: true,
+                    },
+                    hostName: {
+                        required: true
+                    },
+                    roomId:{
+                        required: true
+                    },
+                    type:{
+                        required: true
+                    },
+                    updateInterval:{
+                        required: true,
+                        digits:true
+                    },
+                    samplingRate:{
+                        required: true,
+                        digits:true
+                    },
+                    logsBufferMaxSize:{
+                        required: true,
+                        digits:true
+                    },
+                    buildLogThreadSize:{
+                        required: true,
+                        digits:true
+                    }
+
+
+                },
+                messages: {
+                    hostNum: {
+                        required: "主机编码不能为空！"
+                    },
+                    hostName: {
+                        required: "主机名称不能为空！"
+                    },
+                    roomId:{
+                        required: "请选择机房名称"
+                    },
+                    type:{
+                        required: "请选择主机类型"
+                    },
+                    updateInterval:{
+                        required: "配置更新间隔不能为空",
+                        digits:"必须输入整数"
+                    },
+                    samplingRate:{
+                        required: "采样率不能为空",
+                        digits:"必须输入整数"
+                    },
+                    logsBufferMaxSize:{
+                        required: "日志缓存最大值不能为空",
+                        digits:"必须输入整数"
+                    },
+                    buildLogThreadSize:{
+                        required: "构造日志线程数不能为空",
+                        digits:"必须输入整数"
+                    }
+                }
+            });
+        });
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            服务端采集维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${homeUrl}+'/omweb/sdk/index'"><i class="fa fa-users"></i>服务端采集管理中心</a></li>
+            <li class="active">服务端采集详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab_1" data-toggle="tab">基础信息</a></li>
+                        <li readonly="readonly" class="color: #282828"><a>性能配置</a></li>
+                        <li readonly="readonly"><a>主机配置</a></li>
+                        <li readonly="readonly"><a>微环境配置</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden" value="" name="appId" id="appId">
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="logVer">版本号:
+                                        </label>
+                                        <input type="text" name="logVer"
+                                               class="form-control" id="logVer" placeholder="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="collectAll">全部采集</label>
+                                        <input type="radio" name="collectAll" value="1" >是
+                                        <input type="radio" name="collectAll"  value="0">否
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="appServerName">服务端名称</label>
+                                        <!--    <input type="text" name="appServerName"
+                                                   class="form-control" id="appServerName">-->
+                                        <select   id="appServerName" name ="appServerName" class="js-example-basic-single form-control">
+                                            <option th:id="${app.appId}"  th:each="app,appStat:${appList}" th:value="${app.appNum}"
+                                                    th:text = "${app.appNum}"></option>
+                                        </select>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="appServerVer">服务端版本</label>
+                                        <input type="text" name="appServerVer"
+                                               class="form-control" id="appServerVer">
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label for="levelOne">一级分隔符</label>
+                                        <select name="levelOne" class="form-control js-example-basic-single ">
+                                            <option value="\u007C">|字符</option>
+                                            <option value="\u0001">16进制01字符</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="levelTwo">二级分隔符</label>
+                                        <select name="levelTwo" class="form-control js-example-basic-single ">
+                                            <option value="\u0026">&字符</option>
+                                            <option value="\u0002">16进制02字符</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="updateInterval">配置更新间隔</label>
+                                        <input type="text" name="updateInterval"
+                                               class="form-control" id="updateInterval">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="samplingRate">采样率</label>
+                                        <input type="text" name="samplingRate"
+                                               class="form-control" id="samplingRate">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="logsBufferMaxSize">日志缓存最大值</label>
+                                        <input type="text" name="logsBufferMaxSize"
+                                               class="form-control" id="logsBufferMaxSize">
+                                        <div class="form-group">
+                                        </div>
+                                        <label for="buildLogThreadSize">构造日志线程数</label>
+                                        <input type="text" name="buildLogThreadSize"
+                                               class="form-control" id="buildLogThreadSize">
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                </div>
+                            </div>
+                        <!-- /.tab-pane -->
+                       </form>
+                    </div>
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+            </div>
+    </section>
+
+</div>
+
+</body>
+</html>

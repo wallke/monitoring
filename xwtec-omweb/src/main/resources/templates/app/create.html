@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(document).ready(function(){
+            $(".js-example-basic-single").select2();
+            $("#box-footer").show();
+        });
+
+        function gotoTable1() {
+            $("#box-footer").show();
+        }
+        function gotoTable2() {
+            $("#box-footer").hide();
+        }
+
+        $(function () {
+            $(".nav-tabs >.active").trigger("click");
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/app/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    appNum: {
+                        required: true,
+                        maxlength:200
+                    },
+                    appName: {
+                        required: true,
+                        maxlength:200
+                    },
+                    categoryId:{
+                        required: true
+                    },
+                    cropId:{
+                        required: true
+                    },
+                    desc:{
+                        maxlength:300
+                    },
+                    memo:{
+                        maxlength:300
+                    }
+
+                },
+                messages: {
+                    appNum: {
+                        required: "请输入应用编码"
+                    },
+                    appName: {
+                        required: "请输入应用名称"
+                    },
+                    categoryId:{
+                        required: "请选择应用类别"
+                    },
+                    cropId: {
+                        required: "请选择公司名称"
+                    }
+                    }
+            });
+        });
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            应用详情维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${homeUrl}+'/omweb/app/index'"><i class="fa fa-users"></i>应用管理中心</a></li>
+            <li class="active">应用详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active" onclick="gotoTable1()"><a href="#tab_1" data-toggle="tab">应用信息</a></li>
+                        <li onclick="gotoTable2()"><a href="#tab_2"  data-toggle="tab">节点</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden"  name="actionType" th:value='${actionType}'/>
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="appNum">应用编码</label>
+                                        <input type="text" name="appNum" th:value="${app.appNum}"
+                                               class="form-control" id="appNum" placeholder="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="appName">应用名称</label>
+                                        <input type="text" name="appName" th:value="${app.appName}"
+                                               class="form-control" id="appName">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="categoryId">应用类别</label>
+                                        <select id="categoryId" name="categoryId"  th:field="*{app.categoryId}"  class="js-example-basic-single form-control">
+                                            <option th:each="appCategories,appCategoriesStat : ${appCategoriesList}"
+                                                    th:value="${appCategories.categoryId}" th:text="${appCategories.categoryName}">Credit card</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cropId">公司名称</label>
+                                        <select id="cropId" name="cropId"  th:field="*{app.cropId}"  class="js-example-basic-single form-control">
+                                            <option th:each="crop,cropListStat : ${cropList}"
+                                                    th:value="${crop.cropId}" th:text="${crop.cropName}">Credit card</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="isEnabled">立即启用</label>
+                                        <select id="isEnabled" name="isEnabled"  th:field="*{app.isEnabled}"  class="js-example-basic-single form-control">
+                                            <option th:value="1">启用</option>
+                                            <option th:value="0">不启用</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="desc">说明</label>
+                                        <input type="text" name="desc"  th:value="${app.desc}"
+                                               class="form-control" id="desc">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="memo">备注</label>
+                                        <input type="text" name="memo" th:value="${app.memo}"
+                                               class="form-control" id="memo">
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                    <table class="table table-bordered m-t-sm">
+                                        <tbody>
+                                        <tr>
+                                            <th style="width: 100px">序号</th>
+                                            <th style="width: 100px">主机名称</th>
+                                            <th style="width: 100px">端口</th>
+                                            <th style="width: 100px">主机IP</th>
+                                        </tr>
+                                        <tr th:each="node,nodeStat:${nodeList}">
+                                            <td th:text="${nodeStat.index}+1"></td>
+                                            <td th:text="${node.serverName}"></td>
+                                            <td th:text="${node.port}"></td>
+                                            <td th:text="${node.hostIp}"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        <!-- /.tab-pane -->
+                       </form>
+                    </div>
+                    <div class="box-footer" id="box-footer" style="display: none">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+            </div>
+    </section>
+
+</div>
+
+</body>
+</html>

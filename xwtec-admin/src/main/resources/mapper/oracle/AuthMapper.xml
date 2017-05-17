@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.admin.dao.AuthMapper">
+
+    <resultMap id="PlatformResultMap" type="Platform">
+        <id column="F_ID" property="id"/>
+        <result column="F_NAME" property="name"/>
+        <result column="F_CODE" property="code"/>
+        <result column="F_AVAILABLE" property="available"/>
+        <result column="F_CREATE_TIME" property="createTime"/>
+        <result column="F_DESCRIPTION" property="description"/>
+        <result column="F_URL" property="url"/>
+    </resultMap>
+
+
+    <select id="getPlatforms" resultMap="PlatformResultMap" parameterType="Platform">
+        select
+        F_ID, F_NAME, F_CODE, F_AVAILABLE,F_DESCRIPTION,F_CREATE_TIME,F_URL
+        from t_platform
+    </select>
+
+
+    <!--T_APP START-->
+    <resultMap id="AppResultMap" type="App">
+        <id column="F_ID" property="id"/>
+        <result column="F_NAME" property="name"/>
+        <result column="F_CODE" property="code"/>
+        <result column="F_SECRET" property="secret"/>
+        <result column="F_AVAILABLE" property="available"/>
+        <result column="F_CREATE_TIME" property="createTime"/>
+        <result column="F_DESCRIPTION" property="description"/>
+        <result column="F_URL" property="url"/>
+    </resultMap>
+
+    <insert id="insertApp" parameterType="App">
+        <selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="id">
+            SELECT T_APP_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        insert into T_APP
+        (F_ID, F_NAME, F_CODE, F_SECRET, F_AVAILABLE,F_CREATE_TIME,F_DESCRIPTION,F_URL)
+        values (#{id},#{name},#{code},#{secret},#{available},#{createTime},#{description},#{url})
+    </insert>
+
+    <update id="updateAppById" parameterType="App">
+        update T_APP
+        set F_NAME = #{name},
+        F_CODE = #{code},
+        F_SECRET = #{secret},
+        F_AVAILABLE = #{available},
+        F_DESCRIPTION = #{description},
+        F_URL = #{url}
+        where F_ID = #{id}
+    </update>
+
+    <select id="getAppById" resultMap="AppResultMap" parameterType="java.lang.Long">
+        select
+        F_ID, F_NAME, F_CODE, F_SECRET, F_AVAILABLE,F_DESCRIPTION,F_CREATE_TIME,F_URL
+        from T_APP
+        where F_ID = #{id}
+    </select>
+
+    <select id="getApps" resultMap="AppResultMap" parameterType="App">
+        select
+        F_ID, F_NAME, F_CODE, F_SECRET, F_AVAILABLE,F_DESCRIPTION,F_CREATE_TIME,F_URL
+        from T_APP
+    </select>
+
+    <select id="getAppIdByCode" resultType="java.lang.Long" parameterType="java.lang.String">
+        select F_ID
+        from T_APP
+        where F_CODE = #{code}
+    </select>
+
+
+    <select id="getAppByCode" resultMap="AppResultMap" parameterType="java.lang.String">
+        select
+        F_ID, F_NAME, F_CODE, F_SECRET, F_AVAILABLE,F_DESCRIPTION,F_CREATE_TIME,F_URL
+        from T_APP
+        where F_CODE = #{code} AND F_AVAILABLE = 1
+    </select>
+
+
+    <delete id="deleteAppById" parameterType="java.lang.Long">
+        delete from T_APP
+        where F_ID = #{id}
+    </delete>
+
+
+    <!--T_APP END -->
+    <!--T_RESOURCE START-->
+
+    <resultMap id="ResourceResultMap" type="Menu">
+        <id column="F_ID" property="id"/>
+        <result column="F_NAME" property="name"/>
+        <result column="F_TYPE" property="type"/>
+        <result column="F_URL" property="url"/>
+        <result column="F_PARENT_ID" property="parentId"/>
+        <result column="F_PARENT_IDS" property="parentIds"/>
+        <result column="F_PERMISSION" property="permission"/>
+        <result column="F_AVAILABLE" property="available"/>
+        <result column="F_APP_ID" property="appId"/>
+        <result column="F_STYLE_CLASS" property="styleClass"/>
+
+    </resultMap>
+
+    <select id="getResourceById" resultMap="ResourceResultMap" parameterType="java.lang.Long">
+        select
+        F_ID, F_NAME, F_TYPE, F_URL, F_PARENT_ID, F_PARENT_IDS, F_PERMISSION, F_AVAILABLE,F_APP_ID,F_STYLE_CLASS
+        from T_RESOURCE
+        where F_ID = #{id}
+    </select>
+
+
+    <select id="getResources" resultMap="ResourceResultMap" parameterType="Menu">
+        select
+        F_ID, F_NAME, F_TYPE, F_URL, F_PARENT_ID, F_PARENT_IDS, F_PERMISSION, F_AVAILABLE,F_APP_ID,F_STYLE_CLASS
+        from T_RESOURCE
+    </select>
+
+    <select id="getResourcesByUserId" resultMap="ResourceResultMap" parameterType="java.lang.Long">
+        select
+        R.F_ID, R.F_NAME, R.F_TYPE, R.F_URL, R.F_PARENT_ID, R.F_PARENT_IDS, R.F_PERMISSION, R.F_AVAILABLE,R.F_APP_ID,F_STYLE_CLASS
+        from T_RESOURCE R
+        INNER JOIN T_ROLE_RESOURCE RR ON RR.F_RESOURCE_ID = R.F_ID
+        INNER JOIN T_USER_ROLE UR ON RR.F_ROLE_ID = UR.F_ROLE_ID
+        WHERE UR.F_USER_ID = #{userId}
+    </select>
+
+
+    <delete id="deleteResourceById" parameterType="java.lang.Long">
+        delete from T_RESOURCE
+        where F_ID = #{id}
+    </delete>
+    <insert id="insertResource" parameterType="Menu">
+        <!--<selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="id">-->
+        <!--SELECT T_RESOURCE_ID_SEQ.NEXTVAL FROM DUAL-->
+        <!--</selectKey>-->
+        insert into T_RESOURCE (
+        F_ID, F_NAME, F_TYPE, F_URL, F_PARENT_ID, F_PARENT_IDS, F_PERMISSION, F_AVAILABLE,F_APP_ID,F_STYLE_CLASS
+        )
+        values (
+        #{id},#{name},#{type},#{url},#{parentId},#{parentIds},#{permission},#{available},#{appId},#{styleClass})
+    </insert>
+
+
+    <update id="updateResourceById" parameterType="Menu">
+        update T_RESOURCE
+        set
+            F_NAME = #{name},
+            F_TYPE = #{type},
+            F_URL = #{url},
+            F_PARENT_ID = #{parentId},
+            F_PARENT_IDS = #{parentIds},
+            F_PERMISSION = #{permission},
+            F_AVAILABLE = #{available},
+            F_APP_ID = #{appId},
+            F_STYLE_CLASS=#{styleClass}
+        where F_ID = #{id}
+    </update>
+    <!--T_RESOURCE END-->
+
+
+    <!--T_ROLE START-->
+    <resultMap id="RoleResultMap" type="Role">
+        <id column="F_ID" property="id"/>
+        <result column="F_NAME" property="name"/>
+        <result column="F_DESCRIPTION" property="description"/>
+        <result column="F_AVAILABLE" property="available"/>
+        <result column="F_CODE" property="code"/>
+    </resultMap>
+
+    <select id="getRoleById" resultMap="RoleResultMap" parameterType="java.lang.Long">
+        select
+        F_ID,F_NAME,F_DESCRIPTION,F_AVAILABLE,F_CODE
+        from T_ROLE
+        where F_ID = #{id}
+    </select>
+    <select id="getRoles" resultMap="RoleResultMap" parameterType="Role">
+        select
+        F_ID,F_NAME,F_DESCRIPTION,F_AVAILABLE,F_CODE
+        from T_ROLE
+    </select>
+
+    <select id="getRolesByUserId" resultMap="RoleResultMap" parameterType="java.lang.Long">
+        select
+        R.F_ID,R.F_NAME,R.F_DESCRIPTION,R.F_AVAILABLE,R.F_CODE
+        from T_ROLE R
+        INNER JOIN T_USER_ROLE UR ON R.F_ID = UR.F_ROLE_ID
+        WHERE UR.F_USER_ID = #{userId}
+    </select>
+
+
+
+    <delete id="deleteRoleById" parameterType="java.lang.Long">
+        delete from T_ROLE
+        where F_ID = #{id}
+    </delete>
+    <insert id="insertRole" parameterType="Role">
+        <selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="id">
+            SELECT T_ROLE_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        insert into T_ROLE
+        (F_ID,F_NAME,F_DESCRIPTION,F_AVAILABLE,F_CODE)
+        values
+        (#{id}, #{name}, #{description}, #{available},#{code})
+    </insert>
+
+    <update id="updateRoleById" parameterType="Role">
+        update T_ROLE
+        set F_NAME = #{name},
+        F_DESCRIPTION = #{description},
+        F_AVAILABLE = #{available},
+        F_CODE = #{code}
+        where F_ID = #{id}
+    </update>
+
+    <!--T_ROLE END-->
+
+
+
+
+    <!--T_USER START-->
+
+    <resultMap id="UserResultMap" type="User" >
+        <id column="F_ID" property="id" />
+        <result column="F_NAME" property="name" />
+        <result column="F_LOGIN_NAME" property="loginName" />
+        <result column="F_PASSWORD" property="password" />
+        <result column="F_SALT" property="salt" />
+        <result column="F_LOCKED" property="locked" />
+        <result column="F_CREATE_TIME" property="createTime"  />
+    </resultMap>
+    <select id="getUserById" resultMap="UserResultMap" parameterType="java.lang.Long" >
+        select
+        F_ID, F_NAME, F_LOGIN_NAME, F_PASSWORD, F_SALT, F_LOCKED,F_CREATE_TIME
+        from T_USER
+        where F_ID = #{id}
+    </select>
+    <select id="getUsers" resultMap="UserResultMap" parameterType="User" >
+        select
+        F_ID, F_NAME, F_LOGIN_NAME, F_PASSWORD, F_SALT, F_LOCKED,F_CREATE_TIME
+        from T_USER
+    </select>
+    <select id="getUserByLoginName" resultMap="UserResultMap" parameterType="java.lang.String">
+        select
+        F_ID, F_NAME, F_LOGIN_NAME, F_PASSWORD, F_SALT, F_LOCKED,F_CREATE_TIME
+        from T_USER where  F_LOGIN_NAME=#{loginName}
+    </select>
+    <delete id="deleteUserById" parameterType="java.lang.Long" >
+        delete from T_USER
+        where F_ID = #{id}
+    </delete>
+    <insert id="insertUser" parameterType="User" >
+        <selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="id">
+            SELECT T_USER_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        insert into T_USER
+        (F_ID, F_NAME, F_LOGIN_NAME, F_PASSWORD, F_SALT, F_LOCKED,F_CREATE_TIME)
+        values
+        (#{id}, #{name}, #{loginName},#{password}, #{salt}, #{locked},#{createTime})
+    </insert>
+
+    <update id="updateUserById" parameterType="User" >
+        update T_USER
+        set
+        F_NAME = #{name},
+        F_LOGIN_NAME = #{loginName},
+        F_PASSWORD = #{password},
+        F_SALT = #{salt},
+        F_LOCKED = #{locked}
+        where F_ID = #{id}
+    </update>
+
+    <!--T_USER END-->
+
+
+    <!--T_ORGANIZATION START-->
+
+    <resultMap id="OrganizationResultMap" type="Organization" >
+        <id column="F_ID" property="id" />
+        <result column="F_NAME" property="name" />
+        <result column="F_CODE" property="code"  />
+        <result column="F_DESCRIPTION" property="description" />
+        <result column="F_PARENT_ID" property="parentId" />
+        <result column="F_PARENT_IDS" property="parentIds" />
+    </resultMap>
+
+
+    <delete id="deleteOrganizationById" parameterType="java.lang.Long" >
+        delete from T_ORGANIZATION
+        where F_ID = #{id}
+    </delete>
+
+    <insert id="insertOrganization" parameterType="Organization" >
+        <selectKey resultType="java.lang.Long" order="BEFORE" keyProperty="id">
+            SELECT T_ORGANIZATION_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        insert into T_ORGANIZATION
+        (F_ID, F_NAME, F_CODE, F_DESCRIPTION, F_PARENT_ID, F_PARENT_IDS)
+        values
+        (#{id}, #{name}, #{code},#{description}, #{parentId}, #{parentIds})
+    </insert>
+
+    <select id="getOrganizationById" resultMap="OrganizationResultMap" parameterType="java.lang.Long" >
+        select
+        F_ID, F_NAME, F_CODE, F_DESCRIPTION, F_PARENT_ID, F_PARENT_IDS
+        from T_ORGANIZATION
+        where F_ID = #{id}
+    </select>
+
+    <update id="updateOrganizationById" parameterType="Organization" >
+        update T_ORGANIZATION
+        set
+        F_NAME = #{name},
+        F_CODE = #{code},
+        F_DESCRIPTION = #{description},
+        F_PARENT_ID = #{parentId},
+        F_PARENT_IDS = #{parentIds}
+        where F_ID = #{id}
+    </update>
+
+    <select id="getOrganizations" resultMap="OrganizationResultMap" parameterType="Organization" >
+        select
+        F_ID, F_NAME, F_CODE, F_DESCRIPTION, F_PARENT_ID, F_PARENT_IDS
+        from T_ORGANIZATION
+    </select>
+
+    <!--T_ORGANIZATION END-->
+</mapper>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<title>系统请求转发服务概况</title>
+<link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.css'">
+<link rel="stylesheet"	th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+<script	th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/ionslider/ion.rangeSlider.min.js'"></script>
+<script th:src="${application.webStaticUrl}+'/static/js/adminlte-config.js'"></script>
+<script>
+	(function($) {
+		$.fn.dropdown = function(callback) {
+			// 插件的具体内容放在这里
+			this.each(function() {
+				var $this = $(this);
+				var $dropdown = $this.find(".dropdown-toggle");
+				var $options = $this.find("ul.dropdown-menu>li");
+				$options.on("click", function() {
+					var opt = $(this);
+					$dropdown.html(opt.find("a").html()
+							+ " <i class='fa fa-angle-down'></i>");
+					$this.data("value", opt.find("a").data("value"));
+					$this.data("index", opt.index());
+					$this.data("text", opt.find("a").text());
+					$this.data("placeholder", opt.find("a").text());
+					$this.data("html", opt.find("a").html());
+					if ($.isFunction(callback)) {
+						callback({
+							index : $this.data("index"),
+							value : $this.data("value"),
+							text : $this.data("text"),
+							html : $this.data("html")
+						});
+					}
+				});
+			});
+		};
+
+	})(jQuery);
+
+	$(function() {
+		$("select").select2({
+			language : "zh-CN"
+		});
+		
+		var $appGroups = $("#appGroups");
+		var $hostInfo = $("#hostInfo");
+
+		$appGroups.dropdown(function(result) {
+			$("#appGroup_").val(result.value);
+			
+			$.ajax({
+				type : "post",
+				url : '[[${webUrl}]]/omweb/redis/service',
+				data : {
+					'appGroupId' : result.value
+				},
+				success : function(callback) {
+					$hostInfo.html("");
+					var id = "";
+					name = "请选择主机...";
+					addOption(id, name, $hostInfo);
+
+					if (callback.success) {
+						$.each(callback.data,function(i, val) {
+							addOption(val.serverId, val.hostNum, $hostInfo);
+						});
+					} else {
+						$.notify.error("系统异常,请稍后再试...")
+					}
+				}
+			});
+		});
+
+		$appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+		query_();
+	});
+	
+	function addOption(id, name, select) {
+		var option = new Option();
+		option.value = id;
+		option.text = name;
+		select[0].options.add(option);
+	}
+	
+	
+	function query_(){
+		var hostIp = $("#hostInfo option:selected").text();
+		if("" ==  $("#hostInfo").val()){
+			hostIp ="";
+		}
+		
+		// 总连接数
+		var accepts = [];
+		// 活跃连接数量
+		var active = [];
+		// 读取连接数
+		var reading = [];
+		// 等待连接数
+		var waiting = [];
+		// 响应连接数
+		var writing = [];
+		// 成功握手数
+		var handled = [];
+		// 总请求数
+		var requests = [];
+		// 关键时间
+		var time = [];
+		
+		$.ajax({
+			type : "post",
+			url : '[[${webUrl}]]/omweb/nginx/redisMonitor',
+			data : {
+				'hostIp' : hostIp
+			},
+			success : function(callback) {
+				if (callback.success) {
+					$.each(callback.data,function(i, val) {
+						// 总连接数
+						accepts.push(val.accepts);
+						// 活跃连接数量
+						active.push(val.active);
+						// 读取连接数
+					    reading.push(val.reading);
+						// 等待连接数
+						waiting.push(val.waiting);
+						// 响应连接数
+						writing.push(val.writing);
+						// 成功握手数
+						handled.push(val.handled);
+						// 总请求数
+						requests.push(val.requests);
+						
+						time.push(val.time);
+					});
+					drawnOption(time,accepts,active,reading,waiting,writing,handled,requests);
+				} else {
+					$.notify.error("系统异常,请稍后再试...")
+				}
+			}
+		});
+	}
+	
+	
+	
+	function drawnOption(time,accepts,active,reading,waiting,writing,handled,requests){
+		var myChart = echarts.init(document.getElementById('monitor'),'macarons');
+		var option= {
+				color: ['#ff3d3d','#00a0e9','#f603ff','#00b419'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10, 20,0,20],
+					data:['总连接数','活跃连接数','读取连接数','等待连接数','响应连接数','成功握手数','总请求数'],
+					selected: {
+						'总连接数': true,
+						'活跃连接数': true,
+						'读取连接数': true,
+						'等待连接数': true,
+						'响应连接数' : true,
+						'成功握手数' : true,
+						'总请求数' : true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					 name: '(个)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'总连接数',
+						type:'line',
+						data:accepts,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					},
+					{
+						name:'活跃连接数',
+						type:'line',
+						data:active,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'读取连接数',
+						type:'line',
+						data:reading,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'等待连接数',
+						type:'line',
+						data:waiting,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'响应连接数',
+						type:'line',
+						data:writing,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'成功握手数',
+						type:'line',
+						data:handled,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'总请求数',
+						type:'line',
+						data:requests,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					}
+					
+					
+				]
+			};
+		 myChart.setOption(option);
+	}
+	
+</script>
+
+</head>
+<body class="hold-transition skin-blue skin-xwblue sidebar-mini fixed" th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+	<div class="wrapper">
+		<div class="content-wrapper">
+		<input type="hidden" id="appGroup_" name="appGroup_" value="" />
+			<!-- Main content -->
+			<section class="content">
+				<div class="row">
+					<div class="col-md-12">
+						<div class="box">
+							<div class="box-header with-border">
+							 <div class="btn-group pull-left" id="appGroups">
+								<button type="button" class="btn btn-primary dropdown-toggle"
+									data-toggle="dropdown" aria-haspopup="true"
+									aria-expanded="false">
+									<i class="fa fa-angle-down"></i>
+								</button>
+								<ul class="dropdown-menu">
+									<li th:each="group,groupStat:${appGroups}"><a href="#"
+										th:data-value="${group.id}" th:text="${group.name}"></a></li>
+								</ul>
+							  </div>
+							</div>
+						</div>
+						<!-- /.box -->
+						<div class="box">
+							<div class="box-header  with-border">
+							  <form class="form-horizontal">
+								<input type="hidden" id="appGroup_" name="appGroup_" value="" />
+								<div class="box-body">
+									<label for="hostInfo" class="col-sm-1 control-label">监控主机</label>
+									<div class="col-sm-2">
+										<select class="form-control" id="hostInfo" name="hostInfo">
+										</select>
+									</div>
+									<button class="btn btn-primary" type="button"
+										onclick="query_();">查询</button>
+								</div>
+								</form>
+						  </div>
+							<div class="box-body">
+								<div class="panel panel-monitor">
+									<div class="panel-heading">
+										<button class="btn btn-help">
+											<i class="fa fa-question"></i>
+										</button>
+										运行情况
+									</div>
+									<div class="panel-body">
+										<div id="monitor" style="width: 100%; height: 360px;">
+										</div>
+									</div>
+								</div>
+					</div>
+					<!-- /.col -->
+				</div>
+				<!-- /.row -->
+			</section>
+			<!-- /.content -->
+		</div>
+	</div>
+</body>
+</html>

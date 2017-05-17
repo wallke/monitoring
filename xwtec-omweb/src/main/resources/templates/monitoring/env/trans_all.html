@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/css/jquery.treegrid.css'">
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/js/jquery.treegrid.min.js'"></script>
+    <script>
+        $(function () {
+            $('.tree').treegrid();
+            $(".btn.btnChangeTreeStatus").on("click",function () {
+                $('.tree').treegrid($(this).data("code"));
+            });
+            $("#transAllLogs").on("click",".show_error",function () {
+                $(this).parents("tr").next().toggleClass("hide");
+                $(this).parents("tr").next().find("td").html($(this).data("info"));
+            });
+        });
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <!-- Main content -->
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box" id="js-details">
+                    <div class="box-header">
+                        <button class="btn btn-default btnChangeTreeStatus" data-code="expandAll">展开所有</button>
+                        <button class="btn btn-default btnChangeTreeStatus" data-code="collapseAll">收起所有</button>
+                        <!--<a class="btn btn-success" href="javascript:window.history.back();" type="button" id="js-details-close"><i class="fa fa-reply"></i>-->
+                            <!--返回-->
+                        <!--</a>-->
+                    </div>
+                    <div class="box-body">
+
+                        <table class="table table-hover table-striped table-primary tree " id="transAllLogs">
+                            <thead>
+                            <tr>
+                                <th>主机</th>
+                                <th>应用</th>
+                                <th>类型</th>
+                                <th>名称</th>
+                                <th>时长</th>
+                                <th>时间</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <th:block th:each="item,itemStat:${logs}">
+                                <tr th:class="'treegrid-'+${item.node_ID} + (${item.last_node_ID} ? ' treegrid-parent-' + ${item.last_node_ID} :'') ">
+                                    <td><th:block th:text="${item.server_ip}"></th:block><th:block th:if="${item.server_port}">:[[${item.server_port}]]</th:block></td>
+                                    <td>[[${item.system_name}]]</td>
+                                    <td>[[${item.log_type}]]</td>
+                                    <td>[[${item.node_code}]]
+                                        <th:block th:if="${item.result_type}">
+                                            <a class="tooltip-danger show_error"
+                                               data-toggle="tooltip"
+                                               data-placement="top"
+                                               th:data-info="${item.result_info}"
+                                               th:title="${item.result_type}">
+                                                <i class="fa fa-warning"></i></a>
+                                        </th:block>
+                                    </td>
+                                    <td>[[${item.interval}]]</td>
+                                    <td>[[${item.time}]]</td>
+                                </tr>
+                                <tr class="hide" th:classappend="' treegrid-x' + (${item.last_node_ID} ? ' treegrid-parent-' + ${item.last_node_ID} :'') ">
+                                    <td colspan="6" style="padding: 8px 20px;">
+
+                                    </td>
+                                </tr>
+                            </th:block>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+</body>
+</html>

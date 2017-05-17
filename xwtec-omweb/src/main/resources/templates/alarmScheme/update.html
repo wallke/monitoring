@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            $("#box-footer").show();
+            $(".js-example-basic-single").select2();
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        url:"[[${webUrl}]]/omweb/alarmScheme/create",
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/alarmScheme/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    alert_scheme_name: {
+                        required: true
+                    }
+                },
+                messages: {
+                    alert_scheme_name: {
+                        required: "告警方案名称不能为空"
+                    }
+                }
+            });
+
+            $("#unitsForm").validate({
+                rules: {
+                    alert_pressure: {
+                        required: true,
+                        digits:true
+                    },
+                    alert_level:{
+                        required: true,
+                    },
+                    sustained:{
+                        required: true,
+                        digits:true
+                    },
+                    notice_strategy_code:{
+                        required: true
+                    }
+                },
+                messages: {
+                    alert_pressure: {
+                        required: "告警压力不能为空",
+                        digits:"请输入整数"
+                    },
+                    alert_level:{
+                        required: "预警级别不能为空"
+                    },
+                    sustained:{
+                        required: "持续时间不能为空",
+                        digits:"请输入整数"
+                    },
+                    notice_strategy_code:{
+                        required: "通知策略编码不能为空"
+                    }
+                }
+            });
+        });
+
+        function openModel(but) {
+
+            if(but != null ){
+                $.ajax({
+                    type: "post",
+                    url: '[[${webUrl}]]/omweb/alarmScheme/unitsDetail',
+                    data: {
+                        'untis_id':but.id
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            if(callback.data !=null)
+                            {
+                                $("#alert_pressure").val(callback.data.alert_pressure);
+                                $("#alert_level").val(callback.data.alert_level);
+                                $("#sustained").val(callback.data.sustained);
+                                $("#notice_strategy_code").val(callback.data.notice_strategy_code);
+                                $("#untis_id").val(callback.data.untis_id)
+                            }
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }else
+            {
+                $("#alert_pressure").val('');
+                $("#sustained").val('');
+            }
+
+            $("#myModal").modal('show');
+        }
+        function saveUtils() {
+            if ($("#unitsForm").valid()) {
+                $("#unitsForm").ajaxSubmit({
+                    url: "[[${webUrl}]]/omweb/alarmScheme/createUnits",
+                    success: function (callback) {
+                        // data 保存提交后返回的数据，一般为 json 数据
+                        // 此处可对 data 作相关处理
+                        if (callback.success) {
+                            $.notify.success(callback.message, "", function () {
+                                $("#myModal").modal("hide");
+                                location.reload();
+                            });
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }
+            return false;
+        }
+
+        function deleteUnits(but) {
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/alarmScheme/deleteUnits',
+                        data: {
+                            'untis_id': but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.reload();
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function gotoTable2(val) {
+            if(val == 1)
+            {
+                $("#box-footer").show();
+            } else
+            {
+                $("#box-footer").hide();
+            }
+
+        }
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            告警方案维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/frequency/index'"><i class="fa fa-users"></i> 告警方案管理中心</a></li>
+            <li class="active">告警方案详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active" onclick="gotoTable2(1)"><a href="#tab_1" data-toggle="tab">基础信息</a></li>
+                        <li onclick="gotoTable2(2)"><a href="#tab_2"  data-toggle="tab">告警单元格</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden" name="alert_scheme_code" th:value="${alarmScheme.alert_scheme_code}">
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="alert_scheme_name">告警方案名称</label>
+                                        <input type="text" name="alert_scheme_name" th:value="${alarmScheme.alert_scheme_name}"
+                                               class="form-control" id="alert_scheme_name" placeholder="">
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                    <div class="box-body">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <button type="button" class="btn btn-labeled btn-primary" onclick="openModel()">
+                                                    <i class="btn-label fa fa-plus"></i> 新增
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <table class="table table-bordered m-t-sm">
+                                                <tbody>
+                                                <tr>
+                                                    <th style="width: 100px">序号</th>
+                                                    <th style="width: 100px">告警压力</th>
+                                                    <th style="width: 100px">预警级别</th>
+                                                    <th style="width: 150px">持续时间（分钟）</th>
+                                                    <th style="width: 100px">通知策略编码</th>
+                                                    <th style="width: 100px">操作</th>
+                                                </tr>
+                                                <tr th:each="alarmSchemeUnits,alarmSchemeUnitsStat:${alarmSchemeUnitsList}">
+                                                    <td th:text="${alarmSchemeUnitsStat.index}+1"></td>
+                                                    <td th:text="${alarmSchemeUnits.alert_pressure}"></td>
+                                                    <td th:text="${alarmSchemeUnits.alert_level}"></td>
+                                                    <td th:text="${alarmSchemeUnits.sustained}"></td>
+                                                    <td th:text="${alarmSchemeUnits.notice_strategy_code}"></td>
+                                                    <td>
+                                                        <a onclick="openModel(this)" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" th:id="${alarmSchemeUnits.untis_id}" >修改</a>
+                                                        &nbsp;
+                                                        <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteUnits(this)' th:id="${alarmSchemeUnits.untis_id}">删除</a>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /.tab-pane -->
+                        </form>
+                    </div>
+                    <div class="box-footer" id="box-footer" style="display: none" >
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+        </div>
+    </section>
+
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">告警单元格新增</h4>
+                </div>
+                <form id="unitsForm" method="post" class="formClass">
+                    <input type="hidden" name="alert_scheme_code" th:value="${alarmScheme.alert_scheme_code}">
+                    <input type="hidden" name="untis_id" id="untis_id">
+                    <div class="modal-body" >
+                        <div class="form-group">
+                            <label for="alert_pressure">告警压力</label>
+                            <input type="text" name="alert_pressure"
+                                   class="form-control" id="alert_pressure">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sustained">持续时间（分钟）</label>
+                            <input type="text" name="sustained"
+                                   class="form-control" id="sustained">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="alert_level">预警级别</label>
+                            <select id="alert_level" name="alert_level"     class="js-example-basic-single form-control">
+                                <option th:each="dictionarie,dictionarieStat : ${dictionarieList}"
+                                        th:value="${dictionarie.level}" th:text="${dictionarie.color}">Credit card</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notice_strategy_code">通知策略</label>
+                            <select id="notice_strategy_code" name="notice_strategy_code"   class="js-example-basic-single form-control">
+                                <option th:each="noticeStrategy,noticeStrategyStat : ${noticeStrategyList}"
+                                        th:value="${noticeStrategy.notice_strategy_code}" th:text="${noticeStrategy.notice_strategy_name}">Credit card</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-footer">
+                    <button type="button"  id="SDKHeartBut" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" onclick="saveUtils()" class="btn btn-primary">保存</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+</div>
+</body>
+</html>

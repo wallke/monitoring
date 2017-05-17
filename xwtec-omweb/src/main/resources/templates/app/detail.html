@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            应用详情查看
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${homeUrl}+'/omweb/app/index'"><i class="fa fa-users"></i>应用管理中心</a></li>
+            <li class="active">应用详情查看</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab_1" data-toggle="tab">应用信息</a></li>
+                        <li><a href="#tab_2" data-toggle="tab">节点</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="appNum">应用编码</label>
+                                        <input type="text" name="appNum" readonly="readonly" th:value="${app.appNum}"
+                                               class="form-control" id="appNum" placeholder="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="appName">应用名称</label>
+                                        <input type="text" name="appName" th:value="${app.appName}" readonly="readonly"
+                                               class="form-control" id="appName">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="categoryId">应用类别</label>
+                                        <input type="text" name="categoryName" th:value="${app.categoryName}" readonly="readonly"
+                                               class="form-control" id="categoryName">
+                                        <label for="cropId">公司名称</label>
+                                        <input type="text" name="cropName" th:value="${app.cropName}" readonly="readonly"
+                                               class="form-control" id="cropName">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="serverId">所属主机</label>
+                                        <input type="text" name="hostName" th:value="${app.serverName}" readonly="readonly"
+                                               class="form-control" id="hostName">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="isUse">立即启用</label>
+                                        <input th:value="${app.isUse}=='0'?'否':'是'" readonly="readonly" class="form-control"
+                                               id="isUse">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="desc">说明</label>
+                                        <input type="text" name="desc"  th:value="${app.desc}" readonly="readonly"
+                                               class="form-control" id="desc">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="memo">备注</label>
+                                        <input type="text" name="memo" th:value="${app.memo}" readonly="readonly"
+                                               class="form-control" id="memo">
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                    <table class="table table-bordered m-t-sm">
+                                        <tbody>
+                                        <tr>
+                                            <th style="width: 100px">序号</th>
+                                            <th style="width: 100px">主机名称</th>
+                                            <th style="width: 100px">端口</th>
+                                            <th style="width: 100px">主机IP</th>
+                                        </tr>
+                                        <tr th:each="node,nodeStat:${nodeList}">
+                                            <td th:text="${nodeStat.index}+1"></td>
+                                            <td th:text="${node.serverName}"></td>
+                                            <td th:text="${node.port}"></td>
+                                            <td th:text="${node.hostIp}"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        <!-- /.tab-pane -->
+                       </form>
+                    </div>
+                    <div class="box-footer">
+                        <a type="button" th:href="${webUrl} + '/omweb/app/index'" class="btn btn-primary btnSubmit">返回</a>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+            </div>
+    </section>
+
+</div>
+
+</body>
+</html>

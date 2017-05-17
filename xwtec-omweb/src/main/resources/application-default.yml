@@ -1,0 +1,158 @@
+server:
+  port: 8060
+#  ssl:
+#    key-store: classpath:auth.keystore
+#    key-store-password: 123456
+#    key-password: 123456
+  tomcat:
+      max-threads:  800
+      uri-encoding: UTF-8
+
+#mybatis config
+mybatis:
+  mapper-locations: classpath*:mapper/mysql/*.xml
+  type-aliases-package: com.xwtech.omweb.model
+
+#spring.datasource
+spring:
+  application:
+    name: xwtec-omweb
+  datasource:
+    #url: jdbc:mysql://192.168.1.200:3306/voplatform_dev?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://10.19.237.191:3306/voplatform_dev?characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: vo
+    password: Ww123!@#
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 5
+#SELECT 1 FROM DUAL
+      connection-test-query: SELECT 1
+      idle-timeout: 10000
+      validation-timeout: 10000
+ #REDIS (RedisProperties)
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+    pool:
+      max-active: 8
+      max-wait: -1
+      max-idle: 8
+      min-idle: 0
+  cache:
+    type: redis
+    cache-names:
+      - 'center::auth'
+  aop:
+    proxy-target-class: true
+
+web:
+  staticUrl: http://127.0.0.1:8060
+
+#shiro权限
+shiro:
+  session:
+    name: sid
+    domain:
+    path: /
+    httpOnly: true
+    MaxAge: -1
+  rememberMe:
+    name: rememberMe
+    domain:
+    path: /
+    httpOnly: true
+    MaxAge: -1
+  client:
+    appKey: xwtec-omweb
+    platformKey: xwtec-monitor
+    globalAuthUrl: http://127.0.0.1:8080
+    loginUrl: http://127.0.0.1:8080/login
+    successUrl: http://127.0.0.1:8060
+    unauthorizedUrl:
+    definitions:
+      /: authc
+      /index: authc
+      /omweb/**: authc
+      /**: anon
+
+httpclient:
+  pool:
+  #是路由的默认最大连接（该值默认为20），限制数量实际使用DefaultMaxPerRoute并非MaxTotal。
+    maxTotal: 100
+    #设置过小无法支持大并发(ConnectionPoolTimeoutException: Timeout waiting for connection from pool)，路由是对maxTotal的细分
+    defaultMaxPerRoute: 25
+  #从服务器读取数据的timeout
+  readTimeout: 15000
+  #和服务器建立连接的timeout
+  connectTimeout: 5000
+  #从连接池获取连接的timeout
+  connectionRequestTimeout: 2000
+
+#es type index keys
+elasticsearch:
+  clusterName: cluster
+  servers:
+    - 10.19.241.51
+  discoveryPort: 9300
+ #系统应用的index以及types
+  application:
+     index           : xwtec_application-*
+     #事务日志
+     transactionType : xwtec_application_transaction
+     #调用链日志
+     chainType       : xwtec_application_chain
+     #方法日志
+     methodType      : xwtec_application_method
+     #奔溃日志
+     appcrash      : xwtec_application_appcrash
+   #系统日志的index以及types
+  systemInfo:
+     index           : xwtec_system-*
+     #主机系统日志
+     osType          : xwtec_system_os
+     #主机日志
+     hostType        : xwtec_system_host
+     #Redis运行日志
+     redisType       : xwtec_system_redis
+     #Nginx运行日志
+     nginxType       : xwtec_system_nginx
+  #基础配置
+  basicConfig:
+     xwIndex         : .xwtec
+     esType          : cm
+     esId            : servercm
+     #监听模板
+     monitorTemplateType : alertor.templates
+     #监听目标
+     monitorTargetType   : alertor.targets
+     #消息模板
+     templateType    : alertor.message_templates
+     #预警级别
+     dictType        : alertor.dicts
+     #预警级别ID
+     alert_level     : alert_level
+     #统计指标ID
+     metrics         : metrics
+     #预警网格
+     thresholdType   : alertor.threshold
+     #干系人账户
+     accountType     : alertor.account
+     #变频规则
+     frequencyType   : alertor.frequency
+     #通知策略
+     noticeType      : alertor.notice
+     #告警方案
+     schemeType      : alertor.scheme
+     #更新时间
+     updateType      : alertor.update
+
+   #初始化是否全部查询 true是，false 否
+  isQueryAll      : true
+
+log:
+  path: logs/
+  level: debug
+  appender: console

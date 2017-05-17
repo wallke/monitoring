@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.GridMapper">
+
+    <resultMap id="GridMap" type="com.xwtech.omweb.model.Grid">
+        <result property="grid_code" column="grid_code" jdbcType="VARCHAR"></result>
+        <result property="grid_name" column="grid_name"  jdbcType="VARCHAR"></result>
+        <result property="metric" column="metric"  jdbcType="VARCHAR"></result>
+        <collection property="units" column="grid_code" select="queryUnitsListByCode"></collection>
+    </resultMap>
+    <resultMap id="UnitsMap" type="com.xwtech.omweb.model.Units">
+        <result property="units_id" column="units_id" jdbcType="VARCHAR"></result>
+        <result property="grid_code" column="grid_code" jdbcType="VARCHAR"></result>
+        <result property="alert_level" column="alert_level" jdbcType="VARCHAR"></result>
+        <result property="startTime" column="startTime" jdbcType="VARCHAR"></result>
+        <result property="endTime" column="endTime" jdbcType="VARCHAR"></result>
+        <result property="cordon" column="cordon" jdbcType="DOUBLE"></result>
+    </resultMap>
+    <!--查询预警网格列表-->
+    <select id="queryGridList" resultMap="GridMap">
+        SELECT * FROM  tm_da_grid WHERE  1=1
+    </select>
+    <!--根据code查询预警网格详情-->
+    <select id="queryDetailByCode" parameterType="java.lang.String" resultMap="GridMap">
+        SELECT * FROM  tm_da_grid WHERE  grid_code = #{grid_code}
+    </select>
+    <!--新增预警网格-->
+    <insert id="addGrid" parameterType="com.xwtech.omweb.model.Grid">
+        INSERT INTO tm_da_grid(grid_code,grid_name,metric)
+                  VALUES (#{grid_code},#{grid_name},#{metric})
+
+    </insert>
+    <!--修改预警网格-->
+    <update id="updateGrid" parameterType="com.xwtech.omweb.model.Grid">
+        UPDATE tm_da_grid SET
+        grid_name = #{grid_name},
+        metric = #{metric}
+        WHERE
+        grid_code =#{grid_code}
+    </update>
+    <!--删除预警网格-->
+    <delete id="deleteGrid" parameterType="java.lang.String">
+      DELETE FROM tm_da_grid  WHERE  grid_code =#{grid_code}
+    </delete>
+    <!--根据预警网格编码查询预警单元格列表-->
+    <select id="queryUnitsListByCode" parameterType="java.lang.String" resultMap="UnitsMap">
+      SELECT * FROM  tm_da_units  WHERE  grid_code =#{grid_code}
+    </select>
+    <!--查询预警单元格详情-->
+    <select id="queryUnitsDetail" parameterType="java.lang.String" resultMap="UnitsMap">
+      SELECT * FROM  tm_da_units  WHERE  units_id =#{units_id}
+    </select>
+    <!--新增预警单元格-->
+    <insert id="addUnits" parameterType="com.xwtech.omweb.model.Units">
+      INSERT INTO tm_da_units(units_id,grid_code,alert_level,startTime,endTime,cordon)
+      VALUES (#{units_id},#{grid_code},#{alert_level},#{startTime},#{endTime},#{cordon})
+    </insert>
+    <!--修改预警单元格-->
+    <update id="updateUnits" parameterType="com.xwtech.omweb.model.Units">
+        UPDATE tm_da_units SET
+        grid_code = #{grid_code},
+        alert_level = #{alert_level},
+        startTime = #{startTime},
+        endTime = #{endTime},
+        cordon = #{cordon}
+        WHERE
+        units_id = #{units_id}
+    </update>
+    <!--删除预警单元格-->
+    <delete id="deleteUnits" parameterType="java.lang.String">
+        DELETE  FROM  tm_da_units WHERE  units_id = #{units_id}
+    </delete>
+    <delete id="deleteUnitsByCode" parameterType="java.lang.String">
+            DELETE  FROM  tm_da_units WHERE  grid_code =#{grid_code}
+    </delete>
+
+</mapper>

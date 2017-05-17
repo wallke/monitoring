@@ -1,0 +1,88 @@
+apply from: 'dependencyDefinitions.gradle'
+
+
+
+
+// 所有子项目的通用配置
+subprojects {
+    group 'com.xwtech'
+    version '1.0'
+
+    apply from: "${project.rootDir}/quality.gradle"
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+
+    // JVM 版本号要求
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+
+    // java编译的时候缺省状态下会因为中文字符而失败
+    // 所以这儿需要改为utf8
+    //
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    buildscript {
+        repositories {
+            jcenter()
+        }
+        dependencies {
+            classpath(springbootlibraries.'springbootgradleplugin')
+        }
+    }
+
+    repositories {
+        flatDir {
+            dirs "$rootProject.projectDir/libs"
+        }
+        //maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+        //maven { url "http://maven.oschina.net/content/groups/public/" }
+        mavenCentral()
+    }
+
+    jar {
+        manifest {
+            attributes("Manifest-Version": "${version}")
+            attributes("Created-By": "${group}")
+            attributes("Implementation-Title": "${archivesBaseName}")
+            attributes("Implementation-Version": "${version}")
+        }
+    }
+
+    eclipse {
+        project {
+            name = "${archivesBaseName}"
+        }
+    }
+
+
+    configurations {
+        //
+        // 所有需要忽略的包定义在此
+        //
+        //all*.exclude group: 'commons-httpclient'
+        //all*.exclude group: 'commons-logging'
+        // all*.exclude group: 'commons-beanutils', module: 'commons-beanutils'
+
+        //all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        //all*.exclude group: 'org.slf4j'
+    }
+
+
+    task createJavaProject << {
+        sourceSets*.java.srcDirs*.each { it.mkdirs() }
+        sourceSets*.resources.srcDirs*.each { it.mkdirs()}
+    }
+
+    // 显示当前项目下所有用于 compile 的 jar.
+    //
+    task listJars(description: 'Display all compile jars.') << {
+        configurations.compile.each { File file -> println file.name }
+    }
+
+
+}
+
+
+
+

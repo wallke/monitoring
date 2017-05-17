@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <jmxConfigurator />
+    <!-- 控制台输出日志 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="dailyRollingFileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--<File>/tmp/mall-admin.log</File>-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <FileNamePattern>/tmp/mall-admin/mall-admin.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+        <encoder>
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{0} - %msg %n</Pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.xwtech">
+        <level value="DEBUG" />
+    </logger>
+    <logger name="org.quartz">
+        <level value="DEBUG" />
+    </logger>
+    <logger name="org.apache.shiro">
+        <level value="ERROR" />
+    </logger>
+    <logger name="org.springframework.cache">
+        <level value="ALL" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <!--<appender-ref ref="dailyRollingFileAppender"/>-->
+    </root>
+</configuration>

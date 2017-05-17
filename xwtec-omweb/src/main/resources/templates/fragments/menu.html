@@ -1,0 +1,62 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Left side column. contains the logo and sidebar -->
+<aside class="main-sidebar" th:fragment="sidebar">
+    <!-- sidebar: style can be found in sidebar.less -->
+    <section class="sidebar">
+        <a href="###" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+            <i class="fa fa-bars"></i>
+            <span class="sr-only">切换边栏</span>
+        </a>
+        <!-- sidebar menu: : style can be found in sidebar.less -->
+        <ul class="sidebar-menu">
+            <!--<li><a th:href="${application.webUrl}">-->
+            <!--<i class="fa fa-home"></i>-->
+            <!--<span>首页</span></a>-->
+            <!--</li>-->
+            <li th:class="(${not #lists.isEmpty(menu.subMenus)} ? 'treeview ' : '') + (${menu.current} ? 'active':'')" th:each="menu,menuStat:${menus}">
+                <a th:href="${not #lists.isEmpty(menu.subMenus)} ? 'javascript:;':(${menu.url} + (${#strings.contains(menu.url,'?')}?'&':'?') + 'mid=' + ${menu.id})">
+                    <i th:class="${#strings.isEmpty(menu.styleClass)} ? 'fa fa-circle-o' : ${menu.styleClass} "></i>
+                    <span th:text="${menu.name}"></span>
+                    <th:block th:if="${not #lists.isEmpty(menu.subMenus)}">
+                            <span class="pull-right-container">
+                              <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                    </th:block>
+                </a>
+                <ul th:if="${not #lists.isEmpty(menu.subMenus)}" th:class="'treeview-menu '" th:classappend="(${menu.current} ? 'menu-open':'')" >
+
+                    <li th:each="sub,subStat:${menu.subMenus}" th:class="${sub.current} ? 'active'">
+                        <a th:href="${not #lists.isEmpty(sub.subMenus)} ? 'javascript:;':(${sub.url} + (${#strings.contains(sub.url,'?')}?'&':'?') + 'mid=' + ${sub.id})">
+                            <i  th:class="${#strings.isEmpty(sub.styleClass)} ? 'fa fa-circle-o' : ${sub.styleClass} "></i>
+                            <span th:text="${sub.name}"></span>
+                            <th:block th:if="${not #lists.isEmpty(sub.subMenus)}">
+                            <span class="pull-right-container">
+                              <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                            </th:block>
+                        </a>
+                        <ul th:if="${not #lists.isEmpty(sub.subMenus)}" th:class="'treeview-menu '" th:classappend="(${sub.current} ? 'menu-open':'')" >
+
+                            <li th:each="third,thirdStat:${sub.subMenus}" th:class="${sub.current} ? 'active'">
+                                <a th:href="${third.url} + (${#strings.contains(third.url,'?')}?'&':'?') + 'mid=' + ${third.id}">
+                                    <i  th:class="${#strings.isEmpty(third.styleClass)} ? 'fa fa-circle-o' : ${third.styleClass} "></i>
+                                    <th:block th:text="${third.name}"></th:block>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </li>
+        </ul>
+    </section>
+    <!-- /.sidebar -->
+</aside>
+
+</body>
+
+</html>

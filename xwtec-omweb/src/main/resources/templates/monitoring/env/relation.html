@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+
+    <title>欣网管理后台</title>
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/style/topology.css'">
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/jsplumb/css/jsPlumbToolkit-defaults.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/jsplumb/css/demo.css'">
+
+    <!-- select2样式 -->
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jsplumb/jsplumb.min.js'"></script>
+
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+    <script type="text/javascript">
+
+        jsPlumb.ready(function () {
+
+
+            var option = {
+                Endpoint: ["Dot", {radius: 0.1}],
+                Connector: "Flowchart",//Bezier,Flowchart,Straight
+                HoverPaintStyle: {stroke: "#1e8151", strokeWidth: 2},
+                ConnectionOverlays: [
+                    ["Arrow", {
+                        location: 1,
+                        id: "arrow",
+                        length: 14,
+                        foldback: 0.8
+                    }],
+                    ["Label", {id: "label", cssClass: "aLabel", location: 0.2}]
+                ],
+                Container: "canvas"
+            };
+            var instance = jsPlumb.getInstance(option);
+            instance.registerConnectionType("basic", {anchor: "Continuous", connector: "Flowchart"});
+
+            function init(groupId) {
+                instance.reset();
+                instance.removeAllEndpoints("#canvas");
+                $("#canvas").empty();
+
+                // bind a click listener to each connection; the connection is deleted. you could of course
+                // just do this: jsPlumb.bind("click", jsPlumb.detach), but I wanted to make it clear what was
+                // happening.
+                instance.bind("dblclick", function (c) {
+                    //instance.detach(c);
+                    //relationRequestInfo
+                    var data = c.getData();
+
+                    var sourceAppCode = data.sourceNum;
+
+                    var targetAppCode = data.targetNum;
+
+                    $.get("[[${webUrl}]]/omweb/env/relationRequestInfo", {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        sourceAppCode: sourceAppCode,
+                        targetAppCode: targetAppCode
+                    }, function (callback) {
+                        if (callback.success) {
+//                            var result = juicer($("#listTemplate").html(), {
+//                                list: callback.data
+//                            });
+//                            $("#listTemplateWrapper").html(result);
+
+
+                            var chartData = [];
+                            var chartData1 = [];
+
+                            if($.isArray(callback.data.list1)){
+
+                                $.each(callback.data.list1,function () {
+                                    var v = [];
+                                    v.push(this.mills);
+                                    v.push(this.interval);
+                                    v.push(this.id);
+                                    if(this.error){
+                                        chartData1.push(v);
+                                    }else{
+                                        chartData.push(v);
+                                    }
+
+                                });
+
+                                drawChart(chartData,chartData1);
+
+                            }
+
+                            var chartData2 = [];
+                            var chartData3 = [];
+                            if($.isArray(callback.data.list2)){
+
+                                $.each(callback.data.list2,function () {
+                                    chartData2.push(this.x);
+                                    chartData3.push(this.y);
+                                });
+
+                                drawChart1(chartData2,chartData3);
+
+                            }
+
+
+
+                            //location.hash = "";
+                            //location.hash = "#listTemplateWrapper"; //获得焦点
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+
+                });
+
+                $.get(
+                    "[[${webUrl}]]/omweb/env/getCanvasData",
+                    {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        groupId: groupId
+                    },
+                    function (callback) {
+                        if (callback.success) {
+                            console.debug(callback.data);
+                            if (callback.data.locations) {
+                                locations = callback.data.locations;
+                                //加载位置
+                                $.each(callback.data.locations, function (i, v) {
+                                    var interval = 10;
+                                    var nodeWidth = $(".w").outerWidth() || 10;
+                                    if (this.hAxis == 0 && this.vAxis == 0) {
+                                        newAppNode(this.appId, this.appName, (i * nodeWidth) + (i == 0 ? interval : 2 * interval), interval);
+                                    } else {
+                                        newAppNode(this.appId, this.appName, this.hAxis, this.vAxis);
+                                    }
+                                });
+
+
+                            }
+                            if (callback.data.connections) {
+                                connections = connections;
+                                //加载连线
+                                $.each(callback.data.connections, function (i, v) {
+                                    var con = instance.connect({
+                                        source: v.source,
+                                        target: v.target,
+                                        type: "basic"
+                                    });
+                                    con._jsPlumb.overlays["label"].setLabel("流量：" + v.requestCount + "<br />错误：" + v.requestErrorCount);
+                                    console.log(con)
+                                    con.setData(v);
+                                });
+
+                            }
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+
+
+            }
+
+
+            var connections = [], locations = [];
+
+
+            $("#appGroups").dropdown(function (result) {
+                init(result.value);
+            });
+            $("#appGroups").find("ul.dropdown-menu>li:eq(0)").trigger("click");
+
+
+//            $(".tabpanel-tab").on("click", function () {
+//
+//                var $this = $(this);
+//                var $id = $this.data("id");
+//
+//                init($id);
+//
+//            });
+
+            //
+            // initialise element as connection targets and source.
+            //
+            var initNode = function (el) {
+
+                // initialise draggable elements.
+                //instance.draggable(el);
+
+                instance.makeSource(el, {
+                    filter: ".ep",
+                    anchor: "Continuous",
+                    connectorStyle: {stroke: "#5c96bc", strokeWidth: 2, outlineStroke: "transparent", outlineWidth: 4},
+                    connectionType: "basic",
+                    extract: {
+                        "action": "the-action"
+                    },
+                    maxConnections: -1
+                });
+
+                instance.makeTarget(el, {
+                    dropOptions: {hoverClass: "dragHover"},
+                    anchor: "Continuous",
+                    allowLoopback: true,
+                    maxConnections: -1
+                });
+
+                // this is not part of the core demo functionality; it is a means for the Toolkit edition's wrapped
+                // version of this demo to find out about new nodes being added.
+                //
+                instance.fire("jsPlumbDemoNodeAdded", el);
+            };
+
+
+            var newAppNode = function (appId, appName, x, y) {
+                var d = document.createElement("div");
+                d.className = "w";
+                d.id = appId;
+                d.innerHTML = "<img src='[[${application.webStaticUrl}]]/static/style/images/icon-cloud.png'><div>" + appName + "</div>";
+                d.style.left = x + "px";
+                d.style.top = y + "px";
+                instance.getContainer().appendChild(d);
+                initNode(d);
+                return d;
+            };
+
+
+            jsPlumb.fire("jsPlumbDemoLoaded", instance);
+
+
+
+            moment.locale('zh-cn');
+            var dateInput = $('#js-datetime-range');
+            var valueSpan = $('#js-datetime-value');
+            var label = dateInput.parent();
+            dateInput
+                .daterangepicker({
+                    timePicker: true,
+                    timePicker24Hour: true,
+                    autoUpdateInput: false,
+                    minDate:moment().subtract(2,'weeks').format(),
+                    opens: 'left',
+                    applyClass: 'btn-info',
+                    locale: {
+                        format: 'YYYY-MM-DD HH:mm:ss',
+                        applyLabel: '确认',
+                        cancelLabel: '取消',
+                    }
+                });
+//            dateInput.on('change', function () {
+//                if (this.value && this.value !== 'on') {
+//                    valueSpan.text(this.value);
+//                }
+//            });
+//
+            dateInput.on('cancel.daterangepicker', function(ev, picker) {
+                //do something, like clearing an input
+                //dateInput.val('on');
+            });
+////
+            dateInput.on('apply.daterangepicker', function(ev, picker) {
+               var date = picker.startDate.format('YYYY-MM-DD HH:mm:ss') + " - " + picker.endDate.format('YYYY-MM-DD  HH:mm:ss');
+
+                dateInput.val(date);
+                valueSpan.text(date);
+                init($("#appGroups").data("value"));
+            });
+
+            $(".dateType").on("change",function () {
+                if(this.value === 'on'){
+                    if($(this).data("value")){
+                        init($("#appGroups").data("value"));
+                    }
+                }
+            });
+
+        });
+
+
+        function drawChart(data,data1) {
+            var schema = [
+                {name: 'date', index: 0, text: '时间'},
+                {name: 'AQIindex', index: 1, text: '时长'}
+            ];
+
+
+            var itemStyle = {
+                normal: {
+                    color:"#2f9603",
+                    opacity: 0.8,
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0,
+                    borderColor:"#8cc474",
+                    shadowColor: '#2f9603'
+                }
+            };
+
+            var itemStyle1 = {
+                normal: {
+                    color:"#ff1919",
+                    opacity: 0.8,
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0,
+                    borderColor:"#ff6600",
+                    shadowColor: '#ff1919'
+                }
+            };
+
+            option = {
+//                backgroundColor: '#404a59',
+//                color: [
+//                    '#dd4444', '#fec42c', '#80F1BE'
+//                ],
+                legend: {
+                    y: 'top',
+                    data: ['正常','错误']
+//                    ,
+//                    textStyle: {
+//                        color: '#fff',
+//                        fontSize: 16
+//                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                tooltip: {
+                    padding: 10,
+//                    backgroundColor: '#222',
+//                    borderColor: '#777',
+                    borderWidth: 1
+                    ,
+                    formatter: function (obj) {
+                        // + obj.seriesName
+                        var value = obj.value;
+                        return '<div style="' +
+                            'font-size: 12px;">'
+                            + '发生时间:' + moment(value[0]).format("YYYY-MM-DD HH:mm:ss.SSS") + ',耗时:' + value[1] + '</div>';
+                    }
+                },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        show: true,
+                        xAxisIndex: [0]
+                    }
+                ],
+                xAxis: {
+                    type: 'time',
+                    name: '',
+//                    nameTextStyle: {
+//                        color: '#fff',
+//                        fontSize: 14
+//                    },
+
+                    splitLine: {
+                        show: false
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#008acd'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '时长(ms)',
+                    //nameLocation: 'end',
+                    //nameGap: 20,
+//                    nameTextStyle: {
+//                        color: '#fff',
+//                        fontSize: 16
+//                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#008acd'
+                        }
+                    },
+                    splitLine: {
+                        show: false
+                    }
+                },
+//                visualMap: [
+//                    {
+//                        left: 'right',
+//                        bottom: '5%',
+//                        dimension: 1,
+//                        itemHeight: 120,
+//                        itemWidth:5,
+//                        calculable: true,
+//                        precision: 1,
+//                        //max:60,
+//                        text: ['时长(ms)'],
+//                        textGap: 30
+////                        textStyle: {
+////                            color: '#444'
+////                        },
+////                        inRange: {
+////                            colorLightness: [1, 0.5]
+////                        }
+////                        ,
+////                        outOfRange: {
+////                            color: ['rgba(128,128,128,.5)']
+////                        },
+////                        controller: {
+////                            inRange: {
+////                                color: ['#444']
+////                            },
+////                            outOfRange: {
+////                                color: ['#c23531']
+////                            }
+////                        }
+//                    }
+//                ],
+                series: [
+                    {
+                        name: '正常',
+                        type: 'scatter',
+                        itemStyle: itemStyle,
+                        data: data
+                    },
+                    {
+                        name: '错误',
+                        type: 'scatter',
+                        itemStyle: itemStyle1,
+                        data: data1
+                    }
+                ]
+            };
+
+
+            var myChart = echarts.init($("#chart1")[0], 'macarons');
+            myChart.setOption(option);
+            myChart.on("dblclick",function (params) {
+                window.open("[[${webUrl}]]/omweb/env/trans_all?serviceId=" + params.data[2],"_blank")
+            });
+        }
+
+
+        function drawChart1(category,data) {
+
+            option = {
+                tooltip : {
+                    trigger: 'axis',
+                    axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                        type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+//                legend: {
+//                    data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎','百度','谷歌','必应','其他']
+//                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis : [
+                    {
+                        type : 'category',
+                        data : category
+                    }
+                ],
+                yAxis : [
+                    {
+                        type : 'value'
+                    }
+                ],
+                series : [
+                    {
+                        barWidth:"15px",
+                        name:'请求量',
+                        type:'bar',
+                        data:data
+                    }
+                ]
+            };
+
+
+            var myChart1 = echarts.init($("#chart2")[0], 'macarons');
+
+            myChart1.setOption(option);
+
+        }
+
+
+
+
+
+
+    </script>
+
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <script id="selectTemplate" type="text/template">
+        {@each options as item,index}
+        <option value="${item.value}" data-code="${item.code}">${item.text}</option>
+        {@/each}
+    </script>
+    <section class="content">
+
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <div class="box-body">
+                        <div class="btn-group pull-left" id="appGroups">
+                            <button type="button"
+                                    class="btn btn-primary dropdown-toggle"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"><i class="fa fa-angle-down"></i></button>
+                            <ul class="dropdown-menu">
+                                <li th:each="group,groupStat:${appGroups}">
+                                    <a href="#" th:data-value="${group.id}" th:text="${group.name}"></a>
+                                </li>
+                            </ul>
+                        </div>
+
+
+                        <div class="h4 pull-left">
+                            <div class="container-fluid">应用调用拓扑</div>
+                        </div>
+                        <div class="pull-right">
+                            <div class="btn-group btn-check-group" data-toggle="buttons">
+                                <label class="btn btn-default active">
+                                    <input class="dateType" data-value="1" type="radio" name="options"
+                                           checked="checked"/>1H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="2" type="radio" name="options"/>6H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="3" type="radio" name="options"/>12H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="4" type="radio" name="options"/>1D
+                                </label>
+                                <label class="btn btn-default ">
+                                    <input class="dateType" data-value="5" type="radio" name="options"/>7D
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="6" type="radio" name="options"/>14D
+                                </label>
+                                <label class="btn btn-default check-datetime">
+                                    <input class="dateType" data-value="0" type="radio" name="options"
+                                           id="js-datetime-range"/>
+                                    <span class="check-datetime-placeholder">指定时间</span>
+                                    <span class="check-datetime-value" id="js-datetime-value">指定时间</span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+
+                <div class="box box-info">
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div class="col-md-8 no-padding">
+                            <!-- demo -->
+                            <div class="jtk-demo-canvas canvas-wide statemachine-demo jtk-surface jtk-surface-nopan clear"
+                                 id="canvas">
+
+                            </div>
+                            <!-- /demo -->
+
+                        </div>
+                        <div class="col-md-4">
+                            <div id="chart1" style="height: 260px;">
+
+                            </div>
+
+                            <div id="chart2" style="height: 260px;">
+
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div id="listTemplateWrapper">
+
+                            </div>
+                            <script id="listTemplate" type="text/template">
+                                <table class="table table-bordered m-t-sm table-hover">
+                                    <tbody>
+                                    <tr>
+                                        <th style="width: 100px">主调应用名</th>
+                                        <th style="width: 100px">主调方法名</th>
+                                        <th style="width: 100px">被调应用名</th>
+                                        <th style="width: 100px">被调方法名</th>
+                                        <th style="width: 160px">次数</th>
+                                        <th style="width: 160px">最短时长</th>
+                                        <th style="width: 160px">最长时长</th>
+                                        <th style="width: 160px">平均时长</th>
+                                        <th style="width: 160px">95线</th>
+                                        <th style="width: 160px">99线</th>
+                                        <th style="width: 160px">标准线</th>
+                                        <th style="width: 160px">qbs</th>
+                                    </tr>
+                                    {@each list as item,index}
+                                    <tr>
+                                        <td>
+                                            ${item.sourceAppCode}
+                                        </td>
+                                        <td>
+                                            ${item.sourceMethod}
+                                        </td>
+                                        <td>
+                                            ${item.targetAppCode}
+                                        </td>
+                                        <td>
+                                            ${item.targetMethod}
+                                        </td>
+                                        <td>
+                                            ${item.count}
+                                        </td>
+                                        <td>
+                                            ${item.min}
+                                        </td>
+                                        <td>
+                                            ${item.max}
+                                        </td>
+                                        <td>
+                                            ${item.avg}
+                                        </td>
+                                        <td>
+                                            ${item.line95}
+                                        </td>
+                                        <td>
+                                            ${item.line99}
+                                        </td>
+                                        <td>
+                                            ${item.line50}
+                                        </td>
+                                        <td>
+                                            ${item.qbs}
+                                        </td>
+                                    </tr>
+                                    {@/each}
+
+                                    </tbody>
+                                </table>
+                            </script>
+                        </div>
+
+
+
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+
+    </section>
+</div>
+</body>
+</html>

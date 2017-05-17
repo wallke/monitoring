@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/vendors/jquery-treegrid/0.3.0/css/jquery.treegrid.css'">
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+    <script>
+        $(function () {
+            //select2 初始化下拉框
+            $("select").select2({
+                language: "zh-CN"
+            });
+
+            $("#apps").dropdown(function (result) {
+                getDataDrawChart();
+            });
+            $("#apps").find(".dropdown-menu>li:eq(0)").trigger("click");
+
+            $(".btnChartType input[type=radio]").on("change",function () {
+                $(this).parents(".btn-check-group").find(".btn-default").removeClass("active");
+                $(this).parents(".btn-default").addClass("active");
+                getDataDrawChart();
+            });
+
+            function getDataDrawChart() {
+                $.get('[[${webUrl}]]/omweb/crash/distribution',
+                    {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        techType: $("#apps").data("value"),
+                        type:$(".btnChartType input[type=radio]:checked").val()
+                    },
+                    function (callback) {
+                        if (callback.success) {
+                            window.envChart1 = {};
+                            window.envChart1.category = [];
+                            window.envChart1.data = [];
+                            window.envChart1.legend = [];
+
+                            if (callback.data) {
+                                $.each(callback.data, function (i, v) {
+                                    if (v) {
+                                        for (var key in v) {
+                                            window.envChart1.count = [];
+                                            window.envChart1.category = [];
+
+                                            $.each(v[key], function () {
+                                                window.envChart1.category.push(this.key);
+                                                window.envChart1.count.push(this.count);
+                                            });
+
+                                            window.envChart1.legend.push(key);
+                                            window.envChart1.data.push(getSeries(key, window.envChart1.count));
+                                            console.log("属性：" + key + ",值：" + v[key]);
+                                        }
+                                    }
+                                });
+
+                            }
+                            console.log(window.envChart1.data);
+                            if(window.envChart1.data.length > 0){
+                                drawEnvChart(window.envChart1.category, window.envChart1.data, window.envChart1.legend);
+
+                            }
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+            }
+
+
+            function getSeries(name, data) {
+                return {
+                    name: name,
+                    type: "line",
+                    stack: "总量",
+                    symbolSize: 10,
+                    symbol: 'circle',
+                    yAxisIndex: 0,
+                    z: 10,
+                    itemStyle: {
+                        "normal": {
+                            "label": {
+                                "show": true,
+                                "textStyle": {
+                                    "color": "#666"
+                                },
+                                "position": "insideTop",
+                                formatter: function (p) {
+                                    return p.value > 0 ? (p.value) : '';
+                                }
+                            }
+                        }
+                    },
+                    data: data
+                }
+            }
+
+
+            function drawEnvChart(category, count,legend) {
+                // 基于准备好的dom，初始化echarts实例
+                var myChart = echarts.init(document.getElementById('chart1'), 'macarons');
+
+                // 指定图表的配置项和数据
+                var option = {
+                    legend: {
+                        bottom: "2%",
+                        data:legend
+                    },
+                    tooltip: {
+                        "trigger": "axis",
+                        "axisPointer": {
+                            "type": "shadow",
+                            textStyle: {
+                                color: "#fff"
+                            }
+                        },
+                    },
+                    xAxis: [{
+                        "type": "category",
+                        data: category
+                    }],
+                    yAxis: [
+                        {
+                            type: 'value',
+                            name: '次数',
+                            min: 0,
+                            position: 'left',
+                            splitLine: {
+                                //show: false
+                            },
+                            splitArea: {
+                                // show: false
+                            },
+                            offset: 0,
+                            axisLabel: {
+                                formatter: '{value}'
+                            }
+                        }],
+                    series: count
+                };
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            }
+
+
+
+            moment.locale('zh-cn');
+            var dateInput = $('#js-datetime-range');
+            var valueSpan = $('#js-datetime-value');
+            var label = dateInput.parent();
+            dateInput
+                .daterangepicker({
+                    timePicker: true,
+                    timePicker24Hour: true,
+                    autoUpdateInput: false,
+                    minDate:moment().subtract(2,'weeks').format(),
+                    opens: 'left',
+                    applyClass: 'btn-info',
+                    locale: {
+                        format: 'YYYY-MM-DD HH:mm:ss',
+                        applyLabel: '确认',
+                        cancelLabel: '取消',
+                    }
+                });
+            dateInput.on('cancel.daterangepicker', function(ev, picker) {
+                //do something, like clearing an input
+                //dateInput.val('on');
+            });
+            dateInput.on('apply.daterangepicker', function(ev, picker) {
+                var date = picker.startDate.format('YYYY-MM-DD HH:mm:ss') + " - " + picker.endDate.format('YYYY-MM-DD  HH:mm:ss');
+
+                dateInput.val(date);
+                valueSpan.text(date);
+                getDataDrawChart();
+            });
+
+            $(".dateType").on("change",function () {
+                if(this.value === 'on'){
+                    if($(this).data("value")){
+                        getDataDrawChart();
+                    }
+                }
+            });
+        });
+
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <!-- Main content -->
+    <section class="content">
+        <div class="box">
+            <div class="box-header with-border">
+                <div class="btn-group pull-left" id="apps">
+                    <button type="button"
+                            class="btn btn-primary dropdown-toggle"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false"><i class="fa fa-angle-down"></i></button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a href="#" th:data-value="ANDROID" th:text="ANDROID"></a>
+                        </li>
+                        <li>
+                            <a href="#" th:data-value="IOS" th:text="IOS"></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="h4 pull-left">
+                    <div class="container-fluid">崩溃分析</div>
+                </div>
+                <div class="pull-right">
+                    <div class="btn-group btn-check-group" data-toggle="buttons">
+                        <label class="btn btn-default active">
+                            <input class="dateType" data-value="1" type="radio" name="options"
+                                   checked />1H
+                        </label>
+                        <label class="btn btn-default">
+                            <input class="dateType" data-value="2" type="radio" name="options"/>6H
+                        </label>
+                        <label class="btn btn-default">
+                            <input class="dateType" data-value="3" type="radio" name="options"/>12H
+                        </label>
+                        <label class="btn btn-default">
+                            <input class="dateType" data-value="4" type="radio" name="options"/>1D
+                        </label>
+                        <label class="btn btn-default ">
+                            <input class="dateType" data-value="5" type="radio" name="options"/>7D
+                        </label>
+                        <label class="btn btn-default">
+                            <input class="dateType" data-value="6" type="radio" name="options"/>14D
+                        </label>
+                        <label class="btn btn-default check-datetime">
+                            <input class="dateType" data-value="0" type="radio" name="options"
+                                   id="js-datetime-range"/>
+                            <span class="check-datetime-placeholder">指定时间</span>
+                            <span class="check-datetime-value" id="js-datetime-value">指定时间</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.box -->
+        <div class="box">
+            <div class="box-header">
+                <div class="monitor-filter">
+                    <div class="btn-group btn-check-group btnChartType" data-toggle="buttons">
+                        <label class="btn active">
+                            <input type="radio" value="count" name="chartType" checked> 崩溃汇总
+                        </label>
+                        <label class="btn">
+                            <input type="radio" value="ver"  name="chartType"> 版本分部
+                        </label>
+                        <label class="btn">
+                            <input type="radio" value="deviceType"  name="chartType"> 设备分布
+                        </label>
+                        <label class="btn">
+                            <input type="radio" value="osVer"  name="chartType"> 操作系统分布
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="panel panel-monitor">
+                    <div class="panel-heading">
+                        <button class="btn btn-help"><i class="fa fa-question"></i></button>
+                        崩溃数据汇总
+                    </div>
+                    <div class="panel-body">
+                        <div id="chart1" style="width: 100%;height: 260px;"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- ./box-body -->
+        </div>
+        <!-- /.box -->
+    </section>
+    <!-- /.content -->
+</div>
+</body>
+</html>

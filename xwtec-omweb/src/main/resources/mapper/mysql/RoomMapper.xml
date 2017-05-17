@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.RoomMapper">
+
+    <resultMap id="RoomResultMap" type="Room">
+        <id column="F_ROOM_ID" property="id"/>
+        <result column="F_NUM" property="num"/>
+        <result column="F_NAME" property="name"/>
+        <result column="F_IS_USE" property="isUse"/>
+        <result column="F_IS_ENABLED" property="isEnabled"/>
+        <result column="F_DESC" property="desc"/>
+        <result column="F_MEMO" property="memo"/>
+        <result column="F_CREATE_MANCODE" property="createManCode"/>
+        <result column="F_CREATE_MANNAME" property="createManName"/>
+        <result column="F_CREATE_TIME" property="createTime"/>
+        <result column="F_CREATE_MEMO" property="createMemo"/>
+        <result column="F_LAST_MANCODE" property="lastManCode"/>
+        <result column="F_LAST_MANNAME" property="lastManName"/>
+        <result column="F_LAST_TIME" property="lastTime"/>
+        <result column="F_LAST_MEMO" property="lastMemo"/>
+    </resultMap>
+
+    <select id="getRooms" resultMap="RoomResultMap" parameterType="Room">
+        select *
+        from tm_da_server_room
+        where F_IS_USE=1
+        <if test="num != null and num != ''">
+            and F_NUM like CONCAT('%',#{num},'%')
+        </if>
+        <if test="name != null and name != ''">
+            and F_NAME like CONCAT('%',#{name},'%')
+        </if>
+        order by F_NUM asc
+    </select>
+
+    <select id="getAllRooms" resultMap="RoomResultMap">
+        select *
+        from tm_da_server_room
+        where F_IS_USE=1 AND  F_IS_ENABLED = 1
+        order by F_NUM asc
+    </select>
+    
+    
+    <select id="getRoomsByAppGroupId" resultMap="RoomResultMap"  parameterType="java.lang.String">
+      SELECT DISTINCT A.* FROM tm_da_server_room A
+		JOIN tm_da_server B ON A.F_ROOM_ID = B.F_ROOM_ID
+		JOIN tm_da_node C ON B.F_SERVER_ID = C.F_SERVER_ID
+		JOIN tm_dz_app_group D ON C.F_APP_ID = D.F_APP_ID
+		JOIN tm_da_app_group F ON D.F_GROUP_ID = F.F_GROUP_ID
+		WHERE F.F_GROUP_ID = #{id}
+		AND A.F_IS_USE = 1
+    </select>
+   
+    <select id="getRoomById" resultMap="RoomResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_server_room
+        where F_IS_USE=1 and F_ROOM_ID=#{id}
+    </select>
+
+    <select id="getRoomByNum" resultMap="RoomResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_server_room
+        where F_IS_USE=1 and F_NUM=#{num}
+    </select>
+
+    <select id="getRoomByName" resultMap="RoomResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_server_room
+        where F_IS_USE=1 and F_NAME=#{name}
+    </select>
+
+    <select id="getRoomByNumExceptSelf" resultMap="RoomResultMap" parameterType="Room">
+        select *
+        from tm_da_server_room
+        where F_IS_USE=1 and F_NUM=#{num} and F_ROOM_ID!=#{id}
+    </select>
+
+    <select id="getRoomByNameExceptSelf" resultMap="RoomResultMap" parameterType="Room">
+        select *
+        from tm_da_server_room
+        where F_IS_USE=1 and F_NAME=#{name} and F_ROOM_ID!=#{id}
+    </select>
+
+    <insert id="createRoom" parameterType="Room">
+        insert into tm_da_server_room(F_ROOM_ID, F_NUM, F_NAME, F_IS_USE, F_IS_ENABLED, F_DESC, F_MEMO,
+        F_CREATE_MANCODE, F_CREATE_MANNAME, F_CREATE_TIME, F_CREATE_MEMO,
+        F_LAST_MANCODE, F_LAST_MANNAME, F_LAST_TIME, F_LAST_MEMO)
+        VALUES (#{id}, #{num}, #{name}, #{isUse}, #{isEnabled}, #{desc}, #{memo},
+        #{createManCode}, #{createManName}, #{createTime}, #{createMemo},
+        #{lastManCode}, #{lastManName}, #{lastTime}, #{lastMemo})
+    </insert>
+
+    <update id="updateRoom" parameterType="Room">
+        update tm_da_server_room
+        set F_NUM=#{num}, F_NAME=#{name}, F_IS_USE=#{isUse}, F_IS_ENABLED=#{isEnabled}, F_DESC=#{desc}, F_MEMO=#{memo},
+        F_CREATE_MANCODE=#{createManCode}, F_CREATE_MANNAME=#{createManName}, F_CREATE_TIME=#{createTime}, F_CREATE_MEMO=#{createMemo},
+        F_LAST_MANCODE=#{lastManCode}, F_LAST_MANNAME=#{lastManName}, F_LAST_TIME=#{lastTime}, F_LAST_MEMO=#{lastMemo}
+        where F_ROOM_ID=#{id}
+    </update>
+
+    <delete id="deleteRoom" parameterType="java.lang.String">
+        update tm_da_server_room
+        set F_IS_USE=0
+        where F_ROOM_ID=#{id}
+    </delete>
+    <!--根据机房ID查询机房下是否有主机-->
+    <select id="queryRoomNextServer" parameterType="java.lang.String" resultType="int">
+        SELECT count(*) FROM  tm_da_server_room  t1 LEFT  JOIN  tm_da_server t2
+        ON t1.F_ROOM_ID = t2.F_ROOM_ID WHERE  t1.F_ROOM_ID = #{id}
+    </select>
+
+</mapper>

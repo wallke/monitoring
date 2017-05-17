@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(document).ready(function(){
+            //单选
+            $(".js-example-basic-single").select2();
+        });
+        $(function () {
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+        });
+        function saveAppContact() {
+
+            if ($("form").valid()) {
+                $("form").ajaxSubmit({
+                    url:"[[${webUrl}]]/omweb/cropContacts/addContactApp",
+                    success: function (callback) {
+                        // data 保存提交后返回的数据，一般为 json 数据
+                        // 此处可对 data 作相关处理
+                        if (callback.success) {
+                            $.notify.success(callback.message, "", function () {
+                                location.reload();
+                            });
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }
+            return false;
+
+            $("form").validate({
+                rules: {
+                    hostNum: {
+                        required: true
+                    },
+                    hostName: {
+                        required: true
+                    }
+
+                },
+                messages: {
+                    hostNum: {
+                        required: "主机编码！"
+                    },
+                    hostName: {
+                        required: "主机名称！"
+                    }
+                }
+            });
+            
+        }
+
+        function deleteAppContact(but){
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/cropContacts/deleteAppContact',
+                        data: {
+                            'appId': but.id,
+                            'contactId':$("#contactId").val()
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.reload();
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+
+        }
+        function openModel() {
+            $('#myModal').modal('show');
+        }
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            人员信息应用管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li th:href="${homeUrl}+'/omweb/cropContacts/index'" class="active">人员信息应用管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <button onclick="openModel();"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+
+                                <tr>
+                                    <th style="width: 100px">序号</th>
+                                    <th style="width: 100px">应用编码</th>
+                                    <th style="width: 100px">应用名称</th>
+                                    <th style="width: 100px">应用类别</th>
+                                    <th style="width: 160px">是否启用</th>
+                                    <th style="width: 160px">操作</th>
+                                </tr>
+                                <tbody>
+                              <tr th:each="app,appStat:${appList}">
+                                    <td th:text="${appStat.index+1}"></td>
+                                    <td th:text="${app.appNum}"></td>
+                                    <td th:text="${app.appName}"></td>
+                                    <td th:text="${app.categoryName}"></td>
+                                    <td th:text="${app.isUse}=='0'?'否':'是'"></td>
+                                    <td>
+                                        <a onclick='deleteAppContact(this)'  class=" pointer btn btn-default btn-xs purple btnDetail"  th:id="${app.appId}"  >删除</a>
+                                    </td>
+
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                    <!--模态框开始-->
+                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title">应用维护新增</h4>
+                                </div>
+                                <form role="form" method="post" class="formClass">
+                                    <input type="hidden" id="contactId" name="contactId"  th:value="${contactId}">
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                            <label for="appIds">应用名称</label>
+                                            <select id="appIds" name="appIds"    class="form-control js-example-basic-single">
+                                                <option th:each="appAllList,appAllListStat : ${appAllList}"
+                                                        th:value="${appAllList.appId}" th:text="${appAllList.appName}">Credit card</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                                    <button type="button" data-dismiss="modal" onclick="saveAppContact()" class="btn btn-primary">保存</button>
+                                </div>
+                            </div><!-- /.modal-content -->
+                        </div><!-- /.modal-dialog -->
+                    </div><!-- /.modal -->
+                    <!-- /.box-body -->
+                    <!--模态框结束-->
+                    <div class="box-footer clearfix paginateWrapper">
+                       <!--<ul class="pagination pagination-sm no-margin pull-right">
+                        <li><a href="#">«</a></li>
+                        <li><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">»</a></li>
+                        </ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

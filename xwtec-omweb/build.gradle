@@ -1,0 +1,72 @@
+
+apply plugin: 'org.springframework.boot'
+apply plugin: 'war'
+
+
+springBoot {
+    // mainClass = 'com.xwtech.springboot.SpringBootExampleApplication'
+}
+
+bootRepackage {
+    // mainClass = 'com.xwtech.springboot.SpringBootExampleApplication'
+}
+
+bootRun {
+    addResources = true
+}
+
+dependencies {
+    compile(
+            project(':xwtec-framework'),
+            project(':xwtec-static'),
+            project(':xwtec-es'),
+
+            springbootlibraries."starter-actuator",
+            springbootlibraries."starter-thymeleaf",
+            springbootlibraries."devtools",
+            springbootlibraries."starter-data-redis",
+            springbootlibraries."starter-cache",
+            springbootlibraries."starter-aop",
+
+
+            springbootlibraries."mybatis",
+
+            libraries."jedis",
+            libraries."httpclient",
+
+            libraries.'commons-lang3',
+            libraries.'commons-codec',
+            libraries.'hibernatevalidator',
+            libraries.'jackson-data-formatxml',
+
+            libraries."hikaricp",
+            libraries.'mysqlconnector',
+            libraries.'mybatis-pagehelper',
+            libraries."shiro-spring",
+            //libraries."shiro-ehcache",  //shiro 使用redis cacheManager
+
+            libraries."spring-data-redis",
+
+
+            libraries."thymeleaf",
+            libraries."thymeleaf-spring4",
+            libraries."thymeleaf-layout-dialect",
+            libraries."thymeleaf-extras-shiro",
+           // libraries."elasticsearch-transport",
+            libraries."elasticsearch-transport",
+            libraries."elasticsearch",
+            //libraries."log4j-slf4j-impl",
+            libraries."slf4j-api",
+            libraries."log4j2",
+            libraries."log4j2-api",
+
+
+    )
+
+    compile name:locallibraries.ServerCM
+
+    testCompile(springbootlibraries."starter-test")
+
+    providedRuntime (springbootlibraries.'starter-tomcat')
+}
+

@@ -1,0 +1,101 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="common_head(title,links,scripts)">
+    <th:block th:if="${title} != null">
+        <title th:replace="${title}"></title>
+    </th:block>
+    <th:block th:if="${title} == null">
+        <title>欣网管理后台</title>
+    </th:block>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="google" value="notranslate">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,shrink-to-fit=no,minimal-ui">
+    <meta name="format-detection" content="telephone=no,email=no,address=no,date=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/bootstrap/css/bootstrap.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/font-awesome/4.7.0/css/font-awesome.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/toastr/toastr.min.css'">
+
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/dist/css/AdminLTE.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/dist/css/skins/skin-blue.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/dist/css/adminlte.ext.css'">
+
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/style/main.css'">
+
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/style/monitor.css'">
+    <!--[if lt IE 9]>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/html5shiv/3.7.3/html5shiv.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/respond/1.4.2/respond.min.js'"></script>
+    <![endif]-->
+    <!-- jQuery 2.2.3 -->
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jQuery/jquery-3.1.1.min.js'"></script>
+    <!--<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jQuery/jquery-migrate-1.4.1.min.js'"></script>-->
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jQuery/jquery-migrate-3.0.0.min.js'"></script>
+    <!-- Bootstrap 3.3.6 -->
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/bootstrap/js/bootstrap.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jquery-form/jquery.form.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jquery-validation-1.15.0/jquery.validate.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jquery-validation-1.15.0/jquery-validate.bootstrap-tooltip.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jquery-validation-1.15.0/additional-methods.js?v=2.0'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jquery-validation-1.15.0/localization/messages_zh.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/layer/layer.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/toastr/toastr.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/datapage/jquery.page.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/bootbox/bootbox.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/juicer/juicer.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/dist/js/adminlte.ext.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/ajaxhook/ajaxhook.js'"></script>
+    <style rel="stylesheet">body{background-color:#ecf0f5;}</style>
+    <script>
+        $(function () {
+            var layerLoadingIndex = -1;
+            $.ajaxSetup({
+                global: true,
+                dataType:'json',
+                beforeSend:function () {
+                    if(layerLoadingIndex === -1){
+                        layerLoadingIndex = layer.load(0, {shade: 0.1,time:0}); //0代表加载的风格，支持0-2
+                    }
+                },
+                complete:function () {
+                    layer.close(layerLoadingIndex);
+                    layerLoadingIndex = -1;
+
+                }
+            });
+
+            hookAjax({
+                onload:function(xhr,a,c){
+                    var object = JSON.parse(xhr.responseText)
+                    if(object && !object.success && object.code=="unauthorized"){
+                        setTimeout(function () {
+                            location.href = object.data;
+                        },1000);
+                    }
+                }
+            });
+        });
+    </script>
+    <th:block th:if="${links} != null">
+        <th:block th:replace="${links}" />
+    </th:block>
+    <th:block th:if="${scripts} != null">
+        <th:block th:replace="${scripts}" />
+    </th:block>
+</head>
+
+<body>
+
+
+</body>
+
+</html>

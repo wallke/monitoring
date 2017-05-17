@@ -1,0 +1,14 @@
+apply plugin: 'application'
+
+mainClassName = "com.xwtech.hm.Application"
+applicationDefaultJvmArgs = ["-Dgreeting.language=en"]
+
+dependencies {
+    compile(
+            libraries.'jackson-data-formatxml',
+            libraries.'httpclient',
+            libraries.'logback',
+    )
+    compile name:'javax.mail'
+
+}

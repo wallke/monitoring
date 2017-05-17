@@ -1,0 +1,57 @@
+###################### Filebeat Configuration Example #########################
+
+# This file is an example configuration file highlighting only the most common
+# options. The filebeat.full.yml file from the same directory contains all the
+# supported options with more comments. You can use it as a reference.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/filebeat/index.html
+
+#=========================== Filebeat prospectors =============================
+
+filebeat:
+ registry_file: /home/webapp/monitor/f_registry
+ prospectors:
+
+ -
+    paths:
+     - /home/webapp/webs/zabbix/logs/*.*
+    input_type: log
+    fields:
+         log_source: systemInfo
+ - 
+    paths:
+     - /home/webapp/tomcat-ecp-webtrends/logs/servercm/*.*
+    input_type: log
+    fields:
+         log_source: application
+    # document_type: application
+ - 
+    paths:
+     - /usr/servers/nginx/logs/v3/appcrash/*.*
+    input_type: log
+    fields:
+         log_source: application
+
+
+output:
+  redis:
+    hosts: "10.19.241.52"
+    port: 6380
+    index: "filebeat"
+    db: 0
+    db_topology: 1
+    timeout: 5
+    reconnect_interval: 1
+  #console:
+    
+
+  #output.elasticsearch:
+  # Array of hosts to connect to.
+  #hosts: ["localhost:9200"]
+
+  # Optional protocol and basic auth credentials.
+  #protocol: "https"
+  #username: "elastic"
+  #password: "changeme"
+

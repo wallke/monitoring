@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+
+        // IP地址验证
+        jQuery.validator.addMethod("ip", function(value, element) {
+            return this.optional(element) || /^(([1-9]|([1-9]\d)|(1\d\d)|(2([0-4]\d|5[0-5])))\.)(([1-9]|([1-9]\d)|(1\d\d)|(2([0-4]\d|5[0-5])))\.){2}([1-9]|([1-9]\d)|(1\d\d)|(2([0-4]\d|5[0-5])))$/.test(value);
+        }, "请填写正确的IP地址。");
+        jQuery.validator.addMethod("douHao", function(value, element) {
+            return this.optional(element) || /^[\w,]+$/.test(value);
+        }, "请用逗号分隔");
+
+        $(document).ready(function() {
+            $(".js-example-basic-single").select2();
+        });
+        //拼接黑名单列表
+        function queryHosyNode(but) {
+            var hostId = but.id;
+            var $this =$(but);
+            var $parntTr = $this.parents("tr");
+            var $next = $parntTr.next();
+            if($this.find("i").hasClass("fa-plus")){
+                $("tr.detail").find("td").empty();
+                $("tr.detail").addClass("hide");
+                $("tr").find("i").removeClass("fa-minus").addClass("fa-plus");
+                $.ajax({
+                    type: "post",
+                    url: '[[${webUrl}]]/omweb/sdk/sdkConfHostNodeList',
+                    data: {
+                        'hostId':hostId
+                    },
+                    success: function (callback) {
+                        if(callback.data.length > 0)
+                        {
+                            if (callback.success) {
+                                var templateHtml = "";
+                                templateHtml+=" <table  id='hostNodeTable' class='table table-bordered m-t-sm table-hover'>";
+                                templateHtml+="    <thead >";
+                                templateHtml+="    <tr>";
+                                templateHtml+="    <th style='width: 100px'>节点名称</th>";
+                                templateHtml+="    <th style='width: 100px'>节点代码</th>";
+                                templateHtml+="    <th style='width: 100px'>采集开关</th>";
+                                templateHtml+="    <th style='width: 110px'>操作</th>";
+                                templateHtml+="    </tr>";
+                                templateHtml+="    </thead>";
+                                templateHtml+="    <tbody>";
+                                $.each(callback.data, function(idx, obj) {
+                                    templateHtml+="<tr> ";
+                                    templateHtml+="<td >"+obj.node_name+"</td>";
+                                    templateHtml+="<td >"+obj.nodeCode+"</td>";
+                                    if(obj.collectNode  == '0'){
+                                        templateHtml+="<td >否</td>";
+                                    }else{
+                                        templateHtml+="<td >是</td>";
+                                    }
+                                    templateHtml+="<td><a onclick=openHostNodeModel('"+obj.nodeId+"') class='curosr:pointer  pointer btn btn-default btn-xs purple btnDetail'>修改</a>&nbsp;";
+                                    templateHtml+=" <a class='curosr:pointer  pointer btn btn-default btn-xs purple btnDetail' onclick=deleteSdkConfHostNode('"+obj.nodeId+"') >删除</a></td>";
+                                    templateHtml+="</tr> ";
+                                });
+                                templateHtml+="</tbody>";
+                                templateHtml+="</table>";
+                                $next.find("td").html(templateHtml);
+                                $next.removeClass("hide").find("td");
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    },
+                    beforeSend: function () {
+                        $this.find("i").removeClass("fa-plus").addClass("fa-minus");
+                        $next.removeClass("hide").find("td");
+                    },
+                });
+
+            }else{
+                $this.find("i").removeClass("fa-minus").addClass("fa-plus");
+                $next.find("td").empty();
+                $next.addClass("hide");
+            }
+            $("#hostIdValue").val(hostId);
+
+            //$("#nodeTable").show();
+        }
+
+        //节点配置
+        function openHostNodeModel(nodeId) {
+            $("input[name='collectEnvir']").prop("checked",true);
+            if(nodeId !=null)
+            {
+                $.ajax({
+                    type: "post",
+                    url: '[[${webUrl}]]/omweb/sdk/SDKConfHostNodeDetail',
+                    data: {
+                        'nodeId':nodeId
+                    },
+                    success: function (callback) {
+                        console.log(callback.data);
+                        if (callback.success) {
+                            if(callback.data !=null)
+                            {
+                                $("#nodeId").val(callback.data.nodeId );
+                                $("#hostId").val(callback.data.hostId);
+                                $("#node_name").val(callback.data.node_name );
+                                $("#nodeCode").val(callback.data.nodeCode );
+
+                                $("input[name='collectEnvir'][value='"+callback.data.nodeCode+"']").prop("checked",true);
+                            }
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }else
+            {
+                $("#node_name").val('' );
+                $("#nodeCode").val('' );
+            }
+            $("#hostNodeModal").modal('show');
+        }
+
+        //微环境配置弹框
+        function openEnvModel(but) {
+            $("input[name='collectEnvir']").prop("checked",false);
+            if(but !=null)
+            {
+                $.ajax({
+                    type: "post",
+                    url: '[[${webUrl}]]/omweb/sdk/SDKConfEnvDetail',
+                    data: {
+                        'envId':but.id
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            if(callback.data !=null)
+                            {
+                                $("#envId").val(callback.data.param.envId);
+                                $("#envirId").val(callback.data.param.envirId);
+                                $("#envirName").val(callback.data.param.envirName);
+                                $("#nodeCodes").val(callback.data.nodeCodes );
+                                $("input[name='collectEnvir'][value='"+callback.data.collectEnvir+"']").prop("checked",true);
+                            }
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }else
+            {
+                $("#envirId").val('');
+                $("#envirName").val('');
+                $("#nodeCodes").val('');
+            }
+
+            $("#envModal").modal('show');
+
+        }
+        //主机配置弹框
+        function openHostModel(but) {
+            $("input[name='collectIp']").prop("checked",false);
+            $("input[name='collectPort']").prop("checked",false);
+            if(but !=null)
+            {
+                $.ajax({
+                    type: "post",
+                    url: '[[${webUrl}]]/omweb/sdk/SDKConfHostDetail',
+                    data: {
+                        'hostId':but.id
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            if(callback.data !=null)
+                            {
+                                $("#hostId").val(callback.data.hostId);
+                                //节点IP
+                                $("#ip").val(callback.data.ip);
+                                //节点端口
+                                $("#port").val(callback.data.port);
+                                //主机名称
+                                $("#hostName").val(callback.data.hostName);
+                                $("input[name='collectIp'][value='"+callback.data.collectIp+"']").prop("checked",true);
+                                $("input[name='collectPort'][value='"+callback.data.collectPort+"']").prop("checked",true);
+                            }
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }else
+            {
+                $("#ip").val('');
+                //节点端口
+                $("#port").val('');
+                //主机名称
+                $("#hostName").val('');
+            }
+            $('#hostModal').modal('show');
+        }
+
+        //性能配置弹框
+        function openModel(but) {
+            $("#heartForm").resetForm()
+            $("input[id='collectHeart']").prop("checked",false);
+            if(but != null ){
+                $.ajax({
+                    type: "post",
+                    url: '[[${webUrl}]]/omweb/sdk/sdkConfHeartDetail',
+                    data: {
+                        'heartId':but.id
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                           if(callback.data !=null)
+                           {
+                               //心跳ID
+                               $("#heartId").val(callback.data.heartId)
+                               //心跳采集
+                               $("#heartType").val(callback.data.heartType);
+                               //心跳间隔秒数
+                               $("#heartInterval").val(callback.data.heartInterval);
+                               $("input[id='collectHeart'][value='"+callback.data.collectHeart+"']").prop("checked",true);
+                           }
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }else
+            {
+                $("#heartType").val('');
+                //心跳间隔秒数
+                $("#heartInterval").val('');
+
+            }
+            $('#myModal').modal('show');
+        }
+        //删除主机配置
+        function deleteSdkConfHost(but) {
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/sdk/deleteSDKConfHost',
+                        data: {
+                            'hostId': but.id,
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.reload();
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        //删除性能配置
+        function deleteSdkConfHeart(but) {
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/sdk/deleteSdkConfHeart',
+                        data: {
+                            'heartId': but.id,
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.reload();
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        //删除微环境配置
+        function deleteSdkConfEnv(but) {
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/sdk/deleteSDKConfEnv',
+                        data: {
+                            'envId': but.id,
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.reload();
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        //删除主机节点
+        function deleteSdkConfHostNode(nodeId) {
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/sdk/deleteSDKConfHostNode',
+                        data: {
+                            'nodeId': nodeId,
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.reload();
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        //新增修改性能配置
+        function saveSDKHeart() {
+            if ($("#heartForm").valid()) {
+                $("#heartForm").ajaxSubmit({
+                    url: "[[${webUrl}]]/omweb/sdk/saveSdkHeart",
+                    success: function (callback) {
+                        // data 保存提交后返回的数据，一般为 json 数据
+                        // 此处可对 data 作相关处理
+                        if (callback.success) {
+                            $.notify.success(callback.message, "", function () {
+                                $("#myModal").modal('hide');
+                                location.reload();
+                            });
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }
+
+            return false;
+        }
+        //新增修改主机配置
+        function saveSDKHost() {
+            if ($("#hostForm").valid()) {
+                $("#hostForm").ajaxSubmit({
+                    url: "[[${webUrl}]]/omweb/sdk/saveSDKConfHost",
+                    success: function (callback) {
+                        // data 保存提交后返回的数据，一般为 json 数据
+                        // 此处可对 data 作相关处理
+                        if (callback.success) {
+                            $.notify.success(callback.message, "", function () {
+                                location.reload();
+                            });
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }
+            return false;
+        }
+
+        //新增修改微环境配置
+        function saveSDKEnv() {
+            if ($("#envForm").valid()) {
+                $("#envForm").ajaxSubmit({
+                    url: "[[${webUrl}]]/omweb/sdk/saveSDKConfEnv",
+                    success: function (callback) {
+                        // data 保存提交后返回的数据，一般为 json 数据
+                        // 此处可对 data 作相关处理
+                        if (callback.success) {
+                            $.notify.success(callback.message, "", function () {
+                                $("#saveSDKEnv").modal("hide");
+                                location.reload();
+                            });
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            }
+            return false;
+        }
+        //新增主机节点
+        function saveSDKHostNode() {
+            $("#hostNodeForm").ajaxSubmit({
+                url:"[[${webUrl}]]/omweb/sdk/saveSDKConfHostNode",
+                success: function (callback) {
+                    // data 保存提交后返回的数据，一般为 json 数据
+                    // 此处可对 data 作相关处理
+                    if (callback.success) {
+                        $.notify.success(callback.message, "", function () {
+                            location.reload();
+                        });
+                    } else {
+                        $.notify.error(callback.message)
+                    }
+                }
+            });
+        }
+        $(function () {
+
+            $(".btnSubmit").on("click", function () {
+                var appServer =  $("#appServerName").find("option:selected");
+                var appId = $(appServer).attr("id");
+                $("#appId").val(appId);
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        url:"[[${webUrl}]]/omweb/sdk/updateSdk",
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/sdk/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+
+
+
+            $("#hostForm").validate({
+                rules: {
+                    ip: {
+                        required: true,
+                        ip:true,
+                        maxlength:100
+                    },
+                    port: {
+                        required: true,
+                        digits:true,
+                        maxlength:100
+                    },
+                    hostName:{
+                        required: true,
+                        maxlength:100
+                    },
+                    collectIp:{
+                        required: true,
+                        maxlength:100
+                    },
+                    collectPort:{
+                        required: true,
+                        maxlength:100
+                    }
+                },
+                messages: {
+                    ip: {
+                        required: "IP不能为空",
+                    },
+                    port: {
+                        required: "端口不能为空",
+                        digits:true
+                    },
+                    hostName:{
+                        required: "主机名称不能为空"
+                    },
+                    collectIp:{
+                        required: "请选择端口IP"
+                    },
+                    collectPort:{
+                        required: "请选择端口开关"
+                    }
+                }
+            });
+            
+
+
+            var heartFormVld = $("#heartForm").validate({
+                rules: {
+                    heartType: {
+                        required: true,
+                        maxlength:100
+                    },
+                    heartInterval: {
+                        required: true,
+                        digits:true,
+                        maxlength:100
+                    },
+                    collectHeart:{
+                        required: true,
+                        maxlength:100
+                    }
+                },
+                messages: {
+                    heartType: {
+                        required: "心跳日志采集类型不能为空！"
+                    },
+                    heartInterval: {
+                        required: "心跳间隔秒数不能为空！",
+                        digits:"心跳间隔秒数请输入整数"
+                    },
+                    collectHeart:{
+                        required: "心跳状态不能为空"
+                    }
+                }
+            });
+            $("#SDKHeartBut").click(function () {
+                heartFormVld.resetForm();
+                $('#heartForm')[0].reset();
+            })
+
+            $("#envForm").validate({
+                rules: {
+                    envirId:{
+                        required: true,
+                        maxlength:100
+                    },
+                    envirName: {
+                        required: true,
+                        maxlength:100
+                    },
+                    collectEnvir: {
+                        required: true,
+                        maxlength:100
+                    },
+                    nodeCodes:{
+                        required: true,
+//                        douHao:true,
+                        maxlength:1000
+                    }
+                },
+                messages: {
+                    envirId: {
+                        required: "微环境ID不能为空！"
+                    },
+                    envirName: {
+                        required: "微环境名称不能为空！"
+                    },
+                    collectEnvir:{
+                        required: "采集开关不能为空"
+                    },
+                    nodeCodes:{
+                        required: "节点名称不能为空"
+                    }
+                }
+            });
+
+
+            $("form").validate({
+                rules: {
+                    hostNum: {
+                        required: true,
+                    },
+                    hostName: {
+                        required: true
+                    },
+                    roomId:{
+                        required: true
+                    },
+                    type:{
+                        required: true
+                    },
+                    updateInterval:{
+                        required: true,
+                        digits:true,
+                        maxlength:100
+                    },
+                    samplingRate:{
+                        required: true,
+                        digits:true,
+                        maxlength:100
+                    },
+                    logsBufferMaxSize:{
+                        required: true,
+                        digits:true,
+                        maxlength:100
+                    },
+                    buildLogThreadSize:{
+                        required: true,
+                        digits:true,
+                        maxlength:100
+                    }
+
+
+                },
+                messages: {
+                    hostNum: {
+                        required: "主机编码不能为空！"
+                    },
+                    hostName: {
+                        required: "主机名称不能为空！"
+                    },
+                    roomId:{
+                        required: "请选择机房名称"
+                    },
+                    type:{
+                        required: "请选择主机类型"
+                    },
+                    updateInterval:{
+                        required: "配置更新间隔不能为空",
+                        digits:"必须输入整数"
+                    },
+                    samplingRate:{
+                        required: "采样率不能为空",
+                        digits:"必须输入整数"
+                    },
+                    logsBufferMaxSize:{
+                        required: "日志缓存最大值不能为空",
+                        digits:"必须输入整数"
+                    },
+                    buildLogThreadSize:{
+                        required: "构造日志线程数不能为空",
+                        digits:"必须输入整数"
+                    }
+                }
+            });
+        });
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            服务端采集详情维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${homeUrl}+'/omweb/sdk/index'"><i class="fa fa-users"></i>服务端采集管理中心</a></li>
+            <li class="active">服务端采集详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+
+        <div class="row">
+            <div class="col-xs-12">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab_1" data-toggle="tab">基础信息</a></li>
+                        <li><a href="#tab_2" data-toggle="tab">性能配置</a></li>
+                        <li><a href="#tab_3" data-toggle="tab">节点黑名单配置</a></li>
+                        <li><a href="#tab_4" data-toggle="tab">微环境配置</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden" value="" name="appId" id="appId">
+                            <input type="hidden" id="confId" name="confId" th:value="${sdk.confId}">
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="logVer">版本号:
+                                        </label>
+                                        <input type="text" name="logVer" th:value="${sdk.logVer}"
+                                               class="form-control" id="logVer" placeholder="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="collectAll">全部采集</label>
+                                        <input type="radio" name="collectAll" th:checked="${sdk.collectAll} == '1'"
+                                               th:value="${sdk.collectAll}"
+                                               id="collectAll">是
+                                        <input type="radio" name="collectAll" th:checked="${sdk.collectAll} == '0'"
+                                               th:value="${sdk.collectAll}"
+                                               id="collectAll">否
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="appServerName">服务端名称</label>
+                                        <select id="appServerName" name ="appServerName" class="js-example-basic-single form-control">
+                                            <option th:id="${app.appId}"  th:each="app,appStat:${appList}"  th:field="${sdk.appServerName}"
+                                                    th:value="${app.appNum}" th:text = "${app.appNum}"></option>
+                                        </select>
+                                       <!-- <input id="appServerName" name="appServerName"  th:value="${sdk.appServerName}"   class=" form-control">-->
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="appServerVer">服务端版本</label>
+                                        <input type="text" name="appServerVer" th:value="${sdk.appServerVer}"
+                                               class="form-control" id="appServerVer">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="levelOne">一级分隔符</label>
+                                        <select name="levelOne"  class="form-control js-example-basic-single ">
+                                            <option th:value="'\u0001'" th:selected="${sdk.levelOne} == '\u0001'">16进制01字符</option>
+                                            <option th:value="'\u007C'" th:selected="${sdk.levelOne} == '\u007C'">|字符</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="levelTwo">二级分隔符</label>
+                                        <select name="levelTwo" class="form-control js-example-basic-single ">
+                                            <option th:value="'\u0002'" th:selected="${sdk.levelTwo} == '\u0002'">16进制02字符</option>
+                                            <option th:value="'\u0026'" th:selected="${sdk.levelTwo} == '\u0026'">&字符</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="updateInterval">配置更新间隔</label>
+                                        <input type="text" name="updateInterval" th:value="${sdk.updateInterval}"
+                                               class="form-control" id="updateInterval">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="samplingRate">采样率</label>
+                                        <input type="text" name="samplingRate" th:value="${sdk.samplingRate}"
+                                               class="form-control" id="samplingRate">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="logsBufferMaxSize">日志缓存最大值</label>
+                                        <input type="text" name="logsBufferMaxSize"  th:value="${sdk.logsBufferMaxSize}"
+                                               class="form-control" id="logsBufferMaxSize">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="buildLogThreadSize">构造日志线程数</label>
+                                        <input type="text" name="buildLogThreadSize" th:value="${sdk.buildLogThreadSize}"
+                                               class="form-control" id="buildLogThreadSize">
+                                    </div>
+                                    <div class="box-footer">
+                                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                    <div class="box-body">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <button type="button" class="btn btn-labeled btn-primary" onclick="openModel()">
+                                                    <i class="btn-label fa fa-plus"></i> 新增
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <table class="table table-bordered m-t-sm table-hover">
+                                                <tbody>
+                                                <tr>
+                                                    <th style="width: 100px">序号</th>
+                                                    <th style="width: 100px">心跳日志采集类型</th>
+                                                    <th style="width: 100px">心跳间隔秒数</th>
+                                                    <th style="width: 100px">心跳状态</th>
+                                                    <th style="width: 160px">操作</th>
+                                                </tr>
+                                                <tr th:each="sdk,sdkConfHeartStat:${sdkConfHeartList}">
+                                                    <td th:text="${sdkConfHeartStat.index}+1"></td>
+                                                    <td th:text="${sdk.heartType}"></td>
+                                                    <td th:text="${sdk.heartInterval}"></td>
+                                                    <td th:text="${sdk.collectHeart}=='0'?'否':'是'"></td>
+                                                    <td>
+                                                        <a onclick="openModel(this)" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" th:id="${sdk.heartId}">修改</a>
+                                                        &nbsp;
+                                                        <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteSdkConfHeart(this)' th:id="${sdk.heartId}">删除</a>
+                                                    </td>
+
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="tab_3" class="tab-pane">
+                                    <div class="box-body">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <button type="button" class="btn btn-labeled btn-primary" onclick="openHostModel()">
+                                                    <i class="btn-label fa fa-plus"></i> 新增
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                    <table class="table table-hover table-default">
+                                        <thead lass="bordered-primary bordered-themeprimary bordered-bottom-2">
+                                        <tr>
+                                            <th style="width: 100px">节点IP</th>
+                                            <th style="width: 100px">端口</th>
+                                            <th style="width: 100px">主机名称</th>
+                                            <th style="width: 100px">IP开关</th>
+                                            <th style="width: 120px">端口开关</th>
+                                            <th style="width: 200px">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        <th:block th:each="host,sdkConfHostStat:${sdkConfHostList}">
+                                            <tr >
+                                                <td th:text="${host.ip}"></td>
+                                                <td th:text="${host.port}"></td>
+                                                <td th:text="${host.hostName}"></td>
+                                                <td th:text="${host.collectIp}=='0'?'否':'是'"></td>
+                                                <td th:text="${host.collectPort}=='0'?'否':'是'"></td>
+                                                <td>
+                                                    <a onclick="queryHosyNode(this)"  class="curosr:pointer pointer btn btn-default btn-xs purple btnDetail" th:id="${host.hostId}"><i class="fa fa-plus"></i>节点列表</a>
+                                                    &nbsp;
+                                                    <a onclick="openHostNodeModel()"  class="curosr:pointer pointer btn btn-default btn-xs purple btnDetail" th:id="${host.hostId}"></i>新增节点</a>
+                                                    &nbsp;
+                                                    <a onclick="openHostModel(this)" class="curosr:pointer btn btn-default btn-xs purple btnDetail" th:id="${host.hostId}">修改</a>
+                                                    &nbsp;
+                                                    <a class="curosr:pointer btn btn-default btn-xs purple btnDetail" onclick='deleteSdkConfHost(this)' th:id="${host.hostId}">删除</a>
+                                                </td>
+                                            </tr>
+
+                                            <tr class="detail hide" >
+                                                <td colspan="6">
+
+                                                </td>
+                                            </tr>
+                                        </th:block>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                                   <!-- <div class="box-body">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <button type="button" class="btn btn-labeled btn-primary" onclick="openHostModel()">
+                                                    <i class="btn-label fa fa-plus"></i> 新增
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <table class="table table-bordered m-t-sm table-hover">
+                                                <tbody>
+                                                <tr>
+                                                    <th style="width: 100px">序号</th>
+                                                    <th style="width: 100px">节点IP</th>
+                                                    <th style="width: 100px">端口</th>
+                                                    <th style="width: 100px">主机名称</th>
+                                                    <th style="width: 100px">IP开关</th>
+                                                    <th style="width: 100px">端口开关</th>
+                                                    <th style="width: 100px">节点黑名单</th>
+                                                    <th style="width: 160px">操作</th>
+                                                </tr>
+                                             <tr th:each="host,sdkConfHostStat:${sdkConfHostList}">
+                                                    <td th:text="${sdkConfHostStat.index}+1"></td>
+                                                    <td th:text="${host.ip}"></td>
+                                                    <td th:text="${host.port}"></td>
+                                                    <td th:text="${host.hostName}"></td>
+                                                    <td th:text="${host.collectIp}=='0'?'否':'是'"></td>
+                                                    <td th:text="${host.collectPort}=='0'?'否':'是'"></td>
+                                                    <td><a href="#tab_5" data-toggle="tab" onclick="queryHosyNode(this)" th:id="${host.hostId}">黑名单节点配置</a></td>
+                                                    <td>
+                                                        <a onclick="openHostModel(this)" class="curosr:pointer" th:id="${host.hostId}">修改</a>
+                                                        &nbsp;
+                                                        <a class="curosr:pointer" onclick='deleteSdkConfHost(this)' th:id="${host.hostId}">删除</a>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>-->
+                                </div>
+
+                                <div id="tab_4" class="tab-pane">
+                                    <div class="box-body">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <button type="button" class="btn btn-labeled btn-primary" onclick="openEnvModel()">
+                                                    <i class="btn-label fa fa-plus"></i> 新增
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <table class="table table-bordered m-t-sm table-hover">
+                                                <tbody>
+                                                <tr>
+                                                    <th style="width: 100px">序号</th>
+                                                    <th style="width: 100px">微环境ID</th>
+                                                    <th style="width: 100px">微环境名称</th>
+                                                    <th style="width: 100px">采集开关</th>
+                                                    <th style="width: 100px">节点名称</th>
+                                                    <th style="width: 160px">操作</th>
+                                                </tr>
+                                                <tr th:each="Env,sdkConfEnvStat:${sdkConfEnvList}">
+                                                    <td th:text="${sdkConfEnvStat.index}+1"></td>
+                                                    <td th:text="${Env.envirId}"></td>
+                                                    <td th:text="${Env.envirName}"></td>
+                                                    <td th:text="${Env.collectEnvir}=='0'?'否':'是'"></td>
+                                                    <td th:text="${Env.nodeCodes}"></td>
+                                                    <td>
+                                                        <a onclick="openEnvModel(this)" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" th:id="${Env.envId}" >修改</a>
+                                                        &nbsp;
+                                                        <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteSdkConfEnv(this)' th:id="${Env.envId}">删除</a>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+                          <!--      <div id="tab_5" class="tab-pane">
+                                    <div class="box-body">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <button type="button" class="btn btn-labeled btn-primary" onclick="openHostNodeModel()">
+                                                    <i class="btn-label fa fa-plus"></i> 新增
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <table id="hostNodeTable" class="table table-bordered m-t-sm table-hover">
+                                                <thead>
+                                                <tr>
+                                                    <th style="width: 100px">序号</th>
+                                                    <th style="width: 100px">节点名称</th>
+                                                    <th style="width: 100px">节点代码</th>
+                                                    <th style="width: 100px">采集开关</th>
+                                                    <th style="width: 100px">操作</th>
+                                            </thead>
+                                                </tr>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>-->
+
+                            </div>
+                        <!-- /.tab-pane -->
+                       </form>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+
+                <!--性能配置模态框开始-->
+                <div class="modal fade" id="myModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">性能配置新增</h4>
+                            </div>
+
+                            <form id="heartForm" method="post" class="formClass">
+                                <input type="hidden"  name="heartId" id="heartId" value="">
+                                <input type="hidden"  name="confId" th:value="${sdk.confId}">
+                                <div class="modal-body" >
+                                    <div class="form-group">
+                                        <label for="heartType">心跳采集类型</label>
+                                        <input type="text" name="heartType"
+                                               class="form-control" id="heartType" value="health" placeholder="health">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="heartInterval">心跳间隔次数</label>
+                                        <input type="text" name="heartInterval"
+                                               class="form-control" id="heartInterval">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="collectHeart">心跳状态</label>
+                                        <input type="radio" name="collectHeart"  id="collectHeart"
+                                               value="1"> 是
+                                        <input type="radio" name="collectHeart" id="collectHeart"
+                                               value="0"> 否
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="modal-footer">
+                                <button type="button"  id="SDKHeartBut" class="btn btn-default" data-dismiss="modal">取消</button>
+                                <button type="button" onclick="saveSDKHeart()" class="btn btn-primary">保存</button>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+                <!--性能配置模态框结束-->
+                <!--主机配置模态框开始-->
+                <div class="modal fade" id="hostModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">节点黑名单配置新增</h4>
+                            </div>
+                            <form id="hostForm" method="post" class="formClass">
+                                <input type="hidden"  name="confId" th:value="${sdk.confId}">
+                                <input type="hidden"  id="hostId" name="hostId" >
+                                <div class="modal-body" >
+                                    <div class="form-group">
+                                        <label for="ip">节点IP</label>
+                                        <input type="text" name="ip"
+                                               class="form-control" id="ip" placeholder="">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="port">节点端口</label>
+                                        <input type="text" name="port"
+                                               class="form-control" id="port">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="hostName">主机名称</label>
+                                        <input type="text" name="hostName"
+                                               class="form-control" id="hostName">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="collectIp">IP开关</label>
+                                        <input type="radio" name="collectIp" checked="checked" class="heartInterval"
+                                               value="1"> 是
+                                        <input type="radio" name="collectIp" class="heartInterval"
+                                               value="0"> 否
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="collectPort">端口开关</label>
+                                        <input type="radio" name="collectPort" checked="checked" class="collectPort"
+                                               value="1"> 是
+                                        <input type="radio" name="collectPort" class="collectPort"
+                                               value="0"> 否
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                                <button type="button"  onclick="saveSDKHost()" class="btn btn-primary">保存</button>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+                <!--主机配置模态框结束-->
+                <!--微环境配置模态框开始-->
+                <div class="modal fade" id="envModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">微环境配置</h4>
+                            </div>
+                            <form id="envForm" method="post" class="formClass">
+                                <input type="hidden"  name="envId" id="envId" value="">
+                                <input type="hidden"  name="confId" th:value="${sdk.confId}">
+                                <div class="modal-body" >
+                                    <div class="form-group">
+                                        <label for="envirId">微环境ID</label>
+                                        <input type="text" name="envirId"
+                                               class="form-control" id="envirId" placeholder="">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="envirName">微环境名称</label>
+                                        <input type="text" name="envirName"
+                                               class="form-control" id="envirName">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="collectEnvir">采集开关</label>
+                                        <input type="radio" checked="checked" name="collectEnvir"
+                                               value="1"> 是
+                                        <input type="radio" name="collectEnvir"
+                                               value="0"> 否
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="nodeCodes">节点名称(逗号分隔)</label>
+                                        <textarea  name="nodeCodes"
+                                               class="form-control" id="nodeCodes">
+                                         </textarea>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                                <button type="button" onclick="saveSDKEnv()" class="btn btn-primary">保存</button>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+                <!--微环境配置模态框结束-->
+                <!--主机节点配置模态框开始-->
+                <div class="modal fade" id="hostNodeModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">节点黑名单配置</h4>
+                            </div>
+                            <form id="hostNodeForm" method="post" class="formClass">
+                                <input type="hidden"  name="nodeId" id="nodeId" value="">
+                                <input type="hidden" name="hostId" id="hostIdValue" value="">
+                                <div class="modal-body" >
+                                    <div class="form-group">
+                                        <label for="node_name">节点名称</label>
+                                        <input type="text" name="node_name"
+                                               class="form-control" id="node_name" placeholder="">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="nodeCode">节点代码</label>
+                                        <input type="text" name="nodeCode"
+                                               class="form-control" id="nodeCode">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="collectNode">采集开关</label>
+                                        <input type="radio" name="collectNode" checked="checked" class="collectNode"
+                                               value="1"> 是
+                                        <input type="radio" name="collectNode" class="collectNode"
+                                               value="0"> 否
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                                <button type="button" data-dismiss="modal" onclick="saveSDKHostNode()" class="btn btn-primary">保存</button>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+                <!--主机节点配置模态框结束-->
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+            </div>
+    </section>
+</div>
+
+</body>
+</html>

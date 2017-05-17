@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.SDKMapper">
+
+    <!--SDK实体映射-->
+    <resultMap id="SDKMap" type="com.xwtech.omweb.model.SDK">
+        <result property="confId" column="conf_id"></result>
+        <result property="appId" column="F_APP_ID"></result>
+        <result property="logVer" column="log_ver"></result>
+        <result property="appServerName" column="appServer_name"></result>
+        <result property="appServerVer" column="appServer_ver"></result>
+        <result property="collectAll" column="collect_all"></result>
+        <result property="levelOne" column="level_one"></result>
+        <result property="levelTwo" column="level_two"></result>
+        <result property="updateInterval" column="update_interval"></result>
+        <result property="samplingRate" column="sampling_rate"></result>
+        <result property="logsBufferMaxSize" column="logsBuffer_max_size"></result>
+        <result property="buildLogThreadSize" column="buildLog_thread_size"></result>
+        <result property="flag" column="flag"></result>
+        <result property="createId" column="create_id"></result>
+        <result property="createName" column="create_name"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="updateId" column="update_id"></result>
+        <result property="updateName" column="update_name"></result>
+        <result property="updateTime" column="update_time"></result>
+    </resultMap>
+
+    <!--性能配置  心跳配置实体映射-->
+    <resultMap id="SDKConfHeartMap" type="com.xwtech.omweb.model.SDKConfHeart">
+        <result property="heartId" column="heart_id"></result>
+        <result property="confId" column="conf_id"></result>
+        <result property="heartType" column="heart_type"></result>
+        <result property="heartInterval" column="heart_interval"></result>
+        <result property="collectHeart" column="collect_heart"></result>
+
+        <result property="collect_heart" column="collect_heart"></result>
+        <result property="heart_type" column="heart_type"></result>
+        <result property="heart_interval" column="heart_interval"></result>
+    </resultMap>
+    <!--主机配置实体映射-->
+    <resultMap id="SDKConfHostMap" type="com.xwtech.omweb.model.SDKConfHost">
+        <result property="hostId" column="host_id"></result>
+        <result property="confId" column="conf_id"></result>
+        <result property="ip" column="ip"></result>
+        <result property="port" column="port"></result>
+        <result property="hostName" column="host_name"></result>
+        <result property="collectIp" column="collect_ip"></result>
+        <result property="collectPort" column="collect_port"></result>
+
+        <result property="collect_ip" column="collect_ip"></result>
+        <result property="collect_port" column="collect_port"></result>
+        <result property="host_name" column="host_name"></result>
+    </resultMap>
+    <!--节点配置实体映射-->
+    <resultMap id="SDKConfHostNodeMap" type="com.xwtech.omweb.model.SDKConfHostNode">
+        <result property="nodeId" column="node_id"></result>
+        <result property="hostId" column="host_id"></result>
+        <result property="node_name" column="node_name"></result>
+        <result property="nodeCode" column="node_code"></result>
+        <result property="collectNode" column="collect_node"></result>
+
+        <result property="collect_node" column="collect_node"></result>
+        <result property="node_code" column="node_code"></result>
+    </resultMap>
+    <!--微环境配置实体映射-->
+    <resultMap id="SDKConfEnvMap" type="com.xwtech.omweb.model.SDKConfEnv">
+        <result property="envId" column="env_id"></result>
+        <result property="confId" column="conf_id"></result>
+        <result property="envirId" column="envir_ID"></result>
+        <result property="envirName" column="envir_name"></result>
+        <result property="collectEnvir" column="collect_envir"></result>
+        <result property="nodeCodes" column="node_codes"></result>
+
+        <result property="collect_envir" column="collect_envir"></result>
+        <result property="envir_ID" column="envir_ID"></result>
+        <result property="envir_name" column="envir_name"></result>
+    </resultMap>
+
+
+    <!--JSON性能配置-->
+    <resultMap id="SDKConfHeartJSON" type="com.xwtech.omweb.model.SDKConfHeart">
+        <result property="collect_heart" column="collect_heart"></result>
+        <result property="heart_type" column="heart_type"></result>
+        <result property="heart_interval" column="heart_interval"></result>
+    </resultMap>
+    <!--JSON主机配置实体映射-->
+    <resultMap id="SDKConfHostJSON" type="com.xwtech.omweb.model.SDKConfHost">
+        <result property="collect_ip" column="collect_ip"></result>
+        <result property="collect_port" column="collect_port"></result>
+        <result property="host_name" column="host_name"></result>
+        <result property="ip" column="ip"></result>
+        <result property="port" column="port"></result>
+        <result property="host_id" column="host_id"></result>
+    </resultMap>
+    <!--JSON节点配置实体映射-->
+    <resultMap id="SDKNodeJSON" type="com.xwtech.omweb.model.SDKConfHostNode">
+        <result property="collect_node" column="collect_node"></result>
+        <result property="node_code" column="node_code"></result>
+        <result property="node_name" column="node_name"></result>
+    </resultMap>
+    <!--JSON微环境配置实体映射-->
+    <resultMap id="SDKConfEnvJSON" type="com.xwtech.omweb.model.SDKConfEnv">
+        <result property="collect_envir" column="collect_envir"></result>
+        <result property="envir_ID" column="envir_ID"></result>
+        <result property="envir_name" column="envir_name"></result>
+        <result property="nodeCodes" column="node_codes"></result>
+    </resultMap>
+
+    <!--push到SC上的JSON封装映射-->
+    <resultMap id="SdkJsonMap" type="com.xwtech.omweb.model.SdkJson">
+        <result property="conf_id" column="conf_id"></result>
+        <result property="collect_all" column="collect_all"></result>
+        <result property="log_ver" column="log_ver"></result>
+        <result property="appServer_name" column="appServer_name"></result>
+        <result property="appServer_ver" column="appServer_ver"></result>
+        <association property="separator"  javaType="com.xwtech.omweb.model.Separator">
+            <result property="level_one" column="level_one" jdbcType="VARCHAR"></result>
+            <result property="level_two" column="level_two" jdbcType="VARCHAR"></result>
+        </association>
+        <association property="capability" javaType="com.xwtech.omweb.model.Capability">
+              <result property="update_interval" column="update_interval"></result>
+              <result property="sampling_rate" column="sampling_rate"></result>
+              <result property="logsBuffer_max_size" column="logsBuffer_max_size"></result>
+              <result property="buildLog_thread_size" column="buildLog_thread_size"></result>
+              <collection property="heart" ofType="com.xwtech.omweb.model.SDKConfHeart"
+                          select="querySDKConfHeartJson" column="conf_id">
+              </collection>
+        </association>
+        <collection property="hosts" ofType="com.xwtech.omweb.model.SDKConfHost"
+                     select="querySDKConfHostJson" column="conf_id">
+            <result property="host_id" column="host_id"></result>
+            <!-- <collection property="nodes"
+                         ofType="com.xwtech.omweb.model.SDKConfHostNode"
+                         select="querySDKNodeJson" column="host_id">
+                 <id property="nodeId" column="node_id"/>
+             </collection>-->
+        </collection>
+        <collection property="envirs"  column="conf_id"
+                      select="querySDKConfEnvJson"
+                      ofType="com.xwtech.omweb.model.SDKConfEnv"  />
+    </resultMap>
+    <!--性能JSON-->
+    <select id="querySDKConfHeartJson" parameterType="java.lang.String" resultMap="SDKConfHeartJSON">
+          SELECT * FROM t_sdk_conf_heart T1 WHERE T1.conf_id =#{confId}
+    </select>
+    <!--节点JSON-->
+    <select id="querySDKNodeJson" parameterType="java.lang.String" resultMap="SDKNodeJSON">
+          SELECT * FROM  t_sdk_conf_host_node WHERE host_id  =#{host_id}
+    </select>
+    <!--主机JSON-->
+    <select id="querySDKConfHostJson" parameterType="java.lang.String" resultMap="SDKConfHostJSON">
+               SELECT  t1.host_id,t1.collect_ip,t1.collect_port,t1.`port`,t1.host_name,t1.ip
+               FROM  t_sdk_conf_host t1 where  t1.conf_id =#{confId}
+    </select>
+    <!--微环境JSON-->
+    <select id="querySDKConfEnvJson" parameterType="java.lang.String" resultMap="SDKConfEnvJSON">
+         SELECT * FROM t_sdk_conf_env WHERE  conf_id =#{confId}
+    </select>
+    <select id="querySdkJson" parameterType="java.lang.String" resultMap="SdkJsonMap">
+        SELECT t1.conf_id,t1.log_ver,t1.appServer_name,t1.appServer_ver,t1.level_one, t1.level_two,t1.update_interval,
+          t1.sampling_rate,t1.logsBuffer_max_size,t1.buildLog_thread_size,t1.collect_all
+        FROM t_sdk_conf t1 where t1.conf_id =#{confId}
+    </select>
+    
+
+    <!--查询SDK配置信息列表-->
+    <select id="querySDKList" resultMap="SDKMap">
+        SELECT T1.* FROM T_SDK_CONF  T1 WHERE 1=1
+    </select>
+    <!--根据ID查询SDK详情-->
+    <select id="querySdkDetail" parameterType="java.lang.String"  resultMap="SDKMap">
+        SELECT T1.* FROM T_SDK_CONF  T1 WHERE 1=1
+        AND  T1.conf_id =#{confId}
+
+    </select>
+    <!--新增SDK信息-->
+    <insert id="addSDK" parameterType="com.xwtech.omweb.model.SDK">
+        INSERT  INTO  T_SDK_CONF(conf_id,F_APP_ID,log_ver,appServer_name,appServer_ver,collect_all,
+        level_one,level_two,update_interval,sampling_rate,logsBuffer_max_size,buildLog_thread_size,
+        flag,create_id,create_name,create_time,update_id,update_name,update_time)
+        VALUES (#{confId},#{appId},#{logVer},#{appServerName},#{appServerVer},#{collectAll},
+        #{levelOne},#{levelTwo},#{updateInterval},#{samplingRate},#{logsBufferMaxSize},#{buildLogThreadSize},
+        '0',#{createId},#{createName},now(),#{updateId},#{updateName},now())
+    </insert>
+    <!--修改SDK信息-->
+    <update id="updateSDK" parameterType="com.xwtech.omweb.model.SDK">
+        UPDATE  T_SDK_CONF SET
+        <if test="logVer !=null and logVer!='' ">
+            log_ver = #{logVer},
+        </if>
+        <if test="appId !=null and appId !=''">
+            F_APP_ID =#{appId},
+        </if>
+        <if test="appServerName!=null and appServerName!=''">
+            appServer_name= #{appServerName},
+        </if>
+        <if test="appServerVer !=null and appServerVer !=''">
+            appServer_ver= #{appServerVer},
+        </if>
+        <if test="collectAll!=null and collectAll !=''">
+            collect_all= #{collectAll},
+        </if>
+        <if test="levelOne !=null and levelOne!=''">
+            level_one= #{levelOne},
+        </if>
+        <if test="levelTwo !=null and levelTwo!=''">
+            level_two= #{levelTwo},
+        </if>
+        <if test="updateInterval !=null and updateInterval!=''">
+            update_interval= #{updateInterval},
+        </if>
+        <if test="samplingRate !=null and samplingRate!=''">
+            sampling_rate= #{samplingRate},
+        </if>
+        <if test="logsBufferMaxSize !=null and logsBufferMaxSize!=''">
+            logsBuffer_max_size= #{logsBufferMaxSize},
+        </if>
+        <if test="buildLogThreadSize !=null and buildLogThreadSize!=''">
+            buildLog_thread_size= #{buildLogThreadSize},
+        </if>
+        <if test="flag !=null and flag!=''">
+            flag= #{flag},
+        </if>
+        <if test="updateId !=null and updateId!=''">
+            update_id= #{updateId},
+        </if>
+        <if test="updateName !=null and updateName!=''">
+            update_name= #{updateName},
+        </if>
+        update_time =now()
+        WHERE  conf_id =#{confId}
+    </update>
+
+    <!--修改sdk状态-->
+    <update id="updateSdkFlagEnable" parameterType="java.lang.String">
+          UPDATE  T_SDK_CONF SET
+         flag= #{flag}
+         WHERE  conf_id =#{confId}
+    </update>
+    <!--排除自身ID关闭废弃相同的服务端名称-->
+    <update id="updateSdkFlag" parameterType="java.lang.String">
+         UPDATE  T_SDK_CONF SET
+         flag= #{flag}
+         WHERE  conf_id !=#{confId} AND  appServer_name= #{appServerName}
+    </update>
+
+    <!--根据SDKId查询性能配置列表-->
+    <select id="querySDKConfHeartByConfId" parameterType="java.lang.String" resultMap="SDKConfHeartMap">
+        SELECT * FROM t_sdk_conf_heart T1
+            WHERE T1.conf_id =#{confId}
+    </select>
+    <!--新增SDK心跳配置-->
+    <insert id="addSdkHeart" parameterType="com.xwtech.omweb.model.SDKConfHeart">
+        INSERT  INTO  t_sdk_conf_heart(heart_id,conf_id,heart_type,heart_interval,collect_heart)
+        VALUES(#{heartId},#{confId},#{heartType},#{heartInterval},#{collectHeart})
+    </insert>
+    <!--修改SDK心跳配置-->
+    <update id="updateSdkHrart" parameterType="com.xwtech.omweb.model.SDKConfHeart">
+        UPDATE t_sdk_conf_heart SET
+        conf_id =#{confId},
+        heart_type =#{heartType},
+        heart_interval = #{heartInterval},
+        collect_heart = #{collectHeart}
+        WHERE heart_id =#{heartId}
+    </update>
+    <!--根据心跳ID查询心跳详细信息-->
+    <select id="querySDKConfHeartDetail" parameterType="java.lang.String" resultMap="SDKConfHeartMap">
+          SELECT * FROM t_sdk_conf_heart T1
+            WHERE T1.heart_id =#{heartId}
+    </select>
+    <!--根据心跳ID删除配置信息-->
+    <delete id="deleteSdkConfHeartById" parameterType="java.lang.String">
+        DELETE FROM t_sdk_conf_heart  WHERE heart_id =#{heartId}
+    </delete>
+    <!--根据SDKId查询主机配置列表-->
+    <select id="querySDKConfHostListByConfId" parameterType="java.lang.String" resultMap="SDKConfHostMap">
+        SELECT  * FROM  t_sdk_conf_host where conf_id =#{confId}
+    </select>
+    <!--新增主机配置列表-->
+    <insert id="addSDKConfHost" parameterType="com.xwtech.omweb.model.SDKConfHost">
+         INSERT  INTO  t_sdk_conf_host(host_id,conf_id,ip,port,host_name,collect_ip,collect_port)
+                  VALUES (#{hostId},#{confId},#{ip},#{port},#{hostName},#{collectIp},#{collectPort})
+    </insert>
+    <!--修改主机配置列表-->
+    <update id="updateSDKConfHost" parameterType="com.xwtech.omweb.model.SDKConfHost">
+        UPDATE t_sdk_conf_host SET
+        conf_id=#{confId},
+        ip=#{ip},
+        port=#{port},
+        host_name=#{hostName},
+        collect_ip=#{collectIp},
+        collect_port=#{collectPort}
+        WHERE
+        host_id =#{hostId}
+    </update>
+    <!--删除主机配置-->
+    <delete id="deleteSDKConfHostByHostId" parameterType="java.lang.String">
+        DELETE  FROM  t_sdk_conf_host  WHERE  host_id =#{hostId}
+    </delete>
+    <!--根据ID查询主机详情-->
+    <select id="querySDKConfHostDetail" parameterType="java.lang.String" resultMap="SDKConfHostMap">
+         SELECT  * FROM  t_sdk_conf_host where host_id =#{hostId}
+    </select>
+
+    <!--根据ID查询微环境列表-->
+    <select id="querySDKConfEnvList" parameterType="java.lang.String" resultMap="SDKConfEnvMap">
+        SELECT * FROM t_sdk_conf_env WHERE  conf_id =#{confId}
+    </select>
+    <!--根据应用ID查询微环境列表-->
+    <select id="querySDKConfEnvListByAppId" parameterType="java.lang.String" resultMap="SDKConfEnvMap">
+          SELECT * FROM t_sdk_conf_env t1
+        LEFT JOIN t_sdk_conf t2 ON t1.conf_id =t2.conf_id
+        WHERE
+        t2.F_APP_ID = #{appId}
+    </select>
+    <!--新增微环境-->
+    <insert id="addSDKConfEnv" parameterType="com.xwtech.omweb.model.SDKConfEnv">
+        INSERT INTO t_sdk_conf_env(env_id,conf_id,envir_ID,envir_name,collect_envir,node_codes)
+        VALUES (#{envId},#{confId},#{envirId},#{envirName},#{collectEnvir},#{nodeCodes})
+    </insert>
+    <!--修改微环境-->
+    <update id="updateSDKConfEnv"  parameterType="com.xwtech.omweb.model.SDKConfEnv">
+        UPDATE t_sdk_conf_env SET
+        conf_id=#{confId},
+        envir_ID=#{envirId},
+        envir_name=#{envirName},
+        collect_envir=#{collectEnvir},
+        node_codes=#{nodeCodes}
+        WHERE
+        env_id =#{envId}
+    </update>
+    <!--根据微环境ID删除微环境-->
+    <delete id="deleteSDKConfEnvByEnvId" parameterType="java.lang.String">
+        DELETE FROM  t_sdk_conf_env  WHERE  env_id =#{envId}
+    </delete>
+    <!--根据微环境ID查看微环境详情-->
+    <select id="querySDKConfEnvDetailByEnvId" parameterType="java.lang.String" resultMap="SDKConfEnvMap">
+            SELECT * FROM t_sdk_conf_env WHERE env_id =#{envId}
+    </select>
+
+    <!--查询主机下面所有的节点-->
+    <select id="querySDKConfHostNode" parameterType="java.lang.String" resultMap="SDKConfHostNodeMap">
+        SELECT * FROM  t_sdk_conf_host_node WHERE host_id  =#{hostId}
+    </select>
+    <!--新增节点黑名单-->
+    <insert id="addSDKConfHostNode" parameterType="com.xwtech.omweb.model.SDKConfHostNode">
+        INSERT INTO t_sdk_conf_host_node(node_id,host_id,node_name,node_code,collect_node)
+        VALUES (#{nodeId},#{hostId},#{node_name},#{nodeCode},#{collectNode})
+    </insert>
+    <!--修改节点黑名单-->
+    <update id="updateSDKConfHostNode" parameterType="com.xwtech.omweb.model.SDKConfHostNode">
+        UPDATE t_sdk_conf_host_node SET
+        node_name=#{node_name},
+        node_code=#{nodeCode},
+        collect_node =#{collectNode}
+        WHERE
+           node_id =#{nodeId}
+    </update>
+    <!--删除节点黑名单-->
+    <delete id="deleteSDKConfHostNodeByNodeId" parameterType="java.lang.String">
+        DELETE FROM t_sdk_conf_host_node  WHERE node_id =#{nodeId}
+    </delete>
+    <!--根据ID查询节点详情-->
+    <select id="querySDKConfHostNodeDetail" parameterType="java.lang.String"  resultMap="SDKConfHostNodeMap">
+         SELECT * FROM  t_sdk_conf_host_node  WHERE node_id =#{nodeId}
+    </select>
+</mapper>

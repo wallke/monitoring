@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.CropContactsMapper">
+
+
+    <!--所有公司联系人信息-->
+    <resultMap id="CropContactsMap" type="com.xwtech.omweb.model.CropContacts">
+        <result property="contactId" column="F_CONTACT_ID"></result>
+        <result property="cropId" column="F_CROP_ID"></result>
+        <result property="name" column="F_NAME"></result>
+        <result property="userName" column="F_USERNAME"></result>
+        <result property="phone" column="F_PHONE"></result>
+        <result property="qq" column="F_QQ"></result>
+        <result property="wechat" column="F_WECHAT"></result>
+        <result property="isUse" column="F_IS_USE" ></result>
+        <result property="isEnabled" column="F_IS_ENABLED" ></result>
+        <result property="desc" column="F_DESC" ></result>
+        <result property="memo" column="F_MEMO" ></result>
+        <result property="createManCode" column="F_CREATE_MANCODE" ></result>
+        <result property="createManName" column="F_CREATE_MANNAME" ></result>
+        <result property="createTime" column="F_CREATE_TIME" ></result>
+        <result property="createMemo" column="F_CREATE_MEMO" ></result>
+        <result property="lastManCode" column="F_LAST_MANCODE" ></result>
+        <result property="lastManName" column="F_LAST_MANNAME" ></result>
+        <result property="lastTime" column="F_LAST_TIME" ></result>
+        <result property="lastMemo" column="F_LAST_MEMO" ></result>
+        <result property="cropName" column="F_CROP_NAME"></result>
+        <result property="type" column="F_TYPE"></result>
+        <collection property="channels" column="F_CONTACT_ID" select="queryCropContactsDetailES"></collection>
+    </resultMap>
+
+    <resultMap id="ContactsChannelMap" type="com.xwtech.omweb.model.ContactsChannel">
+        <result property="type" column="F_TYPE"></result>
+        <result property="address" column="F_ADDRESS"></result>
+    </resultMap>
+    <resultMap id="ChannelMap" type="com.xwtech.omweb.model.ContactsChannel">
+        <result property="contactId" column="F_CONTACT_ID"></result>
+        <result property="channelId" column="F_CHANNEL_ID"></result>
+        <result property="address" column="F_ADDRESS"></result>
+        <result property="type" column="F_TYPE"></result>
+        <result property="userName" column="F_USERNAME"></result>
+        <result property="frequency_code" column="frequency_code"></result>
+        <result property="name" column="F_NAME"></result>
+    </resultMap>
+
+
+    <select id="queryCropContactsDetailES"  parameterType="java.lang.String"  resultMap="ContactsChannelMap">
+       SELECT t1.*  FROM  tm_dz_contacts_channel t1
+            WHERE
+            t1.F_CONTACT_ID = #{contactId}
+
+    </select>
+    <!--查询所有人员信息-->
+    <select id="queryCropContacts" parameterType="java.lang.String" resultMap="CropContactsMap">
+            SELECT
+                CONT.*,
+                CROP.F_CROP_NAME
+            FROM
+                TM_DA_CROP_CONTACTS CONT
+            LEFT JOIN TM_DA_CROP CROP ON CONT.F_CROP_ID = CROP.F_CROP_ID
+            WHERE
+                CONT.F_IS_USE = '1'
+            <if test="name !=null and name !=''">
+                AND CONT.F_NAME LIKE CONCAT(CONCAT('%', #{name}), '%')
+            </if>
+
+            <if test="email !=null and email !=''">
+                AND CONT.F_EMAIL LIKE CONCAT(CONCAT('%', #{email}), '%')
+            </if>
+
+            <if test="mobile !=null and mobile !=''">
+                AND CONT.F_MOBILE LIKE CONCAT(CONCAT('%', #{mobile}), '%')
+            </if>
+
+            <if test="cropName !=null and cropName !=''">
+                AND  CROP.F_CROP_NAME LIKE CONCAT(CONCAT('%', #{cropName}), '%')
+            </if>
+            ORDER BY
+                CONT.F_LAST_TIME DESC
+    </select>
+    <!--新增人员信息-->
+    <insert id="addCropContacts" parameterType="com.xwtech.omweb.model.CropContacts">
+        INSERT INTO TM_DA_CROP_CONTACTS (
+	        F_CONTACT_ID,F_CROP_ID,F_USERNAME,F_NAME,F_PHONE,F_QQ,F_WECHAT,
+	        F_IS_USE,F_IS_ENABLED,F_DESC,F_MEMO,F_CREATE_MANCODE,F_CREATE_MANNAME,F_CREATE_TIME,F_CREATE_MEMO,F_LAST_MANCODE,F_LAST_MANNAME,F_LAST_TIME,F_LAST_MEMO,F_TYPE)
+        VALUES
+	    (#{contactId},#{cropId} ,#{userName},#{name},#{phone},#{qq},#{wechat}
+	      ,'1',#{isEnabled},#{desc},#{memo},
+        #{createManCode},#{createManName},now(),#{createMemo},#{lastManCode},#{lastManName},now(),#{lastMemo},#{type})
+    </insert>
+    <!--修改人员信息-->
+    <update id="updateCropContacts" parameterType="com.xwtech.omweb.model.CropContacts">
+        UPDATE TM_DA_CROP_CONTACTS SET
+        <if test="cropId!=null and cropId !=''">
+            F_CROP_ID=#{cropId},
+        </if>
+        <if test="isEnabled !=null and isEnabled !=''">
+            F_IS_ENABLED = #{isEnabled},
+        </if>
+        <if test="name !=null and name !=''">
+            F_NAME=#{name},
+        </if>
+        <if test="phone !=null and phone !=''">
+            F_PHONE=#{phone},
+        </if>
+        <if test="qq !=null and qq !=''">
+            F_QQ=#{qq},
+        </if>
+        <if test="wechat !=null and wechat !=''">
+            F_WECHAT=#{wechat},
+        </if>
+        <if test="isUse !=null and isUse!=''">
+            F_IS_USE = #{isUse},
+        </if>
+        <if test="desc !=null and desc !=''">
+            F_DESC =#{desc},
+        </if>
+        <if test="memo !=null and memo !=''">
+            F_MEMO = #{memo},
+        </if>
+        <if test="lastManCode!=null and lastManCode!=''">
+            F_LAST_MANCODE =#{lastManCode},
+        </if>
+        <if test="lastManName !=null and lastManName!=''">
+            F_LAST_MANNAME =#{lastManName},
+        </if>
+        <if test="lastMemo !=null and lastMemo !=''">
+            F_LAST_MEMO =#{lastMemo},
+        </if>
+        <if test="type !=null and type !=''">
+            F_TYPE =#{type},
+        </if>
+        F_LAST_TIME =now()
+        WHERE
+        F_CONTACT_ID =#{contactId}
+    </update>
+    <!--删除人员信息-->
+    <update id="deleteCropContacts" parameterType="java.lang.String">
+        UPDATE  TM_DA_CROP_CONTACTS SET
+         F_IS_USE = '0',
+         F_IS_ENABLED ='0'
+          WHERE
+        F_CONTACT_ID =#{contactId}
+    </update>
+    <!--查询人员信息详情-->
+    <select id="queryCropContactsDetail" parameterType="java.lang.String" resultMap="CropContactsMap">
+        SELECT
+        CONT.*,
+        CROP.F_CROP_NAME
+        FROM
+        TM_DA_CROP_CONTACTS CONT
+        LEFT JOIN TM_DA_CROP CROP ON CONT.F_CROP_ID = CROP.F_CROP_ID
+        WHERE
+        CONT.F_IS_USE = '1'
+        AND F_CONTACT_ID =#{contactId}
+    </select>
+
+
+    <!--所有公司联系人信息-->
+    <select id="queryCropContactsList" parameterType="java.lang.String" resultMap="CropContactsMap">
+        SELECT  * FROM TM_DA_CROP_CONTACTS WHERE  1=1 AND  F_CROP_ID =#{cropId}  AND F_IS_USE = '1' AND F_IS_ENABLED = '1'
+    </select>
+    <!--新增联系人应用对照关系-->
+    <insert id="addAppContact" parameterType="java.lang.String">
+        INSERT  INTO TM_DZ_APP_CONTACT(F_CONTACT_ID,F_APP_ID)
+        VALUES(#{contactId},#{appId})
+    </insert>
+
+    <!--删除联系人应用对照关系-->
+    <delete id="deleteAppContact" parameterType="java.lang.String">
+          DELETE  FROM TM_DZ_APP_CONTACT WHERE  F_CONTACT_ID =#{contactId} AND  F_APP_ID =#{appId}
+    </delete>
+
+    <!-- 根据通知ID查询联系人列表-->
+    <select id="queryCropContactsByNoticeId" parameterType="java.lang.String" resultMap="CropContactsMap">
+            SELECT * FROM tm_dz_notice_contacts t1
+            LEFT JOIN tm_da_crop_contacts t2 ON t1.F_CONTACT_ID = t2.F_CONTACT_ID
+            WHERE t1.notice_strategy_code = #{notice_strategy_code}
+    </select>
+
+    <!--新增对照关系-->
+    <insert id="addContactsChannel" parameterType="com.xwtech.omweb.model.ContactsChannel">
+        INSERT INTO  tm_dz_contacts_channel (F_CONTACT_ID,F_TYPE,F_ADDRESS,F_CHANNEL_ID)
+        VALUES (#{contactId},#{type},#{address},#{channelId})
+    </insert>
+    <!--删除对照关系-->
+    <delete id="deleteContactsChannel" parameterType="java.lang.String">
+        DELETE FROM  tm_dz_contacts_channel WHERE  F_CONTACT_ID = #{contactId}
+    </delete>
+    <!--获取联系人地址-->
+    <select id="queryContactsAddr" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT F_ADDRESS FROM tm_dz_contacts_channel WHERE  F_CONTACT_ID = #{contactId} AND F_TYPE = #{type}
+    </select>
+
+    <!--验证参数-->
+    <select id="validateParam" parameterType="java.lang.String" resultType="int">
+         SELECT count(*) FROM tm_dz_contacts_channel WHERE F_TYPE = #{type} AND  F_ADDRESS =#{address}
+          <if test="contactId !=null and contactId !=''">
+             AND F_CONTACT_ID != #{contactId}
+          </if>
+    </select>
+    <!--验证用户名是否存在-->
+    <select id="validateUserName" parameterType="java.lang.String" resultType="int">
+        SELECT count(*) FROM  TM_DA_CROP_CONTACTS WHERE  F_USERNAME = #{userName}
+        <if test="contactId !=null and contactId !=''">
+            AND F_CONTACT_ID != #{contactId}
+        </if>
+    </select>
+    <!--获取对照关系列表-->
+    <select id="queryContactsChannelList" parameterType="java.lang.String" resultMap="ChannelMap">
+        SELECT
+            t1.*, t2.F_USERNAME,t2.F_NAME
+        FROM
+            tm_dz_contacts_channel t1
+        LEFT JOIN tm_da_crop_contacts t2 ON t1.F_CONTACT_ID = t2.F_CONTACT_ID
+        WHERE
+            1 = 1
+    </select>
+
+</mapper>

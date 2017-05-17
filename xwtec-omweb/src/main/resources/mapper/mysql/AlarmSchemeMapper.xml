@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.AlarmSchemeMapper">
+
+    <resultMap id="AlarmSchemeMap" type="com.xwtech.omweb.model.AlarmScheme">
+        <result property="alert_scheme_code" column="alert_scheme_code"></result>
+        <result property="alert_scheme_name" column="alert_scheme_name"></result>
+        <collection property="units" column="alert_scheme_code" select="getUnitsList">
+
+        </collection>
+    </resultMap>
+    <resultMap id="AlarmSchemeUnitsMap" type="com.xwtech.omweb.model.AlarmSchemeUnits">
+        <result property="alert_scheme_code" column="alert_scheme_code"></result>
+        <result property="alert_pressure" column="alert_pressure"></result>
+        <result property="alert_level" column="alert_level"></result>
+        <result property="sustained" column="sustained"></result>
+        <result property="notice_strategy_code" column="notice_strategy_code"></result>
+    </resultMap>
+
+    <!--查询告警策略列表-->
+    <select id="queryAlarmSchemeList" resultMap="AlarmSchemeMap">
+        SELECT * FROM tm_da_alarm_scheme WHERE  1=1
+    </select>
+
+    <!--根据id查询告警策略详情-->
+    <select id="queryAlarmSchemeDetail" parameterType="java.lang.String" resultMap="AlarmSchemeMap">
+         SELECT * FROM tm_da_alarm_scheme WHERE   alert_scheme_code = #{alert_scheme_code}
+    </select>
+
+    <!--新增告警策略-->
+    <insert id="addAlarmScheme" parameterType="com.xwtech.omweb.model.AlarmScheme">
+        INSERT into tm_da_alarm_scheme(alert_scheme_code,alert_scheme_name)
+        VALUES (#{alert_scheme_code},#{alert_scheme_name})
+    </insert>
+    <!--查看告警方案单元格列表-->
+    <select id="queryAlarmSchemeUnitsList" parameterType="java.lang.String" resultMap="AlarmSchemeUnitsMap">
+        SELECT
+            t1.*, t2.notice_strategy_name
+        FROM
+            tm_da_alarm_scheme_units t1
+        LEFT JOIN tm_da_notice_strategy t2 ON t1.notice_strategy_code = t2.notice_strategy_code
+        WHERE
+            t1.alert_scheme_code = #{alert_scheme_code}
+    </select>
+    <select id="getUnitsList"  parameterType="java.lang.String" resultMap="AlarmSchemeUnitsMap">
+          SELECT
+            *
+        FROM
+            tm_da_alarm_scheme_units t1
+        WHERE
+            t1.alert_scheme_code = #{alert_scheme_code}
+    </select>
+    <!--查询告警方案单元格详情-->
+    <select id="queryAlarmSchemeUnitsDetail" parameterType="java.lang.String" resultMap="AlarmSchemeUnitsMap">
+         SELECT
+            t1.*, t2.notice_strategy_name
+        FROM
+            tm_da_alarm_scheme_units t1
+        LEFT JOIN tm_da_notice_strategy t2 ON t1.notice_strategy_code = t2.notice_strategy_code
+            WHERE  t1.untis_id = #{untis_id}
+    </select>
+    <!--新增告警策略单元格-->
+    <insert id="addAlarmSchemeUnits" parameterType="com.xwtech.omweb.model.AlarmSchemeUnits" >
+        INSERT INTO tm_da_alarm_scheme_units(untis_id,alert_scheme_code,alert_pressure,alert_level,sustained,notice_strategy_code)
+        VALUES (#{untis_id},#{alert_scheme_code},#{alert_pressure},#{alert_level},#{sustained},#{notice_strategy_code})
+    </insert>
+    <!--修改告警方案单元格-->
+    <update id="updateAlarmSchemeUnits" parameterType="com.xwtech.omweb.model.AlarmSchemeUnits">
+        UPDATE tm_da_alarm_scheme_units SET
+        alert_pressure=#{alert_pressure},
+        alert_level=#{alert_level},
+        sustained=#{sustained},
+        notice_strategy_code=#{notice_strategy_code}
+        WHERE  untis_id = #{untis_id}
+    </update>
+    <!--删除告警方案单元格-->
+    <delete id="deleteAlarmSchemeUnits" parameterType="java.lang.String">
+        DELETE FROM  tm_da_alarm_scheme_units WHERE untis_id = #{untis_id}
+    </delete>
+
+    <!--修改告警策略-->
+    <update id="updateAlarmScheme"  parameterType="com.xwtech.omweb.model.AlarmScheme">
+        UPDATE tm_da_alarm_scheme SET
+        alert_scheme_name =#{alert_scheme_name}
+        WHERE  alert_scheme_code = #{alert_scheme_code}
+    </update>
+
+    <!--根据ID删除告警策略-->
+    <delete id="deleteAlarmScheme" parameterType="java.lang.String">
+        DELETE  FROM  tm_da_alarm_scheme WHERE   alert_scheme_code = #{alert_scheme_code}
+    </delete>
+
+    <delete id="deleteUnitsByCode" parameterType="java.lang.String" >
+        DELETE FROM  tm_da_alarm_scheme_units WHERE  alert_scheme_code = #{alert_scheme_code}
+    </delete>
+
+
+
+
+</mapper>

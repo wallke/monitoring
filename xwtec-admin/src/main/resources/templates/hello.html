@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+</head>
+<body>
+<p th:text="'Hello, ' + ${user.name} + ' 授权 !'"/>
+<p shiro:user="">USER_ATTRIBUTE [[${hello}]] </p>
+<shiro:user>USER_ELEMENT
+    <span shiro:principal="" />
+</shiro:user>
+
+<shiro:hasRole name="superamdin">has role superadmin</shiro:hasRole>
+<shiro:hasAnyRoles name="superadmin">hasAnyRoles superadmin</shiro:hasAnyRoles>
+<shiro:hasPermission name="sys:*">hasPermission sys:*</shiro:hasPermission>
+<p shiro:hasAllPermissions="user:create,user:delete">
+    You can create and delete users.
+</p>
+</body>
+</html>
+

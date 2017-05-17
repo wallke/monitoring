@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.css'" />
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/bootstrap/js/bootstrap.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+        });
+        function deleteServer(but){
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/server/deleteServer',
+                        data: {
+                            'serverId': but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/server/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function pushSc(but) {
+            var confId =  but.id;
+            var flag = $("#"+confId).attr("flag");
+            $.ajax({
+                type: "post",
+                url: '[[${webUrl}]]/omweb/sdk/querySdkJson',
+                data: {
+                    'confId': confId
+                },
+                success: function (callback) {
+                    if (callback.success) {
+                        $.notify.success(callback.message, "", function () {
+                            location.reload();
+                        });
+
+                    } else {
+                        $.notify.error(callback.message)
+                    }
+                }
+            });
+        }
+        
+        function changeFlag(but) {
+            var confId =  but.id;
+            var appServerName = $("#"+confId).attr("appServerName");
+            var flag = $("#"+confId).attr("flag");
+            $.ajax({
+                type: "post",
+                url: '[[${webUrl}]]/omweb/sdk/updateSdkFlag',
+                data: {
+                    'confId': confId,
+                    'appServerName':appServerName,
+                    'flag':flag
+                },
+                success: function (callback) {
+                    if (callback.success) {
+                        $.notify.success(callback.message, "", function () {
+                            location.reload();
+                        });
+
+                    } else {
+                        $.notify.error(callback.message)
+                    }
+                }
+            });
+        }
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+             服务端采集管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">服务端采集管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/sdk/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                                <tbody>
+                                <tr>
+                                    <th style="width: 100px">序号</th>
+                                    <th style="width: 100px">版本号</th>
+                                    <th style="width: 100px">服务端名称</th>
+                                    <th style="width: 100px">全部采集</th>
+                                    <th style="width: 100px">最近修改人</th>
+                                    <th style="width: 160px">最近修改时间</th>
+                                    <th style="width: 100px">状态</th>
+                                    <th style="width: 200px">操作</th>
+                                </tr>
+                               <tr th:each="sdk,sdkStat:${sdkList}">
+                                    <td th:text="${sdkStat.index}+1"></td>
+                                    <td th:text="${sdk.logVer}"></td>
+                                    <td th:text="${sdk.appServerName}"></td>
+                                    <td th:text="${sdk.collectAll} == '0'?'否':'是'"></td>
+                                    <td th:text="${sdk.updateName}"></td>
+                                    <td th:text="${sdk.updateTime}"></td>
+                                    <td th:text="${sdk.flag}=='0'?'废弃':'启用'"></td>
+                                   <td>
+                                       <a th:href="${webUrl} + '/omweb/sdk/update?confId=' + ${sdk.confId}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" >修改</a>
+                                          &nbsp;
+                                           <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick="changeFlag(this)" th:text="${sdk.flag} == '0'?'启用':'废弃'" th:id="${sdk.confId}" th:flag="${sdk.flag}" th:appServerName="${sdk.appServerName}"></a>
+                                          &nbsp;
+                                       <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick="pushSc(this)" th:id="${sdk.confId}">应用</a>
+                                   </td>
+
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer clearfix paginateWrapper">
+                       <!--<ul class="pagination pagination-sm no-margin pull-right">
+                        <li><a href="#">«</a></li>
+                        <li><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">»</a></li>
+                        </ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

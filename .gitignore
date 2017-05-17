@@ -1,0 +1,23 @@
+
+
+# IntelliJ
+/out/
+/build/
+
+.idea
+
+.gradle/
+*/build/
+
+
+admin/src/main/webapp/
+xwtec-jobs/src/main/webapp/
+*.classpath
+*.settings
+*.project
+*/bin
+/bin/
+*/logs/
+*.iml
+classes/
+/quality/reports/

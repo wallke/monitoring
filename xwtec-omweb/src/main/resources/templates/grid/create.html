@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(document).ready(function(){
+            $(".js-example-basic-single").select2();
+        });
+        $(function () {
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/grid/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    grid_name: {
+                        required: true
+                    }
+                },
+                messages: {
+                    grid_name: {
+                        required: "请输入预警网格名称"
+                         }
+                    }
+            });
+        });
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+           预警网格详情维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li ><a th:href="${homeUrl}+'/omweb/grid/index'"><i class="fa fa-users"></i>预警网格管理中心</a></li>
+            <li class="active">预警网格详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active" onclick="gotoTable1()"><a href="#tab_1" data-toggle="tab">预警网格信息</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden"  name="actionType" th:value='${actionType}'/>
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="grid_name">预警网格名称</label>
+                                        <input type="text" name="grid_name" th:value="${grid.grid_name}"
+                                               class="form-control" id="grid_name" placeholder="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="categoryId">预警网格类别</label>
+                                        <select id="categoryId" name="categoryId"  th:field="*{grid.metric}" class="js-example-basic-single form-control">
+                                            <option th:each="metrics,metricsStat : ${metricsList}"
+                                                    th:value="${metrics.metric}" th:text="${metrics.name}">Credit card</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        <!-- /.tab-pane -->
+                       </form>
+                    </div>
+                    <div class="box-footer" id="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+            </div>
+    </section>
+
+</div>
+
+</body>
+</html>

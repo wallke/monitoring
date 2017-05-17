@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.NodeMapper">
+
+    <resultMap id="NodeResultMap" type="Node">
+        <id column="F_NODE_ID" property="id"/>
+        <result column="F_SERVER_ID" property="serverId"/>
+        <result column="F_SERVER_NAME" property="serverName"/>
+        <result column="F_APP_ID" property="appId"/>
+        <result column="F_APP_NAME" property="appName"/>
+        <result column="F_NUM" property="num"/>
+        <result column="F_NAME" property="name"/>
+        <result column="F_PORT" property="port"/>
+        <result column="F_IS_USE" property="isUse"/>
+        <result column="F_IS_ENABLED" property="isEnabled"/>
+        <result column="F_DESC" property="desc"/>
+        <result column="F_MEMO" property="memo"/>
+        <result column="F_CREATE_MANCODE" property="createManCode"/>
+        <result column="F_CREATE_MANNAME" property="createManName"/>
+        <result column="F_CREATE_TIME" property="createTime"/>
+        <result column="F_CREATE_MEMO" property="createMemo"/>
+        <result column="F_LAST_MANCODE" property="lastManCode"/>
+        <result column="F_LAST_MANNAME" property="lastManName"/>
+        <result column="F_LAST_TIME" property="lastTime"/>
+        <result column="F_LAST_MEMO" property="lastMemo"/>
+        <result column="F_IP_ADDRESS" property="hostIp"></result>
+    </resultMap>
+
+    <select id="getNodes" resultMap="NodeResultMap" parameterType="Node">
+        select t_node.*, t_server.F_NAME as F_SERVER_NAME, t_app.F_NAME as F_APP_NAME
+        from tm_da_node t_node left join tm_da_server t_server on t_node.F_SERVER_ID=t_server.F_SERVER_ID
+        left join tm_da_app t_app on t_node.F_APP_ID=t_app.F_APP_ID
+        where t_node.F_IS_USE=1
+        <if test="num != null and num != ''">
+            and t_node.F_NUM like CONCAT('%',#{num},'%')
+        </if>
+        <if test="name != null and name != ''">
+            and t_node.F_NAME like CONCAT('%',#{name},'%')
+        </if>
+        <if test="serverId != null and serverId != ''">
+            and t_node.F_SERVER_ID = #{serverId}
+        </if>
+        <if test="port != null and port != ''">
+            and t_node.F_PORT = #{port}
+        </if>
+        <if test="appId != null and appId != ''">
+            and t_node.F_APP_ID = #{appId}
+        </if>
+    </select>
+
+    <select id="queryNodeList" parameterType="java.lang.String"  resultMap="NodeResultMap" >
+        SELECT * FROM tm_da_node t1
+        LEFT JOIN tm_da_app t2 ON t1.F_APP_ID = t2.F_APP_ID
+        LEFT JOIN tm_da_server t3 ON t3.F_SERVER_ID = t1.F_SERVER_ID
+        WHERE 1=1
+        <if test="appId !=null and appId!=''">
+            AND t1.F_APP_ID = #{appId}
+        </if>
+        <if test="serverId !=null and serverId!=''">
+            AND t1.F_SERVER_ID =#{serverId}
+        </if>
+    </select>
+
+    <select id="getAllNodes" resultMap="NodeResultMap">
+        select *
+        from tm_da_node
+        where F_IS_USE=1
+    </select>
+
+    <select id="getNodesByAppId" resultMap="NodeResultMap" parameterType="java.lang.String">
+          select t1.*,t2.F_NAME as F_SERVER_NAME ,t2.F_IP_ADDRESS from tm_da_node t1
+          LEFT join  tm_da_server t2 on t1.F_SERVER_ID = t2.F_SERVER_ID
+        where t1.F_IS_USE=1 and t1.F_APP_ID=#{appId}
+    </select>
+
+    <select id="getNodeById" resultMap="NodeResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_node
+        where F_IS_USE=1 and F_NODE_ID=#{id}
+    </select>
+
+    <select id="getNodeByNum" resultMap="NodeResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_node
+        where F_IS_USE=1 and F_NUM=#{num}
+    </select>
+
+    <select id="getNodeByName" resultMap="NodeResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_node
+        where F_IS_USE=1 and F_NAME=#{name}
+    </select>
+
+    <select id="getNodeByNumExceptSelf" resultMap="NodeResultMap" parameterType="Node">
+        select *
+        from tm_da_node
+        where F_IS_USE=1 and F_NUM=#{num} and F_NODE_ID!=#{id}
+    </select>
+
+    <select id="getNodeByNameExceptSelf" resultMap="NodeResultMap" parameterType="Node">
+        select *
+        from tm_da_node
+        where F_IS_USE=1 and F_NAME=#{name} and F_NODE_ID!=#{id}
+    </select>
+
+    <insert id="createNode" parameterType="Node">
+        insert into tm_da_node(F_NODE_ID, F_SERVER_ID, F_APP_ID, F_NUM, F_NAME, F_PORT, F_IS_USE, F_IS_ENABLED, F_DESC, F_MEMO,
+        F_CREATE_MANCODE, F_CREATE_MANNAME, F_CREATE_TIME, F_CREATE_MEMO,
+        F_LAST_MANCODE, F_LAST_MANNAME, F_LAST_TIME, F_LAST_MEMO)
+        VALUES (#{id}, #{serverId}, #{appId}, #{num}, #{name}, #{port}, #{isUse}, #{isEnabled}, #{desc}, #{memo},
+        #{createManCode}, #{createManName}, #{createTime}, #{createMemo},
+        #{lastManCode}, #{lastManName}, #{lastTime}, #{lastMemo})
+    </insert>
+
+    <update id="updateNode" parameterType="Node">
+        update tm_da_node
+        set F_SERVER_ID=#{serverId}, F_APP_ID=#{appId}, F_PORT=#{port}, F_IS_USE=#{isUse},
+        F_IS_ENABLED=#{isEnabled}, F_DESC=#{desc}, F_MEMO=#{memo}, F_CREATE_MANCODE=#{createManCode}, F_CREATE_MANNAME=#{createManName},
+        F_CREATE_TIME=#{createTime}, F_CREATE_MEMO=#{createMemo}, F_LAST_MANCODE=#{lastManCode}, F_LAST_MANNAME=#{lastManName},
+        F_LAST_TIME=#{lastTime}, F_LAST_MEMO=#{lastMemo}
+        where F_NODE_ID=#{id}
+    </update>
+
+    <delete id="deleteNode" parameterType="java.lang.String">
+        update tm_da_node
+        set F_IS_USE=0
+        where F_NODE_ID=#{id}
+    </delete>
+
+</mapper>

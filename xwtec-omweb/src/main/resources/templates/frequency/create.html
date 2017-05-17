@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            var actionType = $("#actionType").val();
+            if (actionType == "create")
+            {
+                $("#last_repeat").val(1);
+            }
+
+            jQuery.validator.addMethod("douHao", function(value, element) {
+                return this.optional(element) || /^[\w,]+$/.test(value);
+            }, "请用逗号分隔");
+
+            jQuery.validator.addMethod( "isValueNull", function( value ) {
+                if($.trim(value) == null || $.trim(value) == '')
+                { return false;}else{ return true;}
+            }, "输入值不能为空" );
+
+            var actionType = $("#actionType").val();
+            console.log(actionType)
+            if(actionType == "create")
+            {
+                $("#wait_time").val("60");
+            }
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/frequency/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    frequency_name: {
+                        required: true,
+                        isValueNull:true
+                    },
+                    interval: {
+                        required: true,
+                         isValueNull:true,
+                        douHao:true
+                    },
+                    last_repeat:{
+                        required: true,
+                        isValueNull:true
+                    },
+                    wait_time:{
+                        required: true,
+                        digits:true,
+                        isValueNull:true
+                    },
+                    pause_time:{
+                        required: true,
+                        digits:true,
+                        isValueNull:true
+                    }
+
+
+                },
+                messages: {
+                    frequency_name: {
+                        required: "变频名称不能为空"
+                    },
+                    interval: {
+                        required: "时间间隔不能为空"
+                    },
+                    last_repeat:{
+                        required: "执行次数不能为空"
+                    },
+                    wait_time:{
+                        required: "最大等待时间不能为空",
+                        digits:" 必须输入整数"
+                    },
+                    pause_time:{
+                        required: "最大等待时间不能为空",
+                        digits:" 必须输入整数"
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            变频规则维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/frequency/index'"><i class="fa fa-users"></i> 变频规则管理中心</a></li>
+            <li class="active">变频规则详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-6">
+                <!-- general form elements -->
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">变频规则详情维护</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+
+                    <div class="box-body">
+                        <form role="form" method="post">
+                            <input type="hidden" name="actionType" id="actionType" th:value="${actionType}">
+                            <div class="form-group">
+                                <label for="frequency_name">变频规则名称</label>
+                                <input type="text" name="frequency_name" th:value="${frequencyMode.frequency_name}"
+                                       class="form-control" id="frequency_name" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label for="interval">间隔时间</label>
+                                <textarea type="text" name="interval" th:text="${frequencyMode.interval}"
+                                       class="form-control" id="interval"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="last_repeat">执行次数</label>
+                                <input name="last_repeat" th:value="${frequencyMode.last_repeat}"
+                                          class="form-control" id="last_repeat" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label for="wait_time">最大等待时间(秒)</label>
+                                <input name="wait_time"   th:value="${frequencyMode.wait_time}"
+                                       class="form-control" id="wait_time" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label for="pause_time">最小休止时间(秒)</label>
+                                <input name="pause_time"   th:value="${frequencyMode.pause_time}"
+                                       class="form-control" id="pause_time" placeholder="">
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+
+                </div>
+                <!-- /.box -->
+
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

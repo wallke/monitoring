@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.MetricsMapper">
+
+    <resultMap id="MetricsMap" type="com.xwtech.omweb.model.Metrics">
+        <result property="metric_id" column="metric_id"></result>
+        <result property="metric" column="metric"></result>
+        <result property="name" column="name"></result>
+    </resultMap>
+
+    <!--查询统计指标列表-->
+    <select id="queryMetricsList"  resultMap="MetricsMap">
+        SELECT * FROM tm_da_metric WHERE  1=1
+    </select>
+
+    <!--查询统计指标详情-->
+    <select id="queryMetricsDetail" parameterType="java.lang.String" resultMap="MetricsMap">
+          SELECT * FROM tm_da_metric WHERE  metric_id = #{metric_id}
+    </select>
+
+    <!--新增统计指标-->
+    <insert id="addMetrics" parameterType="com.xwtech.omweb.model.Metrics">
+        INSERT INTO tm_da_metric(metric_id,metric,name)
+        VALUES (#{metric_id},#{metric},#{name})
+    </insert>
+    <!--修改统计指标-->
+    <update id="updateMetrics" parameterType="com.xwtech.omweb.model.Metrics">
+        UPDATE tm_da_metric SET
+        metric =#{metric},
+        name =#{name}
+        WHERE
+        metric_id =#{metric_id}
+    </update>
+    <!--删除统计指标-->
+    <delete id="deleteMetricsById" parameterType="java.lang.String">
+        DELETE FROM  tm_da_metric WHERE metric_id =#{metric_id}
+    </delete>
+    <!---->
+    <select id="validateName" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*) FROM tm_da_metric WHERE 1=1
+        <choose>
+            <when test="metric_id !=null and metric_id !=''">
+                AND  metric_id != #{metric_id} AND metric = #{metric}
+            </when>
+            <otherwise>
+                AND metric = #{metric}
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

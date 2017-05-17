@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            $(".js-example-basic-single").select2();
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/alarmScheme/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    alert_scheme_name: {
+                        required: true
+                    }
+                },
+                messages: {
+                    alert_scheme_name: {
+                        required: "告警方案名称不能为空"
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            告警策略维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/frequency/index'"><i class="fa fa-users"></i> 告警策略管理中心</a></li>
+            <li class="active">告警策略详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-6">
+                <!-- general form elements -->
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">告警策略详情维护</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+
+                    <div class="box-body">
+                        <form role="form" method="post">
+                            <input type="hidden" name="actionType" th:value="${actionType}">
+                            <div class="form-group">
+                                <label for="alert_scheme_name">告警方案名称</label>
+                                <input type="text" name="alert_scheme_name" th:value="${alarmScheme.alert_scheme_name}"
+                                       class="form-control" id="alert_scheme_name" placeholder="">
+                            </div>
+                        </form>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+
+                </div>
+                <!-- /.box -->
+
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

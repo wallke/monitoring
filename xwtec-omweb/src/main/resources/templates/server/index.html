@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            var page =  [[${pageInfo.pages}]];
+            if(page == 0)
+            {
+                $(".table-bordered > tbody").empty().append("<tr><td colspan= '8' align='center' class='col-sm-2 control-label'>未查到相关记录</td></tr>")
+            }
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+        });
+        $(document).ready(function(){
+            $(".js-example-basic-single").select2();
+        });
+
+        function deleteServer(but){
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/server/deleteServer',
+                        data: {
+                            'serverId': but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/server/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+
+        }
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+             主机管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">主机管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="hostName" class="col-sm-2 control-label" style="width: 100px;">主机名称：</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="hostName" th:value="${hostName}"
+                                           class="form-control" id="hostName" placeholder="">
+                                </div>
+                                <label for="hostName" class="col-sm-2 control-label" style="width: 100px;">主机IP：</label>
+                                <div class="col-sm-3">
+                                    <input type="text" name="hostNum" th:value="${hostNum}"
+                                           class="form-control" id="hostNum" placeholder="">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="type" class="col-sm-2 control-label" style="width: 100px;">主机类型：</label>
+                                <div class="col-sm-3">
+                                    <select id="type" name="type"   class="js-example-basic-single  form-control">
+                                        <option selected="selected" value="">请选择</option>
+                                        <option th:value="1" th:selected="${type} == '1'">实体主机</option>
+                                        <option th:value="2" th:selected="${type} == '2'">虚拟主机</option>
+                                    </select>
+                                </div>
+
+                                <label for="roomName" class="col-sm-2 control-label" style="width: 100px;">机房名称：</label>
+                                <div class="col-sm-3">
+                                    <select id="roomName" name="roomName"  class="js-example-basic-single form-control">
+                                        <option selected="selected" value="">请选择</option>
+                                        <option th:each="room,roleStat : ${roomList}"
+                                                th:value="${room.name}" th:text="${room.name}" th:selected="${room.name} == ${roomName}">Credit card</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-2" style="width: 37.667%;">
+                                <button type="submit" class="btn btn-primary pull-right">查询</button>
+                            </div>
+                        </form>
+
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/server/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                             <thead>
+                                <tr>
+                                    <th style="width: 200px">主机IP</th>
+                                    <th style="width: 150px">主机名称</th>
+                                    <th style="width: 100px">主机类型</th>
+                                    <th style="width: 150px">机房名称</th>
+                                    <th style="width: 120px">主机节点数量</th>
+                                    <th style="width: 120px">主机应用数量</th>
+                                    <th style="width: 100px">是否启用</th>
+                                    <th style="width: 160px">操作</th>
+                                </tr>
+                             </thead>
+                                <tbody>
+                               <tr th:each="server,serverStat:${serverList}">
+                                    <td th:text="${server.hostNum}"></td>
+                                    <td th:text="${server.hostName}"></td>
+                                    <td th:text="${server.type} == '1'?'实体主机':'虚拟主机'"></td>
+                                    <td th:text="${server.roomName}"></td>
+                                    <td th:text="${server.nodeCount}"></td>
+                                    <td th:text="${server.appCount}"></td>
+                                    <td th:text="${server.isEnabled}=='0'?'否':'是'"></td>
+                                   <td>
+                                       <a th:href="${webUrl} + '/omweb/server/create?serverId=' + ${server.serverId}" class="curosr:pointerpointer btn btn-default btn-xs purple btnDetail">修改</a>
+                                       &nbsp;
+                                       <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteServer(this)'   th:id = "${server.serverId}"  >删除</a>
+                                       &nbsp;
+                                       <a th:href="${webUrl} + '/omweb/server/serverDetail?serverId=' + ${server.serverId}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail">查看</a>
+                                   </td>
+
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer clearfix paginateWrapper">
+                       <!--<ul class="pagination pagination-sm no-margin pull-right">
+                        <li><a href="#">«</a></li>
+                        <li><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">»</a></li>
+                        </ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Configuration后面的status，这个用于设置log4j2自身内部的信息输出，可以不设置，当设置成trace时，你会看到log4j2内部各种详细输出。
+-->
+<!--
+    monitorInterval：Log4j能够自动检测修改配置 文件和重新配置本身，设置间隔秒数。
+-->
+
+<configuration status="error" monitorInterval="30">
+    <!--先定义所有的appender-->
+    <appenders>
+        <!--这个输出控制台的配置-->
+        <Console name="Console" target="SYSTEM_OUT">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+            <!--这个都知道是输出日志的格式%d{HH:mm:ss.SSS} %-5level %c{1.} [%t] %m%n-->
+            <PatternLayout pattern="%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36}.%M():%L - %msg%n}"/>
+        </Console>
+        <!-- 这个会打印出所有的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档-->
+        <!--<RollingFile name="RollingFile" fileName="logs/app.log"-->
+                     <!--filePattern="log/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">-->
+            <!--<PatternLayout pattern="%d{yyyy-MM-dd 'at' HH:mm:ss z} %-5level %class{36} %L %M - %msg%xEx%n"/>-->
+            <!--<SizeBasedTriggeringPolicy size="50MB"/>-->
+            <!--&lt;!&ndash; DefaultRolloverStrategy属性如不设置，则默认为最多同一文件夹下7个文件，这里设置了20 &ndash;&gt;-->
+            <!--<DefaultRolloverStrategy max="20"/>-->
+
+        <!--</RollingFile>-->
+
+        <!--<Async name="Async">-->
+        <!--<AppenderRef ref="RollingFile"/>-->
+
+        <!--</Async>-->
+
+        <RollingRandomAccessFile
+                name="RollingRandomAccessFile"
+                fileName="logs/app.log"
+                filePattern="logs/app-%d{yyyy-MM-dd}-%i.log.gz"
+                immediateFlush="false"
+                bufferSize="262144">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36}.%M() @%L - %msg%n</Pattern>
+            </PatternLayout>
+            <!--level:BurstFilter过滤的事件级别
+                rate：每秒允许的log事件的平均值
+                maxBurst：当BurstFilter过滤的事件超过rate值，
+                          排队的log事件上限。超过此上限的log，将被丢弃。默认情况下maxBurst = 10*rate
+                          按以上配置，假定每个log事件的执行时间较长，
+                          输出117个log事件（INFO级别）到RollingFileAppenders，
+                          BurstFilter会过滤得到INFO级别的log事件，
+                          之后会发生：16个log事件在执行，100个等待执行，1个被丢弃。-->
+            <BurstFilter level="INFO" rate="16" maxBurst="100"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <!--设置压缩文件数量的上限-->
+            <DefaultRolloverStrategy max="10000"/>
+        </RollingRandomAccessFile>
+
+    </appenders>
+    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效-->
+    <loggers>
+
+        <!--additivity true 则随root的appender  false 为 自定义appender-->
+        <!--<Logger name="com.xwtech.recommend.service" level="TRACE"  additivity="true"/>-->
+
+        <!--additivity true 则随root的appender  false 为 自定义appender-->
+        <Logger name="testLogger" level="info"  additivity="false">
+            <appender-ref ref="RollingRandomAccessFile"/>
+            <appender-ref ref="Console"/>
+        </Logger>
+
+        <!--additivity true 则随root的appender  false 为 自定义appender-->
+        <Logger name="org.springframework" level="error"  additivity="true"/>
+
+        <!--建立一个默认的root的logger-->
+        <root level="error"  includeLocation="true">
+            <appender-ref ref="RollingRandomAccessFile"/>
+            <appender-ref ref="Console"/>
+        </root>
+        <!-- Don't forget to set system property -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
+             to make all loggers asynchronous. -->
+        <!-- No need to set system property "Log4jContextSelector" to any value when using <asyncLogger> or <asyncRoot>. -->
+
+        <!--&lt;!&ndash; pattern layout actually uses location, so we need to include it &ndash;&gt;-->
+        <!--<AsyncLogger name="com.foo.Bar" level="trace" includeLocation="true">-->
+            <!--<AppenderRef ref="RandomAccessFile"/>-->
+        <!--</AsyncLogger>-->
+        <!--<Root level="info" includeLocation="true">-->
+            <!--<AppenderRef ref="Console"/>-->
+        <!--</Root>-->
+
+    </loggers>
+
+</configuration>

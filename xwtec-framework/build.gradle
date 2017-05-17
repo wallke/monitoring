@@ -1,0 +1,19 @@
+
+
+dependencies {
+    compile(
+            springbootlibraries."spring-boot",
+            springbootlibraries."spring-boot-autoconfigure",
+
+            libraries.'servlet-api',
+            libraries.'commons-lang3',
+            libraries.'commons-codec',
+            libraries.'spring-webmvc',
+            libraries."shiro-spring",
+            //libraries."shiro-ehcache",
+            libraries."shiro-web",
+            libraries."spring-data-redis",
+            libraries."httpclient",
+            libraries."jackson-databind"
+    )
+}

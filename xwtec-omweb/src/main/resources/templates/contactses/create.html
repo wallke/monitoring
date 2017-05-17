@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/iCheck/all.css'">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/iCheck/icheck.min.js'"></script>
+    <script>
+        $(document).ready(function(){
+
+            var actionType = $("#actionType").val();
+            if(actionType == "modfiy")
+            {
+                $("#userName").attr("disabled","disabled");
+            }
+            //单选
+            $(".js-example-basic-single").select2();
+
+            //Flat red color scheme for iCheck
+            $('input[type="checkbox"].flat-red').iCheck({
+                checkboxClass: 'icheckbox_flat-green',
+            });
+
+            var typeValue = $("#typeValue").val();
+            typeValue = typeValue.split(",")
+            $.each(typeValue,function (index,value) {
+                if (value == 'sms')
+                {
+                    $("#smsInp").iCheck('check');
+                    $("#mobileDiv").show();
+                }
+                if (value == 'email')
+                {
+                    $("#emailInp").iCheck('check');
+                    $("#emailDiv").show();
+                }
+            })
+        });
+
+        $(function () {
+
+            jQuery.validator.addMethod("isMobile", function(value,element) {
+                var length = value.length;
+                var mobile = /^1[3|4|5|8][0-9]\d{4,8}$/;
+                return this.optional(element)||(length == 11 && mobile.test(value));
+            }, "请正确填写您的手机号码");
+
+
+            $('input[type="checkbox"].flat-red').on('ifChecked', function(event){
+                var value  = $(this).attr("value");
+                if(value == "sms"){
+                    $("#mobileDiv").show();
+                }
+                if(value == "email")
+                {
+                    $("#emailDiv").show();
+                }
+            });
+
+            $('input[type="checkbox"].flat-red').on('ifUnchecked', function(event){
+                var value  = $(this).attr("value");
+                if(value == "sms"){
+                    $("#mobileDiv").hide();
+                    $("#mobile").val("");
+                }
+                if(value == "email")
+                {
+                    $("#emailDiv").hide();
+                    $("#email").val("");
+                }
+            });
+
+            $(".btnSubmit").on("click", function () {
+                var smsCheck =  $('input[type="checkbox"][value="sms"]').is(":checked");
+                var emailCheck =  $('input[type="checkbox"][value="email"]').is(":checked");
+                if(!smsCheck && !emailCheck)
+                {
+                    $.notify.error("请选择类型");
+                    return;
+                }
+                if(smsCheck)
+                {
+                    var mobile = $("#mobile").val();
+                    if (mobile == null || mobile =='')
+                    {
+                        $.notify.error("请输入手机号码");
+                        return;
+                    }
+                }
+                if(emailCheck)
+                {
+                    var email = $("#email").val();
+                    if (email == null || email =='')
+                    {
+                        $.notify.error("请输入邮箱");
+                        return;
+                    }
+                }
+
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/cropContacts/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+//                    name:{
+//                        required: true,
+//                    },
+                    mobile:{
+                        required: true,
+                        isMobile:true
+
+                    },
+                    email:{
+                        required: true,
+                        email:true
+                    },
+
+                },
+                messages: {
+                    name:{
+                        required: "联系人名称不能为空",
+                    },
+                    mobile:{
+                        required: "请输入手机号码",
+                        isMobile:"请输入正确的手机号码"
+                    },
+                    email:{
+                        required: "请输入邮箱",
+                        email:"邮箱格式不正确"
+                    },
+                }
+            });
+        });
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            联系人详情维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/cropContacts/index'"><i class="fa fa-users"></i> 联系人管理中心</a></li>
+            <li class="active">联系人详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- general form elements -->
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">联系人详情维护</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+
+                    <div class="box-body">
+                        <form role="form" method="post" class="formClass">
+                            <input type="hidden"  id="typeValue" th:value="${cropContacts.type}">
+                            <input type="hidden"  id="actionType" name="actionType" th:value='${actionType}'/>
+                                    <div class="form-group">
+                                        <label for="userName">联系人账户</label>
+                                        <input type="text" name="userName" required th:value="${cropContacts.userName}"
+                                               class="form-control" id="userName">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="name">联系人名称</label>
+                                        <input type="text" name="name" required th:value="${cropContacts.name}"
+                                               class="form-control" id="name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="type">类型:</label>
+                                        <input type="checkbox" id="smsInp" value="sms" class="flat-red" name="type">&nbsp;手机&nbsp;
+                                        <input type="checkbox"  id="emailInp" value="email" class="flat-red" name="type">&nbsp;邮箱&nbsp;
+                                    </div>
+
+                                    <div class="form-group" id="mobileDiv" style="display: none">
+                                        <label for="mobile">手机</label>
+                                        <input type="text" name="mobile" maxlength="11" th:value="${cropContacts.mobile}"
+                                               class="form-control" id="mobile">
+                                    </div>
+
+                                    <div class="form-group" id="emailDiv" style="display: none">
+                                        <label for="email">邮箱</label>
+                                        <input type="text" name="email" th:value="${cropContacts.email}"
+                                               class="form-control" id="email">
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label for="phone">电话</label>
+                                        <input type="text" name="phone" th:value="${cropContacts.phone}"
+                                               class="form-control" id="phone">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="qq">qq</label>
+                                        <input type="text" name="qq" th:value="${cropContacts.qq}"
+                                               class="form-control" id="qq">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="wechat">微信</label>
+                                        <input type="text" name="wechat"  th:value="${cropContacts.wechat}"
+                                               class="form-control" id="wechat">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="isEnabled">立即启用</label>
+                                        <select id="isEnabled" name="isEnabled"  th:field="*{cropContacts.isEnabled}"class="js-example-basic-single form-control" >
+                                            <option th:value="1">启用</option>
+                                            <option th:value="0">不启用</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                            <label for="cropId">公司名称</label>
+                                            <select id="cropId" name="cropId"  th:field="*{cropContacts.cropId}"  class="js-example-basic-single form-control">
+                                                <option th:each="crop,cropListStat : ${cropList}"
+                                                        th:value="${crop.cropId}" th:text="${crop.cropName}">Credit card</option>
+                                            </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="desc">说明</label>
+                                        <input type="text" name="desc"  th:value="${cropContacts.desc}"
+                                               class="form-control" id="desc">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="memo">备注</label>
+                                        <input type="text" name="memo" th:value="${cropContacts.memo}"
+                                               class="form-control" id="memo">
+                                    </div>
+                            <!-- /.tab-pane -->
+                        </form>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+
+                </div>
+                <!-- /.box -->
+
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <title>欣网管理后台 | Dashboard</title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/bootstrap/css/bootstrap.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/font-awesome/4.7.0/css/font-awesome.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/jvectormap/jquery-jvectormap-1.2.2.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/dist/css/AdminLTE.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/dist/css/skins/skin-blue.min.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/iCheck/square/blue.css'">
+    <link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/style/main.css'">
+    <!--[if lt IE 9]>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/html5shiv/3.7.3/html5shiv.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/respond/1.4.2/respond.min.js'"></script>
+    <![endif]-->
+</head>
+<body class="hold-transition login-page">
+<div class="login-box">
+    <div class="login-logo">
+        <a href="#">欣网管理后台</a>
+    </div>
+    <!-- /.login-logo -->
+    <div class="login-box-body">
+        <p class="login-box-msg" th:text="${message}"></p>
+
+        <form method="post">
+            <div class="form-group has-feedback">
+                <input type="text" class="form-control" placeholder="账号" name="username" th:value="${user.loginName}">
+                <span class="fa fa-user form-control-feedback"></span>
+            </div>
+            <div class="form-group has-feedback">
+                <input type="password" class="form-control" placeholder="密码" name="password">
+                <span class="fa fa-lock form-control-feedback"></span>
+            </div>
+            <div class="row">
+                <div class="col-xs-8">
+                    <div class="checkbox icheck">
+                        <label>
+                            <input type="checkbox" checked name="rememberMe"> 记住密码
+                        </label>
+                    </div>
+                </div>
+                <!-- /.col -->
+                <div class="col-xs-4">
+                    <button type="submit" class="btn btn-primary btn-block btn-flat">登录</button>
+                </div>
+                <!-- /.col -->
+            </div>
+        </form>
+
+    </div>
+    <!-- /.login-box-body -->
+</div>
+<!-- /.login-box -->
+
+<!-- jQuery 2.2.3 -->
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/jQuery/jquery-2.2.3.min.js'"></script>
+<!-- Bootstrap 3.3.6 -->
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/bootstrap/js/bootstrap.min.js'"></script>
+<!-- iCheck -->
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/iCheck/icheck.min.js'"></script>
+<script>
+    $(function () {
+        $('input').iCheck({
+            checkboxClass: 'icheckbox_square-blue',
+            radioClass: 'iradio_square-blue',
+            increaseArea: '20%' // optional
+        });
+    });
+</script>
+</body>
+</html>

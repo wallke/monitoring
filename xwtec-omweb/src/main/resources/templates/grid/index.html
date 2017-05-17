@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+        });
+
+        function deleteGrid(but){
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/grid/deleteGrid',
+                        data: {
+                            'grid_code': but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/grid/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function appGrid(but) {
+            $.ajax({
+                type: "post",
+                url: '[[${webUrl}]]/omweb/grid/appEs',
+                data: {
+                    'grid_code': but.id
+                },
+                success: function (callback) {
+                    if (callback.success) {
+                        $.notify.success(callback.message, "", function () {
+                            location.href = '[[${webUrl}]]/omweb/grid/index';
+                        });
+
+                    } else {
+                        $.notify.error(callback.message)
+                    }
+                }
+            });
+        }
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            预警网格管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">预警网格管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/grid/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                                <tbody>
+                                <tr>
+                                    <th style="width: 100px">序号</th>
+                                    <th style="width: 100px">预警网格名称</th>
+                                    <th style="width: 100px">指标</th>
+                                    <th style="width: 160px">操作</th>
+                                </tr>
+                               <tr th:each="grid,gridStat:${gridList}">
+                                   <td th:text="${gridStat.index+1}"></td>
+                                   <td th:text="${grid.grid_name}"></td>
+                                   <td th:text="${grid.metric}"></td>
+                                   <td>
+                                     <a th:href="${webUrl} + '/omweb/grid/update?grid_code=' + ${grid.grid_code}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail">修改</a>
+                                       &nbsp;
+                                       <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteGrid(this)'   th:id="${grid.grid_code}"  >删除</a>
+                                       &nbsp;
+                                       <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='appGrid(this)'   th:id="${grid.grid_code}"  >应用</a>
+                                   </td>
+
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer clearfix paginateWrapper">
+                       <!--<ul class="pagination pagination-sm no-margin pull-right">
+                        <li><a href="#">«</a></li>
+                        <li><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">»</a></li>
+                        </ul>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

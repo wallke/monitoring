@@ -1,0 +1,15 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body th:fragment="page(content)" class="hold-transition skin-blue skin-xwblue sidebar-mini fixed"
+>
+<div class="wrapper">
+    <header th:replace="fragments/header :: top"></header>
+    <aside th:replace="fragments/menu :: sidebar"></aside>
+    <th:block th:if="${content} != null">
+        <div class="content-wrapper" th:replace="${content}"></div>
+    </th:block>
+</div>
+<th:block th:include="fragments/footer :: js"></th:block>
+</body>
+</html>

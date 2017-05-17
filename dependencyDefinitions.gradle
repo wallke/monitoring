@@ -1,0 +1,126 @@
+/**
+ * 依赖包的定义。
+ *
+ * 这种定义方式的优点是在顶级项目目录下引入，在子项目中也可以直接用了。
+ *
+ */
+
+// jar包的版本号
+//
+ext.versions = [
+        "spring"                    : '4.3.6.RELEASE',
+        "springbootgradleplugin"    : '1.5.1.RELEASE',
+        "commonslang"               : '3.5',
+        "commonscodec"              : '1.9',
+        "hibernatevalidator"        : '5.2.4.Final',
+        "jackson"                   : '2.8.6',
+        "woodstox"                  : "4.4.1",
+        "springfoxswagger2"         : '2.5.0',
+        "dependencymanagementplugin": "0.6.1.RELEASE",
+        "springcloudconfig"         : "1.1.2.RELEASE",
+        "springclouddependencies"   : "Brixton.SR4",
+        "mybatis"                   : "1.1.1",
+        "mybatispagehelper"         : "4.1.6",
+        "hikaricp"                  : "2.4.7",
+        "mysqlconnector"            : "6.0.5",
+        "shiro"                     : "1.3.2",
+]
+
+// 各种可能会用到的jar包
+//
+ext.libraries = [
+        "servlet-api"                : "javax.servlet:javax.servlet-api:3.1.0",
+        "spring-webmvc"              : "org.springframework:spring-webmvc:${versions.spring}",
+        "commons-lang3"              : "org.apache.commons:commons-lang3:${versions.commonslang}",
+        "commons-codec"              : "commons-codec:commons-codec:${versions.commonscodec}",
+
+        "hibernatevalidator"         : "org.hibernate:hibernate-validator:${versions.hibernatevalidator}",
+        "woodstox-core-asl"          : "org.codehaus.woodstox:woodstox-core-asl:${versions.woodstox}",
+        "springfox-swagger2"         : "io.springfox:springfox-swagger2:${versions.springfoxswagger2}",
+        "springfox-swagger-ui"       : "io.springfox:springfox-swagger-ui:${versions.springfoxswagger2}",
+        "hikaricp"                   : "com.zaxxer:HikariCP:${versions.hikaricp}",
+        "mysqlconnector"             : "mysql:mysql-connector-java:${versions.mysqlconnector}",
+        "mybatis-pagehelper"         : "com.github.pagehelper:pagehelper:${versions.mybatispagehelper}",
+        "shiro-spring"               : "org.apache.shiro:shiro-spring:${versions.shiro}",
+        "shiro-ehcache"              : "org.apache.shiro:shiro-ehcache:${versions.shiro}",
+        "shiro-web"                  : "org.apache.shiro:shiro-web:${versions.shiro}",
+        "spring-data-redis"          : "org.springframework.data:spring-data-redis:1.8.0.RELEASE",
+        "quartz"                     : "org.quartz-scheduler:quartz:2.2.3",
+        "quartz-jobs"                : "org.quartz-scheduler:quartz-jobs:2.2.3",
+        "thymeleaf"                  : 'org.thymeleaf:thymeleaf:3.0.3.RELEASE',
+        "thymeleaf-spring4"          : 'org.thymeleaf:thymeleaf-spring4:3.0.3.RELEASE',
+        "thymeleaf-layout-dialect"   : 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:2.2.0',
+        "thymeleaf-extras-shiro"     : "com.github.theborakompanioni:thymeleaf-extras-shiro:2.0.0",
+        "raven-logback"              : "com.getsentry.raven:raven-logback:7.7.1",
+        "spring-integration-kafka"   : "org.springframework.integration:spring-integration-kafka:2.1.0.RELEASE",
+        "spring-integration-java-dsl": "org.springframework.integration:spring-integration-java-dsl:1.1.3.RELEASE",
+        "kafka_2.11"                 : 'org.apache.kafka:kafka_2.11:0.10.0.1',
+        "jedis"                      : "redis.clients:jedis:2.9.0",
+        "httpclient"                 : "org.apache.httpcomponents:httpclient:4.5.3",
+
+        "logback"                    : "ch.qos.logback:logback-classic:1.1.11",
+        "log4j"                      : "log4j:log4j:1.2.17",
+        "log4j2"                     : "org.apache.logging.log4j:log4j-core:2.7",
+        "log4j2-api"                 : "org.apache.logging.log4j:log4j-api:2.7",
+        "slf4j-log4j12"              : "org.slf4j:slf4j-log4j12:1.7.22",
+        "slf4j-api"                  : "org.slf4j:slf4j-api:1.7.22",
+        "log4j-slf4j-impl"           : "org.apache.logging.log4j:log4j-slf4j-impl:2.7",
+
+
+        "jyaml"                      : "org.jyaml:jyaml:1.3",
+        "jackson-databind"           : "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+        "jackson-annotations"        : "com.fasterxml.jackson.core:jackson-annotations:${versions.jackson}",
+        "jackson-data-formatxml"     : "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:${versions.jackson}",
+        "jackson-dataformat-smile"   : "com.fasterxml.jackson.dataformat:jackson-dataformat-smile:${versions.jackson}",
+        "jackson-dataformat-yaml"    : "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${versions.jackson}",
+        "jackson-dataformat-cbor"    : "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:${versions.jackson}",
+
+        "alibaba-fastjson"           : "com.alibaba:fastjson:1.2.4",
+        "elasticsearch-transport"    : "org.elasticsearch.client:transport:5.2.0",
+        "elasticsearch"              : "org.elasticsearch:elasticsearch:5.2.0"
+
+
+]
+
+ext.locallibraries = [
+        "ojdbc6"  : "ojdbc6-11.2.0.3",
+        "ServerCM": "ServerCM",
+]
+
+ext.springbootlibraries = [
+        "springbootgradleplugin"         : "org.springframework.boot:spring-boot-gradle-plugin:${versions.springbootgradleplugin}",
+        "starter-actuator"               : 'org.springframework.boot:spring-boot-starter-actuator',
+        "starter-thymeleaf"              : 'org.springframework.boot:spring-boot-starter-thymeleaf',
+        "devtools"                       : 'org.springframework.boot:spring-boot-devtools',
+        "starter-data-redis"             : "org.springframework.boot:spring-boot-starter-data-redis",
+        "starter-data-elasticsearch"     : "org.springframework.boot:spring-boot-starter-data-elasticsearch",
+        "starter-tomcat"                 : "org.springframework.boot:spring-boot-starter-tomcat",
+        "starter-cache"                  : "org.springframework.boot:spring-boot-starter-cache",
+        "starter-aop"                    : "org.springframework.boot:spring-boot-starter-aop",
+        "spring-boot-starter-integration": "org.springframework.boot:spring-boot-starter-integration",
+        "spring-boot-loader"             : "org.springframework.boot:spring-boot-loader",
+        "configuration-processor"        : "org.springframework.boot:spring-boot-configuration-processor",
+
+        "starter-test"                   : 'org.springframework.boot:spring-boot-starter-test',
+        "mybatis"                        : "org.mybatis.spring.boot:mybatis-spring-boot-starter:${versions.mybatis}",
+        "spring-boot"                    : "org.springframework.boot:spring-boot:${versions.springbootgradleplugin}",
+        "spring-boot-autoconfigure"      : "org.springframework.boot:spring-boot-autoconfigure:${versions.springbootgradleplugin}",
+
+
+]
+
+ext.springcloudlibraries = [
+        "dependencymanagementplugin": "io.spring.gradle:dependency-management-plugin:${versions.dependencymanagementplugin}",
+        "spring-cloud-dependencies" : "org.springframework.cloud:spring-cloud-dependencies:${versions.springclouddependencies}",
+        "starter-eureka"            : "org.springframework.cloud:spring-cloud-starter-eureka",
+        "starter-config"            : "org.springframework.cloud:spring-cloud-starter-config",
+        "eureka-server"             : "org.springframework.cloud:spring-cloud-starter-eureka-server",
+        "config-server"             : "org.springframework.cloud:spring-cloud-config-server",
+        "starter-hystrix"           : "org.springframework.cloud:spring-cloud-starter-hystrix",
+        "starter-hystrix-dashboard" : "org.springframework.cloud:spring-cloud-starter-hystrix-dashboard",
+        "starter-feign"             : "org.springframework.cloud:spring-cloud-starter-feign",
+        "starter-zuul"              : "org.springframework.cloud:spring-cloud-starter-zuul",
+        "netflix-sidecar"           : "org.springframework.cloud:spring-cloud-netflix-sidecar",
+
+        // "spring-cloud-dependencies":"org.springframework.cloud:spring-cloud-dependencies:${versions.springclouddependencies}",
+]

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.FrequencyModeMapper">
+    <resultMap id="FrequencyModeMap" type="com.xwtech.omweb.model.FrequencyMode">
+        <result property="frequency_code" column="frequency_code"></result>
+        <result property="frequency_name" column="frequency_name"></result>
+        <result property="interval" column="interval_seq"></result>
+        <result property="last_repeat" column="last_repeat"></result>
+        <result property="wait_time" column="wait_time"></result>
+        <result property="pause_time" column="pause_time"></result>
+    </resultMap>
+
+    <!--查询变频模式列表-->
+    <select id="queryFrequencyMode" resultMap="FrequencyModeMap">
+        SELECT * FROM tm_da_frequency_mode WHERE  1=1
+    </select>
+    <!--根据id查询变频模式详情-->
+    <select id="queryFrequencyModeDetail" parameterType="java.lang.String" resultMap="FrequencyModeMap">
+        SELECT * FROM tm_da_frequency_mode WHERE   frequency_code=#{frequency_code}
+    </select>
+    <!--新增变频模式-->
+    <insert id="addFrequencyMode" parameterType="com.xwtech.omweb.model.FrequencyMode">
+        insert into tm_da_frequency_mode  (frequency_code,frequency_name,interval_seq,last_repeat,wait_time,pause_time)
+               values (#{frequency_code},#{frequency_name},#{interval},#{last_repeat},#{wait_time},#{pause_time});
+    </insert>
+    <!--修改变频模式-->
+    <update id="updateFrequencyMode" parameterType="com.xwtech.omweb.model.FrequencyMode">
+        UPDATE tm_da_frequency_mode SET
+        frequency_name =#{frequency_name},
+        interval_seq = #{interval},
+        last_repeat = #{last_repeat},
+        wait_time = #{wait_time},
+        pause_time =#{pause_time}
+        WHERE
+        frequency_code=#{frequency_code}
+    </update>
+    <!--根据主键删除变频模式-->
+    <delete id="deleteFrequencyMode" parameterType="java.lang.String">
+        DELETE  FROM  tm_da_frequency_mode WHERE  frequency_code=#{frequency_code}
+    </delete>
+    <!--验证变频名称是否重复-->
+    <select id="validateFrequencyName" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*) FROM tm_da_frequency_mode WHERE  1=1
+        <choose>
+            <when test="frequency_code !=null and frequency_code!=''">
+                AND frequency_code != #{frequency_code} AND  frequency_name =#{frequency_name}
+            </when>
+            <otherwise>
+                AND frequency_name =#{frequency_name}
+            </otherwise>
+        </choose>
+    </select>
+
+
+
+</mapper>

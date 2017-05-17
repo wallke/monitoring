@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head   th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+  <title>系统请求转发服务监控</title>
+  
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+      
+  <script type="text/javascript">
+  (function($) {
+		$.fn.dropdown = function(callback) {
+			// 插件的具体内容放在这里
+			this.each(function() {
+				var $this = $(this);
+				var $dropdown = $this.find(".dropdown-toggle");
+				var $options = $this.find("ul.dropdown-menu>li");
+				$options.on("click", function() {
+					var opt = $(this);
+					$dropdown.html(opt.find("a").html()
+							+ " <i class='fa fa-angle-down'></i>");
+					$this.data("value", opt.find("a").data("value"));
+					$this.data("index", opt.index());
+					$this.data("text", opt.find("a").text());
+					$this.data("placeholder", opt.find("a").text());
+					$this.data("html", opt.find("a").html());
+					if ($.isFunction(callback)) {
+						callback({
+							index : $this.data("index"),
+							value : $this.data("value"),
+							text : $this.data("text"),
+							html : $this.data("html")
+						});
+					}
+				});
+			});
+		};
+
+	})(jQuery);
+	
+	$(function() {
+		$("select").select2({
+			language : "zh-CN"
+		});
+
+		var $appGroups = $("#appGroups");
+		var $roomInfo = $("#roomInfo");
+		var $hostInfo = $("#hostInfo");
+
+		$appGroups.dropdown(function(result) {
+
+					$("#appGroup_").val(result.value);
+					$.ajax({
+								type : "post",
+								url : '[[${webUrl}]]/omweb/host/room',
+								data : {
+									'appGroupId' : result.value
+								},
+								success : function(callback) {
+									$roomInfo.html("");
+									$hostInfo.html("");
+									var id = "";
+									var name = "请选择机房...";
+									addOption(id, name, $roomInfo);
+
+									name = "请选择主机...";
+									addOption(id, name, $hostInfo);
+
+									if (callback.success) {
+										$.each(callback.data,
+														function(i, val) {
+															addOption(val.id,val.name,$roomInfo);
+														});
+										//查询
+										query_();
+									} else {
+										$.notify.error("系统异常,请稍后再试...")
+									}
+								}
+							});
+				});
+
+		$appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+		
+		
+		 moment.locale('zh-cn');
+         var dateInput = $('#js-datetime-range');
+         var valueSpan = $('#js-datetime-value');
+         var label = dateInput.parent();
+         dateInput
+             .daterangepicker({
+                 timePicker: true,
+                 timePicker24Hour: true,
+                 autoUpdateInput: true,
+                 opens: 'left',
+                 applyClass: 'btn-info',
+                 locale: {
+                     format: 'YYYY-MM-DD HH:mm:ss',
+                     applyLabel: '确认',
+                     cancelLabel: '取消',
+                 }
+             });
+         dateInput.on('change', function () {
+             if (this.value && this.value !== 'on') {
+                 valueSpan.text(this.value);
+             }
+         });
+
+         window.envData =undefined;
+         
+         $(".btnQuery").on("click",function () {
+        	 query_();
+         });
+
+		
+	});
+	
+	function initHost() {
+		var roomId = $("#roomInfo").val();
+		//var appGroupId = $("#appGroup_").val();
+		var $hostInfo = $("#hostInfo");
+
+		$.ajax({
+			type : "post",
+			url : '[[${webUrl}]]/omweb/host/service',
+			data : {
+				'roomId' : roomId
+			},
+			success : function(callback) {
+				$hostInfo.html("");
+				var id = "";
+				var name = "请选择主机...";
+				addOption(id, name, $hostInfo);
+				if (callback.success) {
+					$.each(callback.data, function(i, val) {
+						addOption(val.serverId, val.hostNum, $hostInfo);
+					});
+					//查询
+					//query_();
+				} else {
+					$.notify.error("系统异常,请稍后再试...")
+				}
+			}
+		});
+
+	}
+	
+	function addOption(id, name, select) {
+		var option = new Option();
+		option.value = id;
+		option.text = name;
+		select[0].options.add(option);
+	}
+	
+	function query_(){
+		var appGroupId = $("#appGroup_").val();
+		var roomId = $("#roomInfo").val();
+		var roomName = $("#roomInfo option:selected").text();
+		var hostIp = $("#hostInfo option:selected").text();
+		if("" ==  $("#hostInfo").val()){
+			hostIp ="";
+		}
+		if("" ==  roomId){
+			roomName ="";
+		}
+		
+		var html = "";
+		$("#serviceInfo").html("");
+		
+		if($("select[name=roomInfo] option").size()==1){
+			return;
+		}
+		var checkServerId = "";
+		$.ajax({
+			type : "post",
+			url : '[[${webUrl}]]/omweb/host/serviceInfos',
+			data : {
+				'appGroupId' : appGroupId,
+				'roomId' : roomId,
+				'roomName' : roomName,
+				'hostIp' : hostIp
+			},
+			success : function(callback) {
+				if (callback.success) {
+					$.each(callback.data,function(i, val) {
+					    if(i==0){
+					    	checkServerId = val.serverId;
+					    }
+						html += 
+							  "<a href=\"javascript:click('"+val.serverId+"');\" class='list-group-item clearfix'  id = '"+val.serverId+"'> "+  
+                       		  "	 <div class='pull-left'>"+val.hostName+"</div> "+  
+                       		  "	 <div class='pull-right'>"+val.hostNum+"</div></a>";
+					});
+
+					$("#serviceInfo").append(html);
+					click(checkServerId);
+				} else {
+				}
+			}
+		});
+	}
+	
+	function click(serverId){
+		// 总连接数
+		var accepts = [];
+		// 活跃连接数量
+		var active = [];
+		// 读取连接数
+		var reading = [];
+		// 等待连接数
+		var waiting = [];
+		// 响应连接数
+		var writing = [];
+		// 成功握手数
+		var handled = [];
+		// 总请求数
+		var requests = [];
+		// 关键时间
+		var time = [];
+		
+		var $a = $("#"+serverId+"");
+		
+		$('.list-group-item').each(function(i){
+	        $(this).removeClass('active');
+	 	}); 
+		
+		$a.addClass("active");
+		var hostIp = $a.find(".pull-right").text();
+		
+		$.ajax({
+			type : "post",
+			url : '[[${webUrl}]]/omweb/nginx/monNginfo',
+			data : {
+				'serverId' : serverId,
+				'hostIp' : hostIp,
+				'dateType': $(".dateType:checked").data("value"),
+                'date': $(".dateType:checked").val()
+			},
+			success : function(callback) {
+				if (callback.success) {
+					$.each(callback.data, function(i, val) {
+						// 总连接数
+						accepts.push(val.accepts);
+						// 活跃连接数量
+						active.push(val.active);
+						// 读取连接数
+					    reading.push(val.reading);
+						// 等待连接数
+						waiting.push(val.waiting);
+						// 响应连接数
+						writing.push(val.writing);
+						// 成功握手数
+						handled.push(val.handled);
+						// 总请求数
+						requests.push(val.requests);
+						
+						time.push(val.key);
+					});
+					drawnOption(time,accepts,active,reading,waiting,writing,handled,requests);
+				} else {
+					$.notify.error("系统异常,请稍后再试...")
+				}
+			}
+		});
+	}
+	
+
+	function drawnOption(time,accepts,active,reading,waiting,writing,handled,requests){
+		var myChart = echarts.init(document.getElementById('monitor'),'macarons');
+		var option= {
+				color: ['#ff3d3d','#00a0e9','#f603ff','#00b419'],
+				tooltip: {
+					trigger: 'axis'
+				},
+				legend: {
+					padding: [10, 20,0,20],
+					data:['总连接数','活跃连接数','读取连接数','等待连接数','响应连接数','成功握手数','总请求数'],
+					selected: {
+						'总连接数': true,
+						'活跃连接数': true,
+						'读取连接数': true,
+						'等待连接数': true,
+						'响应连接数' : true,
+						'成功握手数' : true,
+						'总请求数' : true
+					}
+				},
+				grid: {
+					left: '0',
+					right: '3%',
+					bottom: '3%',
+					top:'13%',
+					containLabel: true
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            },
+					data: time
+				},
+				yAxis: {
+					 name: '(个)',
+					splitLine:{//网格线
+		                show: true,
+		                lineStyle:{
+		                    color:['#b1b1b1'],
+		                    type:'dashed'
+		                }
+		            }
+				},
+				series: [
+					{
+						name:'总连接数',
+						type:'line',
+						data:accepts,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'//值显示
+							}
+						}
+					},
+					{
+						name:'活跃连接数',
+						type:'line',
+						data:active,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'读取连接数',
+						type:'line',
+						data:reading,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'等待连接数',
+						type:'line',
+						data:waiting,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'响应连接数',
+						type:'line',
+						data:writing,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'成功握手数',
+						type:'line',
+						data:handled,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					},
+					{
+						name:'总请求数',
+						type:'line',
+						data:requests,
+						label: {
+							normal: {
+								show: true,
+								position: 'top'
+							}
+						}
+					}
+					
+					
+				]
+			};
+		 myChart.setOption(option);
+	}
+  </script>
+</head>
+<body class="hold-transition skin-blue skin-xwblue sidebar-mini fixed"  th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+  <div class="wrapper">
+    <div class="content-wrapper">
+      <!-- Main content -->
+      <section class="content">
+        <div class="row">
+          <div class="col-md-12">
+          <div class="box">
+           <div class="box-body">
+				<div class="btn-group pull-left" id="appGroups">
+					<button type="button" class="btn btn-primary dropdown-toggle"
+						data-toggle="dropdown" aria-haspopup="true"
+						aria-expanded="false">
+						<i class="fa fa-angle-down"></i>
+					</button>
+					<ul class="dropdown-menu">
+						<li th:each="group,groupStat:${appGroups}"><a href="#"
+							th:data-value="${group.id}" th:text="${group.name}"></a></li>
+					</ul>
+				</div>
+				<!-- /btn-group -->
+				   <div class="pull-right">
+                            <div class="btn-group btn-check-group" data-toggle="buttons">
+                                <label class="btn btn-default active">
+                                    <input class="dateType" data-value="1" type="radio" name="options" checked="checked" />1H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="2" type="radio" name="options" />6H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="3" type="radio" name="options" />12H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="4" type="radio" name="options" />1D
+                                </label>
+                                <label class="btn btn-default ">
+                                    <input class="dateType" data-value="5" type="radio" name="options" />7D
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="6" type="radio" name="options" />14D
+                                </label>
+                                <label class="btn btn-default check-datetime">
+                                    <input class="dateType" data-value="0" type="radio" name="options"
+                                           id="js-datetime-range" />
+                                    <span class="check-datetime-placeholder">指定时间</span>
+                                    <span class="check-datetime-value" id="js-datetime-value">指定时间</span>
+                                </label>
+                            </div>
+                        </div>
+			</div>
+			</div>
+            <!-- /.box -->
+            <div class="box">
+              <div class="box-header   with-border">
+                   <input type="hidden" id="appGroup_" name="appGroup_" value="" />
+                    <form class="form-horizontal">
+					<div class="box-body">
+						<label for="roomInfo" class="col-sm-1 control-label">机房名称</label>
+						<div class="col-sm-2">
+							<select class="form-control" id="roomInfo" name="roomInfo"
+								onchange="initHost();">
+							</select>
+						</div>
+						<label for="hostInfo" class="col-sm-1 control-label">监控主机</label>
+						<div class="col-sm-2">
+							<select class="form-control" id="hostInfo" name="hostInfo">
+							</select>
+						</div>
+						<button class="btn btn-primary btnQuery" type="button">查询</button>
+					</div>
+					</form>
+				</div>
+              <!-- /.box-header -->
+              <div class="box-body">
+                <div class="row">
+                  <div class="col-md-4 col-lg-3">
+                     <div class="panel panel-monitor">
+                      <div class="panel-heading">
+                        <button class="btn btn-help"><i class="fa fa-question"></i></button>
+                      		 主机信息表
+                      </div>
+                      <br>
+                      <div class="list-group">
+                        <div class="list-group-item disabled clearfix">
+                          <div class="pull-left">主机名称</div>
+                          <div class="pull-right">主机地址</div>
+                        </div>
+                        <div id = "serviceInfo">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-8 col-lg-9">
+                    <div class="panel panel-monitor">
+                      <div class="panel-heading">
+                        <button class="btn btn-help"><i class="fa fa-question"></i></button>
+                      运行情况
+                      </div>
+                      <div class="panel-body">
+                     	 <div id="monitor" style="width: 100%;height: 360px;">
+                     	 </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

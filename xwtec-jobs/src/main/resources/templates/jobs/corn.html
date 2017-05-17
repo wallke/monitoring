@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.full.min.js'"></script>
+    <script>
+        $(function () {
+            $(".select2").select2();
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    cornExpression: {
+                        required: true
+                    }
+
+                },
+                messages: {
+                    cornExpression: {
+                        required: "请输入任务计划CORN！"
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            任务维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/jobs'"><i class="fa fa-tasks"></i> 任务列表</a></li>
+            <li class="active">任务维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-6">
+                <!-- general form elements -->
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">任务维护</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+
+                    <div class="box-body">
+                        <form role="form" method="post">
+                            <div class="form-group">
+                                <label for="jobGroup">组名</label>
+                                <input type="text" name="jobGroup" th:value="${job.jobGroup}"
+                                       class="form-control " id="jobGroup" placeholder="" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="jobName">任务名</label>
+                                <input type="text" name="jobName" th:value="${job.jobName}"
+                                       class="form-control " id="jobName" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="triggerName">触发器名</label>
+                                <input type="text" name="triggerName" th:value="${trigger.triggerName}"
+                                       class="form-control " id="triggerName" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="jobClassName">任务实现类</label>
+                                <input type="text" name="jobClassName" th:value="${job.jobClassName}"
+                                       class="form-control disabled" id="jobClassName" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="cornExpression">任务计划</label>
+                                <input type="text" name="cornExpression" th:value="${trigger.cornExpression}"
+                                       class="form-control" id="cornExpression">
+                            </div>
+
+                        </form>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                        <a class="btn btn-info" th:href="${webUrl} + '/jobs'">返回</a>
+                    </div>
+
+                </div>
+                <!-- /.box -->
+
+            </div>
+        </div>
+    </section>
+
+</div>
+
+</body>
+</html>

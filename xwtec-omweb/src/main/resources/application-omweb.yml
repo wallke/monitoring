@@ -1,0 +1,137 @@
+server:
+  port: 8083
+#  ssl:
+#    key-store: classpath:auth.keystore
+#    key-store-password: 123456
+#    key-password: 123456
+  tomcat:
+      max-threads:  200
+      uri-encoding: UTF-8
+
+#mybatis config
+mybatis:
+  mapper-locations: classpath*:mapper/mysql/*.xml
+  type-aliases-package: com.xwtech.omweb.model
+
+#spring.datasource
+spring:
+  application:
+    name: xwtec-omweb
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/voplatform?characterEncoding=utf8&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: vo
+    password: voxwtec
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 2
+#SELECT 1 FROM DUAL
+      connection-test-query: SELECT 1
+      idle-timeout: 60000
+      validation-timeout: 5000
+      max-lifetime: 28000000
+      connection-timeout: 15000
+ #REDIS (RedisProperties)
+  redis:
+    database: 0
+    host: 10.19.241.52
+    port: 6381
+    pool:
+      max-active: 200
+      max-wait: 5000
+      max-idle: 20
+      min-idle: 1
+  cache:
+    type: redis
+    cache-names:
+      - 'center::auth'
+  aop:
+    proxy-target-class: true
+
+web:
+  staticUrl: http//10.19.245.186:8881/web
+
+#shiro权限
+shiro:
+  session:
+    name: sid
+    domain:
+    path: /
+    httpOnly: true
+    MaxAge: -1
+  rememberMe:
+    name: rememberMe
+    domain:
+    path: /
+    httpOnly: true
+    MaxAge: -1
+  client:
+    appKey: xwtec-omweb
+    platformKey: xwtec-monitor
+    globalAuthUrl: http://10.19.245.186:8881/center
+    loginUrl: http://10.19.245.186:8881/center/login
+    successUrl: http://10.19.245.186:8881/web/index
+    unauthorizedUrl:
+    definitions:
+      /: authc
+      /index: authc
+      /omweb/**: authc
+      /**: anon
+
+httpclient:
+  pool:
+  #是路由的默认最大连接（该值默认为20），限制数量实际使用DefaultMaxPerRoute并非MaxTotal。
+    maxTotal: 100
+    #设置过小无法支持大并发(ConnectionPoolTimeoutException: Timeout waiting for connection from pool)，路由是对maxTotal的细分
+    defaultMaxPerRoute: 25
+  #从服务器读取数据的timeout
+  readTimeout: 15000
+  #和服务器建立连接的timeout
+  connectTimeout: 5000
+  #从连接池获取连接的timeout
+  connectionRequestTimeout: 2000
+
+#es type index keys
+elasticsearch:
+  clusterName: cluster
+  servers:
+    - 192.195.30.147
+    - 192.195.30.152
+    - 192.195.30.153
+  discoveryPort: 9300
+ #系统应用的index以及types
+  application:
+     index           : xwtec_application-*
+     #事务日志
+     transactionType : xwtec_application_transaction
+     #调用链日志
+     chainType       : xwtec_application_chain
+     #方法日志
+     methodType      : xwtec_application_method
+     #奔溃日志
+     appcrash      : xwtec_application_appcrash
+   #系统日志的index以及types
+  systemInfo:
+     index           : xwtec_system-*
+     #主机系统日志
+     osType          : xwtec_system_os
+     #主机日志
+     hostType        : xwtec_system_host
+     #Redis运行日志
+     redisType       : xwtec_system_redis
+     #Nginx运行日志
+     nginxType       : xwtec_system_nginx
+  #基础配置
+  basicConfig:
+     xwIndex         : .xwtec
+     esType          : cm
+     esId            : servercm
+   #初始化是否全部查询 true是，false 否
+  isQueryAll      : true
+
+
+log:
+  path: logs/
+  level: info
+  appender: rollingFile

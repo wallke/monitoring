@@ -1,0 +1,17 @@
+version 'unspecified'
+
+apply plugin: 'java'
+
+
+dependencies {
+    compile(
+            springbootlibraries."spring-boot",
+            libraries."elasticsearch-transport",
+            libraries."elasticsearch",
+            //libraries."log4j-slf4j-impl",
+            libraries."logback",
+            libraries."commons-lang3",
+            libraries."httpclient",
+            libraries."alibaba-fastjson" 
+    )
+}

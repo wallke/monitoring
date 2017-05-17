@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.MonitorTemplateMapper">
+
+    <resultMap id="MonitorTemplateMap" type="com.xwtech.omweb.model.MonitorTemplate">
+        <result property="monitor_template_id" column="monitor_template_id"></result>
+        <result property="template_name" column="template_name"></result>
+        <result property="log_type" column="log_type"></result>
+        <result property="es_index" column="es_index"></result>
+        <result property="es_type" column="es_type"></result>
+    </resultMap>
+
+    <!--查询监听模板列表-->
+    <select id="queryMonitorTemplateList" resultMap="MonitorTemplateMap">
+               SELECT t.monitor_template_id, t.template_name,t.es_index,t.es_type,
+                  CASE t.log_type
+                WHEN 'transaction' THEN
+                    '事务日志'
+                WHEN 'chain' THEN
+                    '调用链日志'
+                WHEN 'z_host' THEN
+                    '主机日志'
+                WHEN 'z_redis' THEN
+                    'redis运行日志'
+                WHEN 'z_nginx' THEN
+                    'nginx运行日志'
+                END AS log_type
+                FROM
+                    tm_da_monitor_template t
+                WHERE
+                    1 = 1
+    </select>
+    <!--新增监听模板-->
+    <insert id="addMonitorTemplate" parameterType="com.xwtech.omweb.model.MonitorTemplate">
+        INSERT INTO  tm_da_monitor_template(monitor_template_id,template_name,log_type,es_index,es_type)
+        VALUES (#{monitor_template_id},#{template_name},#{log_type},#{es_index},#{es_type})
+    </insert>
+    <!--修改监听模板-->
+    <update id="updateMonitorTemplate"  parameterType="com.xwtech.omweb.model.MonitorTemplate">
+        UPDATE tm_da_monitor_template SET
+        template_name =#{template_name},
+        log_type =#{log_type},
+        es_index =#{es_index},
+        es_type = #{es_type}
+        WHERE
+        monitor_template_id = #{monitor_template_id}
+    </update>
+    <!--根据监听模板主键删除监听模板-->
+    <delete id="deleteMonitorTemplateById" parameterType="java.lang.String">
+        DELETE FROM tm_da_monitor_template WHERE    monitor_template_id = #{monitor_template_id}
+    </delete>
+    <!--查询监听模板详情-->
+    <select id="queryMonitorTemplateDetail" parameterType="java.lang.String" resultMap="MonitorTemplateMap">
+           SELECT * FROM  tm_da_monitor_template WHERE  monitor_template_id = #{monitor_template_id}
+    </select>
+    <!--查询监听模板下面是否存在监听目标-->
+    <select id="queryTemplateNextTarget" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*) FROM tm_da_montitor_target t1
+        LEFT JOIN tm_da_monitor_template t2
+        ON t1.monitor_template_id = t2.monitor_template_id
+        WHERE t1.monitor_template_id =#{monitor_template_id}
+    </select>
+    <!--验证监听目标名称是否唯一-->
+    <select id="validateTemplateName" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*) FROM  tm_da_monitor_template WHERE 1=1
+        <choose>
+            <when test="monitor_template_id !=null and monitor_template_id !=''">
+                AND monitor_template_id != #{monitor_template_id} AND template_name = #{template_name}
+            </when>
+            <otherwise>
+                AND template_name = #{template_name}
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

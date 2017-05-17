@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<link rel="stylesheet" th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.css'" />
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/bootstrap/js/bootstrap.js'"></script>
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <title>欣网管理后台</title>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+           公司详情查看
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${homeUrl}+'/omweb/crop/index'"><i class="fa fa-users"></i>公司管理中心</a></li>
+            <li class="active">公司详情查看</li>
+        </ol>
+    </section>
+
+    <section class="content">
+
+
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Custom Tabs -->
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab_1" data-toggle="tab">公司信息</a></li>
+                        <li><a href="#tab_2" data-toggle="tab">人员信息</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <form role="form" method="post" class="formClass">
+                            <div class="tab-content " >
+                                <div id="tab_1" class="tab-pane active">
+                                    <div class="form-group">
+                                        <label for="cropName">公司</label>
+                                        <input type="text" name="cropName" readonly="readonly" th:value="${crop.cropName}"
+                                               class="form-control" id="cropName" placeholder="">
+                                    </div>
+
+                               <!--     <div class="form-group">
+                                        <label for="serverId">行业</label>
+                                        <select id="serverId" name="serverId" multiple="multiple" th:field="*{app.serverId}" th:remove="all-but-first" class="form-control">
+                                            <option th:each="server,serverStat : ${serverList}"
+                                                    th:value="${server.serverId}" th:text="${server.hostName}">Credit card</option>
+                                        </select>
+                                    </div>-->
+                                    <div class="form-group">
+                                        <label for="cropScale">规模</label>
+                                        <input type="text" name="cropScale" readonly="readonly" th:value="${crop.cropScale}"
+                                               class="form-control" id="cropScale">
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label for="isUse">启用信息</label>
+                                        <input th:value="${crop.isUse}=='0'?'否':'是'" readonly="readonly" class="form-control"
+                                               id="isUse">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="cropAddress">地址</label>
+                                        <input type="text" name="cropAddress"  readonly="readonly" th:value="${crop.cropAddress}"
+                                               class="form-control" id="cropAddress">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="memo">备注</label>
+                                        <input type="text" name="memo" readonly="readonly" th:value="${crop.memo}"
+                                               class="form-control" id="memo">
+                                    </div>
+                                </div>
+
+                                <div id="tab_2" class="tab-pane">
+                                    <table class="table table-bordered m-t-sm table-hover">
+                                        <tbody>
+                                        <tr>
+                                            <th style="width: 100px">序号</th>
+                                            <th style="width: 100px">姓名</th>
+                                            <th style="width: 100px">电话</th>
+                                            <th style="width: 160px">手机</th>
+                                            <th style="width: 160px">邮箱</th>
+                                            <th style="width: 160px">QQ</th>
+                                            <th style="width: 160px">微信</th>
+                                        </tr>
+                                        <tr th:each="cropContactses,cropContactsesStat:${cropContactsesList}">
+                                            <td th:text="${cropContactsesStat.index+1}"></td>
+                                            <td th:text="${cropContactses.name}"></td>
+                                            <td th:text="${cropContactses.phone}"></td>
+                                            <td th:text="${cropContactses.mobile} "></td>
+                                            <td th:text="${cropContactses.email}"></td>
+                                            <td th:text="${cropContactses.qq}"></td>
+                                            <td th:text="${cropContactses.wechat}"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        <!-- /.tab-pane -->
+                       </form>
+                    </div>
+                    <div class="box-footer">
+                        <a type="button" th:href="${webUrl} + '/omweb/crop/index'" class="btn btn-primary btnSubmit">返回</a>
+                    </div>
+                    <!-- /.tab-content -->
+                </div>
+                <!-- nav-tabs-custom -->
+            </div>
+            <!-- /.col -->
+            </div>
+    </section>
+
+</div>
+
+</body>
+</html>

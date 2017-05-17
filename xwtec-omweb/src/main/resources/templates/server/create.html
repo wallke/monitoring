@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+<script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(document).ready(function(){
+            $(".js-example-basic-single").select2();
+        });
+
+        $(function () {
+            jQuery.validator.addMethod( "isValueNull", function( value ) {
+                if($.trim(value) == null || $.trim(value) == '')
+                {
+                    return false;
+                }else
+                {
+                    return true;
+                }
+
+            }, "输入值不能为空" );
+
+            // IP地址验证
+            jQuery.validator.addMethod("ip", function(value, element) {
+                return this.optional(element) || /^(([1-9]|([1-9]\d)|(1\d\d)|(2([0-4]\d|5[0-5])))\.)(([1-9]|([1-9]\d)|(1\d\d)|(2([0-4]\d|5[0-5])))\.){2}([1-9]|([1-9]\d)|(1\d\d)|(2([0-4]\d|5[0-5])))$/.test(value);
+            }, "请填写正确的IP地址。");
+
+            $(".btnSubmit").on("click", function () {
+                if ($("#serverForm").valid()) {
+                    $("#serverForm").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/server/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("#serverForm").validate({
+                rules: {
+                    hostNum: {
+                        required: true,
+                        ip:true,
+                        isValueNull:true
+                    },
+                    hostName: {
+                        required: true,
+                        isValueNull:true
+                    },
+                    roomId:{
+                        required: true
+                    },
+                    type:{
+                        required: true
+                    }
+                },
+                messages: {
+                    hostNum: {
+                        required: "主机IP不能为空！"
+                    },
+                    hostName: {
+                        required: "主机名称！"
+                    },
+                    roomId:{
+                        required: "请选择机房名称"
+                    },
+                    type:{
+                        required: "请选择主机类型"
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            主机详情维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${homeUrl}+'/omweb/server/index'"><i class="fa fa-users"></i>主机管理中心</a></li>
+            <li class="active">主机详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <!-- SELECT2 EXAMPLE -->
+        <div class="box box-default">
+            <!-- /.box-header -->
+            <div class="box-body">
+                <div class="row">
+                    <form role="form" id="serverForm" method="post" class="formClass">
+                        <input type="hidden"  name="actionType" th:value='${actionType}'/>
+
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="hostNum">主机IP</label>
+                            <input type="text" name="hostNum" maxlength="20" th:value="${server.hostNum}"
+                                   class="form-control" id="hostNum" placeholder="">
+                        </div>
+                        <div class="form-group">
+                            <label for="hostName">主机名称</label>
+                            <input type="text" name="hostName"  maxlength="100" th:value="${server.hostName}"
+                                   class="form-control" id="hostName">
+                        </div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="roomId">机房名称</label>
+                            <select id="roomId" name="roomId"  th:field="*{server.roomId}"  class="js-example-basic-single form-control">
+                                <option th:each="room,roleStat : ${roomList}"
+                                        th:value="${room.id}" th:text="${room.name}">Credit card</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="isEnabled">立即启用</label>
+                            <select id="isEnabled" name="isEnabled"  th:field="*{server.isEnabled}" class="js-example-basic-single form-control">
+                                <option th:value="1">启用</option>
+                                <option th:value="0">不启用</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="type">主机类型</label>
+                            <select id="type" name="type" th:field="*{server.type}" class="js-example-basic-single form-control">
+                                <option selected="selected" value="">请选择</option>
+                                <option th:value="1">实体主机</option>
+                                <option th:value="2">虚拟主机</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="serverInfo.CPUInfo" >CUP信息</label>
+                            <input type="text" name="serverInfo.CPUInfo"  maxlength="200" th:value="${server.serverInfo.CPUInfo}"
+                                   placeholder=""   class="form-control" id="serverInfo.CPUInfo">
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="desc">说明</label>
+                            <input type="text" name="desc" maxlength="200" th:value="${server.desc}"
+                                   class="form-control " id="desc">
+                        </div>
+                        <div class="form-group">
+                            <label for="serverInfo.diskInfo" >磁盘信息</label>
+                            <input type="text" name="serverInfo.diskInfo"  maxlength="200" th:value="${server.serverInfo.diskInfo}"
+                                   class="form-control" id="serverInfo.diskInfo">
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="serverInfo.memInfo" >内存信息</label>
+                            <input type="text" name="serverInfo.memInfo" maxlength="200"  th:value="${server.serverInfo.memInfo}"
+                                   class="form-control" id="serverInfo.memInfo">
+                        </div>
+                        <div class="form-group">
+                            <label for="memo">备注</label>
+                            <input type="text" name="memo" maxlength="800" th:value="${server.memo}"
+                                   class="form-control" id="memo">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="serverInfo.osInfo">操作系统</label>
+                            <input type="text" name="serverInfo.osInfo" maxlength="200" th:value="${server.serverInfo.osInfo}"
+                                   class="form-control" id="osInfo.osInfo">
+                        </div>
+                    </div>
+                    <!-- /.col -->
+                </form>
+                <!-- /.row -->
+            </div>
+            <!-- /.box-body -->
+            <div class="box-footer">
+                <button type="button" class="btn btn-primary btnSubmit">提交</button>
+            </div>
+        </div>
+
+        <!--<div class="row">-->
+            <!--<div class="col-md-6">-->
+                <!--&lt;!&ndash; Custom Tabs &ndash;&gt;-->
+                <!--<div class="nav-tabs-custom">-->
+                    <!--<ul class="nav nav-tabs">-->
+                        <!--<li class="active"><a href="#tab_1" data-toggle="tab">基本信息</a></li>-->
+                        <!--<li><a href="#tab_2" data-toggle="tab">主机配置</a></li>-->
+                    <!--</ul>-->
+                    <!--<div class="tab-content">-->
+                        <!--<form role="form" id="serverForm" method="post" class="formClass">-->
+                            <!--<input type="hidden"  name="actionType" th:value='${actionType}'/>-->
+                            <!--<div class="tab-content " >-->
+                                <!--<div id="tab_1" class="tab-pane active">-->
+
+                                <!--</div>-->
+
+                                <!--<div id="tab_2" class="tab-pane">-->
+                                <!--</div>-->
+                            <!--</div>-->
+                        <!--&lt;!&ndash; /.tab-pane &ndash;&gt;-->
+                            <!--<div class="box-footer">-->
+                                <!--<button type="button" class="btn btn-primary btnSubmit">提交</button>-->
+                            <!--</div>-->
+                       <!--</form>-->
+                    <!--</div>-->
+
+                    <!--&lt;!&ndash; /.tab-content &ndash;&gt;-->
+                <!--</div>-->
+                <!--&lt;!&ndash; nav-tabs-custom &ndash;&gt;-->
+            <!--</div>-->
+            <!--&lt;!&ndash; /.col &ndash;&gt;-->
+            <!--</div>-->
+    </section>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+server:
+  port: 8080  #dockfile ENV 设置覆盖 当前开发使用
+#  ssl:
+#    key-store: classpath:auth.keystore
+#    key-store-password: 123456
+#    key-password: 123456
+  tomcat:
+      max-threads:  200
+      uri-encoding: UTF-8
+
+#mybatis config
+mybatis:
+  mapper-locations: classpath*:mapper/mysql/*.xml
+  type-aliases-package: com.xwtech.framework.shiro.model.auth
+
+#spring.datasource
+spring:
+  application:
+    name: xwtec-admin
+  datasource:
+  #  url: jdbc:mysql://192.168.1.200:3306/voplatform_dev?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://10.19.237.191:3306/voplatform_dev?characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: vo
+    password: Ww123!@#
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 5
+#SELECT 1 FROM DUAL
+      connection-test-query: SELECT 1
+      idle-timeout: 10000
+      validation-timeout: 10000
+ #REDIS (RedisProperties)
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+    pool:
+      max-active: 8
+      max-wait: -1
+      max-idle: 8
+      min-idle: 0
+  cache:
+    type: redis
+    cache-names:
+      - 'center::auth'
+  aop:
+    proxy-target-class: true
+
+#shiro权限
+shiro:
+  session:
+    name: sid
+    domain:
+    path: /
+    httpOnly: true
+    MaxAge: -1
+  rememberMe:
+    name: rememberMe
+    domain:
+    path: /
+    httpOnly: true
+    MaxAge: -1
+  server:
+    hashIterations: 2
+    hashAlgorithmName: md5
+    globalSessionTimeout: 1800000 #默认30分钟
+  client:
+    appKey: xwtec-admin
+    platformKey: default-xwtec-monitor
+    globalAuthUrl: http://127.0.0.1:8080
+    loginUrl: http://127.0.0.1:8080/login
+    successUrl: http://127.0.0.1:8060/
+    unauthorizedUrl: /unauthorized
+    definitions:
+      /static/**: anon
+      /: authc
+      /index: authc
+      /user/**: authc
+      /resource/**: authc
+      /role/**: authc
+
+web:
+  staticUrl: http://127.0.0.1:8080
+
+log:
+  path: logs/
+  level: debug
+  appender: console
+
+#---
+## 测试环境配置
+#spring:
+#  profiles: test
+#
+#
+#---
+## 生产环境配置
+#spring:
+#  profiles: prod
+
+
+
+
+
+
+
+
+
+

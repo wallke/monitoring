@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/i18n/zh-CN.js'"></script>
+    <link rel="stylesheet"
+          th:href="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.css'">
+    <script th:src="${application.webStaticUrl}+'/static/js/vendors/moment.js/2.17.1/moment-with-locales.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/daterangepicker/daterangepicker.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/echarts.min.js'"></script>
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/echarts/macarons.js'"></script>
+
+    <script>
+
+        $(function () {
+
+            $("select").select2({
+                language: "zh-CN"
+            });
+
+            var $appGroups = $("#appGroups"),
+                $app = $("#app"),
+                $host = $("#host"),
+                $port = $("#port");
+
+            $appGroups.dropdown(function (result) {
+                $.ajax({
+                    type: "get",
+                    url: '[[${webUrl}]]/omweb/env/apps',
+                    data: {
+                        'appGroupId': result.value
+                    },
+                    success: function (callback) {
+                        if (callback.success) {
+                            var tempOptions = [];
+//                            [{
+//                                value: "",
+//                                text: "请选择应用...",
+//                                code: ""
+//                            }];
+                            $.each(callback.data, function (i, val) {
+                                val && tempOptions.push({
+                                    value: val.appId,
+                                    text: val.appName,
+                                    code: val.appNum
+                                });
+                            });
+                            var result = juicer($("#selectTemplate").html(), {
+                                options: tempOptions
+                            });
+                            if (tempOptions.length > 0) {
+                                $app.html(result);
+                                initHosts($app.val());
+                            } else {
+                                $app.val(null).trigger("change");
+                                $app.html("");
+                            }
+
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    }
+                });
+            });
+
+            $appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
+
+
+            $app.on("change", function (e) {
+
+                initHosts($(this).val());
+
+            });
+
+            function initHosts(appId) {
+                var tempOptions = [];
+                tempOptions.push({
+                    value: "",
+                    text: "请选择主机...",
+                    code: ""
+                });
+                if (appId) {
+                    $.get('[[${webUrl}]]/omweb/env/hosts', {appId: appId}, function (callback) {
+                        if (callback.success) {
+
+                            $.each(callback.data, function (i, val) {
+                                val && tempOptions.push({
+                                    value: val.serverId,
+                                    text: val.hostNum,
+                                    code: val.hostNum
+                                });
+                            });
+                            var result = juicer($("#selectTemplate").html(), {
+                                options: tempOptions
+                            });
+
+                            $host.html(result);
+                            initPorts($app.val(), $host.val());
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+                } else {
+                    var result = juicer($("#selectTemplate").html(), {
+                        options: tempOptions
+                    });
+                    $host.val(null).trigger("change");
+                    $host.html(result);
+                }
+
+            }
+
+            $host.on("change", function (e) {
+
+                initPorts($app.val(), $(this).val());
+
+            });
+
+            function initPorts(appId, serverId) {
+                var tempOptions = [];
+                tempOptions.push({
+                    value: "",
+                    text: "请选择端口...",
+                    code: ""
+                });
+
+                if (serverId) {
+                    $.get('[[${webUrl}]]/omweb/env/ports', {appId: appId, serverId: serverId}, function (callback) {
+                        if (callback.success) {
+                            $.each(callback.data, function (i, val) {
+                                val && tempOptions.push({
+                                    value: val.id,
+                                    text: val.port,
+                                    code: val.port
+                                });
+                            });
+                            var result = juicer($("#selectTemplate").html(), {
+                                options: tempOptions
+                            });
+                            $port.html(result);
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+                } else {
+                    var result = juicer($("#selectTemplate").html(), {
+                        options: tempOptions
+                    });
+                    $port.html(result);
+                }
+
+
+            }
+
+            moment.locale('zh-cn');
+            var dateInput = $('#js-datetime-range');
+            var valueSpan = $('#js-datetime-value');
+            var label = dateInput.parent();
+            dateInput
+                .daterangepicker({
+                    timePicker: true,
+                    timePicker24Hour: true,
+                    autoUpdateInput: true,
+                    opens: 'left',
+                    applyClass: 'btn-info',
+                    locale: {
+                        format: 'YYYY-MM-DD HH:mm:ss',
+                        applyLabel: '确认',
+                        cancelLabel: '取消',
+                    }
+                });
+            dateInput.on('change', function () {
+                if (this.value && this.value !== 'on') {
+                    valueSpan.text(this.value);
+                }
+            });
+
+            window.envData = undefined;
+
+            function getEnv() {
+
+                var metrics = $(".metricsType:checked").val();
+
+                $.get('[[${webUrl}]]/omweb/env/env_metrics',
+                    {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        appCode: $app.find("option:selected").data("code"),
+                        appId: $app.find("option:selected").val(),
+                        host: $host.find("option:selected").data("code"),
+                        port: $port.find("option:selected").data("code"),
+                        metrics: metrics,
+                        envName: $("#envName").val()
+                    },
+                    function (callback) {
+                        if (callback.success) {
+
+                            $("#env-monitor-list,#envSingle tbody,#envService tbody,#envChart,#envChart1").empty();
+
+                            window.envData = callback.data;
+
+                            if($.isArray(window.envData)){
+                                window.envData.sort(function (a,b) {
+                                    if(metrics === "0"){
+                                       return b.avg - a.avg;
+                                    }else if(metrics === "1"){
+                                        return b.count - a.count;
+                                    }else if(metrics === "2"){
+                                        return b.errorRate - a.errorRate;
+                                    }else{
+                                        return 0;
+                                    }
+                                });
+                            }
+
+                            var result = juicer($("#envTemplate").html(), {
+                                data: window.envData
+                            });
+                            $("#env-monitor-list").html(result);
+
+
+                            $("#env-monitor-list a:eq(0)").trigger("click");
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+            }
+
+            $(".btnQuery").on("click", function () {
+                getEnv();
+            });
+
+            $(".metricsType").on("change", function () {
+                getEnv();
+            });
+
+            $("#env-monitor-list").on("click", "a", function () {
+                $(this).siblings("a").removeClass("active");
+                $(this).addClass("active");
+                var envId = $(this).data("code");
+                var singleData = $.grep(window.envData, function (val, index) {
+                    return envId === val.environmentId;
+                });
+
+                var result = juicer($("#envSingleTemplate").html(), {
+                    data: singleData
+                });
+                $("#envSingle tbody").html(result);
+
+                window.envChart = {};
+                window.envChart.count = [];
+                window.envChart.errorCount = [];
+                window.envChart.avg = [];
+                window.envChart.category = [];
+
+                console.log(singleData)
+
+                $.each(singleData[0].dateHistogramBeans, function (i, v) {
+
+                    window.envChart.count.push(v.count)
+                    window.envChart.errorCount.push(v.errorCount)
+                    window.envChart.avg.push(v.avg)
+                    //echarts.format.formatTime('yyyy-MM-dd HH:mm', new Date(v.key.millis))
+                    window.envChart.category.push(v.key);
+
+                })
+
+
+                drawEnvChart(window.envChart.category, window.envChart.count, window.envChart.errorCount, window.envChart.avg);
+
+
+                window.envChart1 = {};
+                window.envChart1.category = [];
+                window.envChart1.count = [];
+
+                $.get('[[${webUrl}]]/omweb/env/env_service_proportion',
+                    {
+                        dateType: $(".dateType:checked").data("value"),
+                        date: $(".dateType:checked").val(),
+                        envId: envId,
+                        appCode: $app.find("option:selected").data("code"),
+                        host: $host.find("option:selected").data("code"),
+                        port: $port.find("option:selected").data("code")
+                    },
+                    function (callback) {
+                        if (callback.success) {
+
+                            if (callback.data) {
+
+                                var result = juicer($("#envServiceTemplate").html(), {
+                                    data: callback.data
+                                });
+                                $("#envService tbody").html(result);
+
+                                $.each(callback.data, function (i, v) {
+                                    window.envChart1.category.push(v.nodeCode);
+                                    window.envChart1.count.push({value: v.count, name: v.nodeCode})
+
+                                });
+
+                                drawEnvChart1(window.envChart1.category, window.envChart1.count);
+                            }
+
+                        } else {
+                            $.notify.error(callback.message)
+                        }
+                    });
+
+
+            });
+
+
+            function drawEnvChart(category, count, errorCount, avg) {
+                // 基于准备好的dom，初始化echarts实例
+                var myChart = echarts.init(document.getElementById('envChart'), 'macarons');
+
+                // 指定图表的配置项和数据
+                var option = {
+                    "legend": {
+                        bottom: "2%",
+                        "data": ['总数', '错误数', '平均时长']
+                    },
+
+                    "tooltip": {
+                        "trigger": "axis",
+                        "axisPointer": {
+                            "type": "shadow",
+                            textStyle: {
+                                color: "#fff"
+                            }
+
+                        },
+                    },
+                    "xAxis": [{
+                        "type": "category",
+                        data: category
+                    }],
+                    "yAxis": [{
+                        type: 'value',
+                        name: '请求量',
+                        min: 0,
+                        position: 'left',
+                        splitLine: {
+                            show: false
+                        },
+                        splitArea: {
+                            show: false
+                        },
+                        axisLabel: {
+                            formatter: '{value}'
+                        }
+                    },
+                        {
+                            type: 'value',
+                            name: '平均时长',
+                            min: 0,
+                            position: 'right',
+                            splitLine: {
+                                show: false
+                            },
+                            splitArea: {
+                                show: false
+                            },
+                            offset: 0,
+                            axisLabel: {
+                                formatter: '{value} ms'
+                            }
+                        }],
+                    "series": [{
+                        "name": "总数",
+                        "type": "bar",
+                        z: 2,
+                        barGap: '-100%',
+                        yAxisIndex: 0,
+                        barMaxWidth: 10,
+                        "data": count
+                    },
+
+                        {
+                            "name": "错误数",
+                            "type": "bar",
+                            z: 3,
+                            yAxisIndex: 0,
+                            barGap: '-100%',
+                            barMaxWidth: 10,
+                            "data": errorCount
+                        }, {
+                            "name": "平均时长",
+                            "type": "line",
+                            "stack": "总量",
+                            symbolSize: 10,
+                            symbol: 'circle',
+                            yAxisIndex: 1,
+                            z: 10,
+                            "data": avg
+                        },
+                    ]
+                };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            };
+
+            drawEnvChart();
+
+
+            function drawEnvChart1(category, count) {
+                // 基于准备好的dom，初始化echarts实例
+                var myChart = echarts.init(document.getElementById('envChart1'), 'macarons');
+                // 指定图表的配置项和数据
+                var option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: "{a} <br/>{b} : {c} ({d}%)"
+                    },
+                    legend: {
+                        bottom: "0%",
+                        data: category
+                    },
+                    series: [
+                        {
+                            name: '微环境服务占比',
+                            type: 'pie',
+                            radius: '75%',
+                            center: ['50%', '45%'],
+                            data: count,
+                            itemStyle: {
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                // 使用刚指定的配置项和数据显示图表。
+                myChart.setOption(option);
+            }
+
+            drawEnvChart1();
+
+        });
+
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <script id="selectTemplate" type="text/template">
+        {@each options as item,index}
+        <option value="${item.value}" data-code="${item.code}">${item.text}</option>
+        {@/each}
+    </script>
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box">
+                    <div class="box-body">
+                        <div class="btn-group pull-left" id="appGroups">
+                            <button type="button"
+                                    class="btn btn-primary dropdown-toggle"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"><i class="fa fa-angle-down"></i></button>
+                            <ul class="dropdown-menu">
+                                <li th:each="group,groupStat:${appGroups}">
+                                    <a href="#" th:data-value="${group.id}" th:text="${group.name}"></a>
+                                </li>
+                            </ul>
+                        </div>
+
+
+                        <div class="h4 pull-left">
+                            <div class="container-fluid">微环境监控</div>
+                        </div>
+                        <div class="pull-right">
+                            <div class="btn-group btn-check-group" data-toggle="buttons">
+                                <label class="btn btn-default active">
+                                    <input class="dateType" data-value="1" type="radio" name="options"
+                                           checked="checked"/>1H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="2" type="radio" name="options"/>6H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="3" type="radio" name="options"/>12H
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="4" type="radio" name="options"/>1D
+                                </label>
+                                <label class="btn btn-default ">
+                                    <input class="dateType" data-value="5" type="radio" name="options"/>7D
+                                </label>
+                                <label class="btn btn-default">
+                                    <input class="dateType" data-value="6" type="radio" name="options"/>14D
+                                </label>
+                                <label class="btn btn-default check-datetime">
+                                    <input class="dateType" data-value="0" type="radio" name="options"
+                                           id="js-datetime-range"/>
+                                    <span class="check-datetime-placeholder">指定时间</span>
+                                    <span class="check-datetime-value" id="js-datetime-value">指定时间</span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
+                <div class="box">
+                    <div class="box-header with-border">
+
+                        <form class="form-horizontal">
+                            <div class="box-body">
+                                <div class="form-group no-margin">
+                                    <label for="app" class="col-sm-1 control-label">应用</label>
+                                    <div class="col-sm-2">
+                                        <select class="form-control" id="app">
+
+                                        </select>
+                                    </div>
+                                    <label for="host" class="col-sm-1 control-label">主机</label>
+                                    <div class="col-sm-2">
+                                        <select class="form-control" id="host">
+                                            <option>请选择主机...</option>
+                                        </select>
+                                    </div>
+
+                                    <label for="port" class="col-sm-1 control-label">端口</label>
+
+                                    <div class="col-sm-2">
+                                        <select class="form-control" id="port">
+                                            <option>请选择端口...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <input type="text" class="form-control" id="envName" placeholder="微环境名称"/>
+                                    </div>
+                                    <button type="button" class="btn btn-info btnQuery">查询</button>
+                                </div>
+
+                            </div>
+                            <!-- /.box-footer -->
+                        </form>
+
+                    </div>
+                    <div class="box-header">
+                        <div class="monitor-filter">
+                            <!--排序：-->
+                            <div class="btn-group btn-check-group" data-toggle="buttons">
+                                <label class="btn active">
+                                    <input type="radio" checked class="metricsType" value="0" name="metricsType"
+                                           data-label="平均时长"/> 平均时长
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" class="metricsType" value="1" name="metricsType"
+                                           data-label="吞吐率"/> 吞吐率
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" class="metricsType" value="2" name="metricsType"
+                                           data-label="错误率"/> 错误率
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-md-4 col-lg-3">
+                                <script id="envTemplate" type="text/template">
+                                    <div class="list-group-item disabled clearfix">
+                                        <div class="pull-left">微环境名称</div>
+                                        <div class="pull-right">${$(".metricsType:checked").data("label")}</div>
+                                    </div>
+                                    {@each data as item,index}
+                                    {@if $(".metricsType:checked").val()==="0"}
+                                    <a href="javascript:;" class="list-group-item clearfix"
+                                       data-code="${item.environmentId}">
+                                        <i class="monitor-list-pointer" style="width: 0%"></i>
+                                        <b class="monitor-list-arrow"></b>
+                                        <div class="pull-left">${item.environmentName}</div>
+                                        <div class="pull-right">${item.avg}</div>
+                                    </a>
+                                    {@else if $(".metricsType:checked").val()==="1"}
+                                    <a href="javascript:;" class="list-group-item clearfix"
+                                       data-code="${item.environmentId}">
+                                        <i class="monitor-list-pointer" style="width: 0%"></i>
+                                        <b class="monitor-list-arrow"></b>
+                                        <div class="pull-left">${item.environmentName}</div>
+                                        <div class="pull-right">${item.qbs.toFixed(1)}</div>
+                                    </a>
+                                    {@else}
+                                    <a href="javascript:;" class="list-group-item clearfix"
+                                       data-code="${item.environmentId}">
+                                        <i class="monitor-list-pointer"
+                                           style="width: ${item.errorRate.toFixed(2)}%"></i>
+                                        <b class="monitor-list-arrow"></b>
+                                        <div class="pull-left">${item.environmentName}</div>
+                                        <div class="pull-right">${item.errorRate.toFixed(2)}%</div>
+                                    </a>
+                                    {@/if}
+
+                                    {@/each}
+                                </script>
+
+                                <div class="list-group monitor-list" id="env-monitor-list">
+                                    <div class="list-group-item disabled clearfix">
+                                        <div class="pull-left">微环境名称</div>
+                                        <div class="pull-right"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8 col-lg-9">
+                                <div class="panel panel-monitor">
+                                    <div class="panel-heading">
+                                        <button class="btn btn-help"><i class="fa fa-question"></i></button>
+                                        微环境监控指标信息表
+                                    </div>
+                                    <div class="panel-body">
+                                        <script id="envSingleTemplate" type="text/template">
+                                            {@each data as item,index}
+                                            <tr>
+                                                <td>${item.environmentName}</td>
+                                                <td>${item.count}</td>
+                                                <td>${item.errorCount}</td>
+                                                <td>${item.errorRate.toFixed(2)}%</td>
+                                                <td>${item.min}</td>
+                                                <td>${item.max}</td>
+                                                <td>${item.avg}</td>
+                                                <td>${item.line95}</td>
+                                                <td>${item.line99}</td>
+                                                <td>${item.line50}</td>
+                                                <td>${item.qbs.toFixed(1)}</td>
+                                            </tr>
+                                            {@/each}
+                                        </script>
+                                        <table id="envSingle"
+                                               class="table table-hover table-bordered table-striped table-monitor text-center">
+                                            <thead>
+                                            <tr>
+                                                <th>微环境名称</th>
+                                                <th>总量</th>
+                                                <th>错误</th>
+                                                <th>错误率</th>
+                                                <th>最短时长</th>
+                                                <th>最长时长</th>
+                                                <th>平均时长</th>
+                                                <th>95线</th>
+                                                <th>99线</th>
+                                                <th>标准线</th>
+                                                <th>QPS</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="panel panel-monitor">
+                                    <div class="panel-heading">
+                                        <button class="btn btn-help"><i class="fa fa-question"></i></button>
+                                        微环境监控指标图表
+                                    </div>
+                                    <div class="panel-body">
+                                        <div id="envChart" style="width: 100%;height: 400px;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="panel panel-monitor">
+                                    <div class="panel-heading">
+                                        <button class="btn btn-help"><i class="fa fa-question"></i></button>
+                                        服务监控指标信息表
+                                    </div>
+                                    <div class="panel-body">
+
+                                        <script id="envServiceTemplate" type="text/template">
+                                            {@each data as item,index}
+                                            <tr>
+                                                <td>${item.nodeCode}</td>
+                                                <td>${item.count}</td>
+                                                <td>${item.errorCount}</td>
+                                                <td>${item.errorRate.toFixed(2)}%</td>
+                                                <td>${item.min}</td>
+                                                <td>${item.max}</td>
+                                                <td>${item.avg}</td>
+                                                <td>${item.line95}</td>
+                                                <td>${item.line99}</td>
+                                                <td>${item.line50}</td>
+                                                <td>${item.qbs.toFixed(1)}</td>
+                                            </tr>
+                                            {@/each}
+                                        </script>
+                                        <table id="envService"
+                                               class="table table-hover table-bordered table-striped table-monitor text-center">
+                                            <thead>
+                                            <tr>
+                                                <th>服务名称</th>
+                                                <th>总量</th>
+                                                <th>错误</th>
+                                                <th>错误率</th>
+                                                <th>最短时长</th>
+                                                <th>最长时长</th>
+                                                <th>平均时长</th>
+                                                <th>95线</th>
+                                                <th>99线</th>
+                                                <th>标准线</th>
+                                                <th>QPS</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="panel panel-monitor">
+                                    <div class="panel-heading">
+                                        <button class="btn btn-help"><i class="fa fa-question"></i></button>
+                                        微环境服务占比
+                                    </div>
+                                    <div class="panel-body">
+                                        <div id="envChart1" style="width: 100%;height: 400px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ./box-body -->
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+</div>
+</body>
+</html>

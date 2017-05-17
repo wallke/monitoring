@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.ServerMapper">
+
+    <!-- 主机实体映射-->
+    <resultMap id="ServerMap" type="com.xwtech.omweb.model.Server" >
+        <result property="serverId" column="F_SERVER_ID" ></result>
+        <result property="roomId" column="F_ROOM_ID" ></result>
+        <result property="roomName" column="F_ROOM_NAME"></result>
+        <result property="hostNum" column="F_NUM" ></result>
+        <result property="hostName" column="F_NAME" ></result>
+        <result property="type" column="F_TYPE" ></result>
+        <result property="ipAddress" column="F_IP_ADDRESS" ></result>
+        <result property="isUse" column="F_IS_USE" ></result>
+        <result property="isEnabled" column="F_IS_ENABLED" ></result>
+        <result property="desc" column="F_DESC" ></result>
+        <result property="memo" column="F_MEMO" ></result>
+        <result property="createManCode" column="F_CREATE_MANCODE" ></result>
+        <result property="createManName" column="F_CREATE_MANNAME" ></result>
+        <result property="createTime" column="F_CREATE_TIME" ></result>
+        <result property="createMemo" column="F_CREATE_MEMO" ></result>
+        <result property="lastManCode" column="F_LAST_MANCODE" ></result>
+        <result property="lastManName" column="F_LAST_MANNAME" ></result>
+        <result property="lastTime" column="F_LAST_TIME" ></result>
+        <result property="lastMemo" column="F_LAST_MEMO" ></result>
+        <result property="nodeCount" column="nodeCount"></result>
+        <result property="appCount" column="appCount"></result>
+        <!-- 主机信息实体映射 -->
+        <association property="serverInfo" javaType="com.xwtech.omweb.model.ServerInfo">
+            <result property="serverId" column="F_SERVER_ID" ></result>
+            <result property="roomId" column="F_ROOM_ID" ></result>
+            <result property="CPUInfo" column="F_CPU_INFO" ></result>
+            <result property="memInfo" column="F_MEM_INFO" ></result>
+            <result property="diskInfo" column="F_DISK_INFO" ></result>
+            <result property="osInfo" column="F_OS_INFO" ></result>
+            <result property="memo" column="F_MEMO" ></result>
+            <result property="createManCode" column="F_CREATE_MANCODE" ></result>
+            <result property="createManName" column="F_CREATE_MANNAME" ></result>
+            <result property="createTime" column="F_CREATE_TIME" ></result>
+            <result property="createMemo" column="F_CREATE_MEMO" ></result>
+            <result property="lastManCode" column="F_LAST_MANCODE" ></result>
+            <result property="lastManName" column="F_LAST_MANNAME" ></result>
+            <result property="lastTime" column="F_LAST_TIME" ></result>
+            <result property="lastMemo" column="F_LAST_MEMO" ></result>
+        </association>
+    </resultMap>
+
+    <!-- 根据主机编码和主机名称查询主机列表信息 -->
+    <select id="queryServerListInfo" parameterType="java.lang.String" resultMap="ServerMap">
+        SELECT
+            SVR.*,
+            SVR_INFO.*,
+            ROOM.F_NAME AS F_ROOM_NAME,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE NODE
+                WHERE
+                    NODE.F_SERVER_ID = SVR.F_SERVER_ID) AS nodeCount,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE APP
+                WHERE
+                    APP.F_SERVER_ID = SVR.F_SERVER_ID) AS appCount
+        FROM
+            TM_DA_SERVER SVR
+                LEFT JOIN
+            TM_DA_SERVER_INFO SVR_INFO ON SVR.F_SERVER_ID = SVR_INFO.F_SERVER_ID
+                LEFT JOIN
+            TM_DA_SERVER_ROOM ROOM ON SVR.F_ROOM_ID = ROOM.F_ROOM_ID
+        WHERE
+                SVR.F_IS_USE = '1'
+                <if test="hostNum !=null and hostNum !=''">
+                    AND SVR.F_NUM  LIKE CONCAT(CONCAT('%', #{hostNum}), '%')
+                </if>
+                <if test="hostName !=null and hostName !=''">
+                    AND SVR.F_NAME LIKE CONCAT(CONCAT('%', #{hostName}), '%')
+                </if>
+                <if test="type !=null and type !=''">
+                    AND SVR.F_TYPE = #{type}
+                </if>
+                <if test="roomName !=null and roomName !=''">
+                    AND ROOM.F_NAME  LIKE CONCAT(CONCAT('%', #{roomName}), '%')
+                </if>
+        ORDER BY SVR.F_LAST_TIME DESC
+    </select>
+
+
+    <select id="queryServerListByParam" parameterType="java.lang.String" resultMap="ServerMap">
+        SELECT
+            SVR.*,
+            SVR_INFO.*,
+            ROOM.F_NAME AS F_ROOM_NAME,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE NODE
+                WHERE
+                    NODE.F_SERVER_ID = SVR.F_SERVER_ID) AS nodeCount,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE APP
+                WHERE
+                    APP.F_SERVER_ID = SVR.F_SERVER_ID) AS appCount
+        FROM
+            TM_DA_SERVER SVR
+                LEFT JOIN
+            TM_DA_SERVER_INFO SVR_INFO ON SVR.F_SERVER_ID = SVR_INFO.F_SERVER_ID
+                LEFT JOIN
+            TM_DA_SERVER_ROOM ROOM ON SVR.F_ROOM_ID = ROOM.F_ROOM_ID
+        WHERE
+                SVR.F_IS_USE = '1'
+                 AND SVR.F_NUM  = #{hostNum}
+    </select>
+    <select id="queryServerListByAppId" parameterType="java.lang.String" resultMap="ServerMap">
+                SELECT t2.F_SERVER_ID,t3.* FROM tm_da_app t1
+                LEFT JOIN tm_da_node t2 ON t1.F_APP_ID = t2.F_APP_ID
+                LEFT JOIN tm_da_server t3 ON t2.F_SERVER_ID = t3.F_SERVER_ID
+                WHERE t1.F_APP_ID = #{appId}
+                GROUP BY t2.F_SERVER_ID
+    </select>
+
+    <select id="queryServerListByRoomId"  parameterType="java.lang.String" resultMap="ServerMap">
+        SELECT
+            SVR.*,
+            SVR_INFO.*,
+            ROOM.F_NAME AS F_ROOM_NAME,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE NODE
+                WHERE
+                    NODE.F_SERVER_ID = SVR.F_SERVER_ID) AS nodeCount,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE APP
+                WHERE
+                    APP.F_SERVER_ID = SVR.F_SERVER_ID) AS appCount
+        FROM
+            TM_DA_SERVER SVR
+                LEFT JOIN
+            TM_DA_SERVER_INFO SVR_INFO ON SVR.F_SERVER_ID = SVR_INFO.F_SERVER_ID
+                LEFT JOIN
+            TM_DA_SERVER_ROOM ROOM ON SVR.F_ROOM_ID = ROOM.F_ROOM_ID
+        WHERE
+                SVR.F_IS_USE = '1'
+                AND SVR.F_IS_ENABLED = '1'
+                AND  SVR.F_ROOM_ID = #{roomId}
+
+    </select>
+
+    <select id="queryServerList" resultMap="ServerMap">
+         SELECT
+            SVR.*,
+            SVR_INFO.*,
+            ROOM.F_NAME AS F_ROOM_NAME,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE NODE
+                WHERE
+                    NODE.F_SERVER_ID = SVR.F_SERVER_ID) AS nodeCount,
+            (SELECT
+                    COUNT(*)
+                FROM
+                    TM_DA_NODE APP
+                WHERE
+                    APP.F_SERVER_ID = SVR.F_SERVER_ID) AS appCount
+        FROM
+            TM_DA_SERVER SVR
+                LEFT JOIN
+            TM_DA_SERVER_INFO SVR_INFO ON SVR.F_SERVER_ID = SVR_INFO.F_SERVER_ID
+                LEFT JOIN
+            TM_DA_SERVER_ROOM ROOM ON SVR.F_ROOM_ID = ROOM.F_ROOM_ID
+        WHERE
+                SVR.F_IS_USE = '1'
+                AND SVR.F_IS_ENABLED = '1'
+    </select>
+
+    <!--根据主机ID查询主机详情-->
+    <select id="queryServerDetail" parameterType="java.lang.String" resultMap="ServerMap">
+         SELECT
+            SVR.*,
+            SVR_INFO.*
+        FROM
+            TM_DA_SERVER SVR
+                LEFT JOIN
+            TM_DA_SERVER_INFO SVR_INFO ON SVR.F_SERVER_ID = SVR_INFO.F_SERVER_ID
+                LEFT JOIN
+            TM_DA_SERVER_ROOM ROOM ON SVR.F_ROOM_ID = ROOM.F_ROOM_ID
+        WHERE
+                SVR.F_IS_USE = '1'
+                AND SVR.F_IS_ENABLED = '1'
+                AND  SVR.F_SERVER_ID = #{serverId}
+    </select>
+
+    <!--新增主机-->
+   <insert id="addServer" parameterType="com.xwtech.omweb.model.Server" >
+        INSERT INTO TM_DA_SERVER
+        (F_SERVER_ID,F_ROOM_ID,F_NUM,F_NAME,F_TYPE,F_IP_ADDRESS,F_IS_USE,F_IS_ENABLED,F_DESC,F_MEMO,
+        F_CREATE_MANCODE,F_CREATE_MANNAME,F_CREATE_TIME ,F_CREATE_MEMO,F_LAST_MANCODE,F_LAST_MANNAME,F_LAST_TIME,F_LAST_MEMO)
+        VALUES (#{serverId},#{roomId},#{hostNum},#{hostName},#{type},#{ipAddress},'1',#{isEnabled},#{desc},#{memo},
+        #{createManCode},#{createManName},now(),#{createMemo},#{lastManCode},#{lastManName},now(),#{lastMemo})
+    </insert>
+    <!--新增主机详细信息-->
+   <insert id="addServerInfo" parameterType="com.xwtech.omweb.model.Server">
+       INSERT  INTO TM_DA_SERVER_INFO
+       (F_SERVER_ID,F_ROOM_ID,F_CPU_INFO,F_MEM_INFO,F_DISK_INFO,F_OS_INFO,F_MEMO,
+        F_CREATE_MANCODE,F_CREATE_MANNAME,F_CREATE_TIME ,F_CREATE_MEMO,F_LAST_MANCODE,F_LAST_MANNAME,F_LAST_TIME,F_LAST_MEMO)
+       VALUES (#{serverId},#{roomId},#{serverInfo.CPUInfo},#{serverInfo.memInfo},#{serverInfo.diskInfo},#{serverInfo.osInfo},#{serverInfo.memo},
+         #{createManCode},#{createManName},now(),#{createMemo},#{lastManCode},#{lastManName},now(),#{lastMemo})
+   </insert>
+    <!--修改主机信息-->
+    <update id="updateServer" parameterType="com.xwtech.omweb.model.Server">
+        UPDATE TM_DA_SERVER SET
+        <if test="roomId !=null and roomId !=''">
+            F_ROOM_ID = #{roomId},
+        </if>
+        <if test="isEnabled !=null and isEnabled !=''">
+            F_IS_ENABLED =  #{isEnabled},
+        </if>
+        <if test="hostNum !=null and hostNum != ''">
+            F_NUM  =#{hostNum},
+        </if>
+        <if test="hostName !=null and hostName !=''">
+            F_NAME    = #{hostName},
+        </if>
+        <if test="type !=null and type !='' ">
+            F_TYPE = #{type},
+        </if>
+        <if test="ipAddress !=null and ipAddress != ''">
+            F_IP_ADDRESS = #{ipAddress},
+        </if>
+        <if test="isUse !=null and isUse!=''">
+            F_IS_USE = #{isUse},
+        </if>
+        <if test="desc !=null and desc !=''">
+            F_DESC =#{desc},
+        </if>
+        <if test="memo !=null and memo !=''">
+            F_MEMO = #{memo},
+        </if>
+        <if test="lastManCode!=null and lastManCode!=''">
+            F_LAST_MANCODE =#{lastManCode},
+        </if>
+        <if test="lastManName !=null and lastManName!=''">
+            F_LAST_MANNAME =#{lastManName},
+        </if>
+        <if test="lastMemo !=null and lastMemo !=''">
+            F_LAST_MEMO =#{lastMemo},
+        </if>
+        F_LAST_TIME =now()
+
+        WHERE  F_SERVER_ID = #{serverId}
+
+    </update>
+    <!--修改主机详细信息-->
+    <update id="updateServerInfo" parameterType="com.xwtech.omweb.model.Server">
+        UPDATE TM_DA_SERVER_INFO SET
+        <if test="roomId !=null and roomId !=''">
+            F_ROOM_ID = #{roomId},
+        </if>
+        <if test="serverInfo.CPUInfo !=null and serverInfo.CPUInfo !=''">
+            F_CPU_INFO = #{serverInfo.CPUInfo},
+        </if>
+        <if test="serverInfo.memInfo !=null and serverInfo.memInfo !=''">
+            F_MEM_INFO = #{serverInfo.memInfo},
+        </if>
+        <if test="serverInfo.diskInfo !=null and serverInfo.diskInfo !=''">
+            F_DISK_INFO = #{serverInfo.diskInfo},
+        </if>
+        <if test="serverInfo.osInfo !=null and serverInfo.osInfo !=''">
+            F_OS_INFO = #{serverInfo.osInfo},
+        </if>
+        <if test="serverInfo.memo !=null and serverInfo.memo !=''">
+            F_MEMO = #{serverInfo.memo},
+        </if>
+        <if test="lastManCode!=null and lastManCode!=''">
+            F_LAST_MANCODE =#{lastManCode},
+        </if>
+        <if test="lastManName !=null and lastManName!=''">
+            F_LAST_MANNAME =#{lastManName},
+        </if>
+        <if test="lastMemo !=null and lastMemo !=''">
+            F_LAST_MEMO =#{lastMemo},
+        </if>
+        F_LAST_TIME =now()
+        WHERE   F_SERVER_ID = #{serverId}
+    </update>
+
+    <!--根据主机ID删除主机信息-->
+    <update id="deleteServerById" parameterType="java.lang.String">
+        UPDATE  TM_DA_SERVER SET
+        F_IS_USE ='0',
+        F_IS_ENABLED ='0'
+        WHERE
+        F_SERVER_ID = #{serverId}
+    </update>
+
+    <!--查询主机名称是否存在-->
+    <select id="queryServerName" parameterType="java.lang.String" resultType="Integer">
+        SELECT  COUNT(*) FROM TM_DA_SERVER T1
+        <choose>
+            <when test="serverId !=null and serverId !=''">
+                WHERE  T1.F_NAME = #{serverName}
+                AND T1.F_SERVER_ID !=#{serverId}
+            </when>
+            <otherwise>
+                WHERE  T1.F_NAME = #{serverName}
+            </otherwise>
+        </choose>
+        AND T1.F_IS_USE = '1'
+    </select>
+
+    <!--查询主机编码是否存在-->
+    <select id="queryServerNum" parameterType="java.lang.String" resultType="Integer">
+        SELECT  COUNT(*) FROM TM_DA_SERVER T1
+        <choose>
+            <when test="serverId !=null and serverId !=''">
+                WHERE  T1.F_NUM = #{serverNum}
+                AND T1.F_SERVER_ID !=#{serverId}
+            </when>
+            <otherwise>
+                WHERE  T1.F_NUM = #{serverNum}
+            </otherwise>
+        </choose>
+        AND T1.F_IS_USE = '1'
+    </select>
+
+</mapper>

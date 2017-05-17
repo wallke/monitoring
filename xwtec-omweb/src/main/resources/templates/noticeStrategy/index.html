@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            $(".paginateWrapper").page({
+                index: '[[${pageInfo.pageNum}]]',
+                maxIndex: '[[${pageInfo.pages}]]',
+                size: '[[${pageInfo.pageSize}]]',
+                parameter: 'pn',
+                style: "pagination-sm no-margin pull-right"
+            });
+        });
+
+
+        function deleteNoticeStrategy(but){
+            var msg = "确定要删除吗？";
+            $.notify.confirm(msg,function(sure){
+                if (sure) {
+                    $.ajax({
+                        type: "post",
+                        url: '[[${webUrl}]]/omweb/noticeStrategy/deleteNoticeStrategy',
+                        data: {
+                            'notice_strategy_code': but.id
+                        },
+                        success: function (callback) {
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/noticeStrategy/index';
+                                });
+
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+            });
+
+        }
+
+    </script>
+</head>
+
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+             通知策略管理中心
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li class="active">通知策略管理中心</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a th:href="${webUrl} + '/omweb/noticeStrategy/create'"
+                                   class="btn btn-labeled btn-primary">
+                                    <i class="btn-label fa fa-plus"></i> 新增
+                                </a>
+                            </div>
+                        </div>
+                        <div>
+                            <table class="table table-bordered m-t-sm table-hover">
+                                <tbody>
+                                <tr>
+                                    <th style="width: 100px">序号</th>
+                                    <th style="width: 100px">通知策略名称</th>
+                                    <th style="width: 160px">操作</th>
+                                </tr>
+                               <tr th:each="noticeStrategy,noticeStrategieStat:${noticeStrategieList}">
+                                   <td th:text="${noticeStrategieStat.index+1}"></td>
+                                   <td th:text="${noticeStrategy.notice_strategy_name}"></td>
+                                   <td>
+                                     <a th:href="${webUrl} + '/omweb/noticeStrategy/create?notice_strategy_code=' + ${noticeStrategy.notice_strategy_code}" class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail">修改</a>
+                                       &nbsp;
+                                       <a class="curosr:pointer  pointer btn btn-default btn-xs purple btnDetail" onclick='deleteNoticeStrategy(this)'   th:id="${noticeStrategy.notice_strategy_code}"  >删除</a>
+                                   </td>
+
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+                    <div class="box-footer clearfix paginateWrapper">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

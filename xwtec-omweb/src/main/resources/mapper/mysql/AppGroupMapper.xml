@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.AppGroupMapper">
+
+    <resultMap id="AppGroupResultMap" type="AppGroup">
+        <id column="F_GROUP_ID" property="id"/>
+        <result column="F_NUM" property="num"/>
+        <result column="F_NAME" property="name"/>
+        <result column="F_IS_USE" property="isUse"/>
+        <result column="F_IS_ENABLED" property="isEnabled"/>
+        <result column="F_DESC" property="desc"/>
+        <result column="F_MEMO" property="memo"/>
+        <result column="F_CREATE_MANCODE" property="createManCode"/>
+        <result column="F_CREATE_MANNAME" property="createManName"/>
+        <result column="F_CREATE_TIME" property="createTime"/>
+        <result column="F_CREATE_MEMO" property="createMemo"/>
+        <result column="F_LAST_MANCODE" property="lastManCode"/>
+        <result column="F_LAST_MANNAME" property="lastManName"/>
+        <result column="F_LAST_TIME" property="lastTime"/>
+        <result column="F_LAST_MEMO" property="lastMemo"/>
+    </resultMap>
+
+    <select id="getAppGroups" resultMap="AppGroupResultMap" parameterType="AppGroup">
+        select *
+        from tm_da_app_group
+        where F_IS_USE=1
+        <if test="num != null and num != ''">
+            and F_NUM like CONCAT('%',#{num},'%')
+        </if>
+        <if test="name != null and name != ''">
+            and F_NAME like CONCAT('%',#{name},'%')
+        </if>
+        order by F_NUM asc
+    </select>
+
+    <select id="getAllAppGroups" resultMap="AppGroupResultMap">
+        select *
+        from tm_da_app_group
+        where F_IS_USE=1
+        AND F_IS_ENABLED = 1
+        order by F_NUM asc
+    </select>
+
+    <select id="getAppGroupById" resultMap="AppGroupResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_app_group
+        where F_IS_USE=1 and F_GROUP_ID=#{id}
+    </select>
+
+    <select id="getAppGroupByNum" resultMap="AppGroupResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_app_group
+        where F_IS_USE=1 and F_NUM=#{num}
+    </select>
+
+    <select id="getAppGroupByName" resultMap="AppGroupResultMap" parameterType="java.lang.String">
+        select *
+        from tm_da_app_group
+        where F_IS_USE=1 and F_NAME=#{name}
+    </select>
+
+    <select id="getAppGroupByNumExceptSelf" resultMap="AppGroupResultMap" parameterType="AppGroup">
+        select *
+        from tm_da_app_group
+        where F_IS_USE=1 and F_NUM=#{num} and F_GROUP_ID!=#{id}
+    </select>
+
+    <select id="getAppGroupByNameExceptSelf" resultMap="AppGroupResultMap" parameterType="AppGroup">
+        select *
+        from tm_da_app_group
+        where F_IS_USE=1 and F_NAME=#{name} and F_GROUP_ID!=#{id}
+    </select>
+
+    <insert id="createAppGroup" parameterType="AppGroup">
+        insert into tm_da_app_group(F_GROUP_ID, F_NUM, F_NAME, F_IS_USE, F_IS_ENABLED, F_DESC, F_MEMO,
+        F_CREATE_MANCODE, F_CREATE_MANNAME, F_CREATE_TIME, F_CREATE_MEMO,
+        F_LAST_MANCODE, F_LAST_MANNAME, F_LAST_TIME, F_LAST_MEMO)
+        values (#{id}, #{num}, #{name}, #{isUse}, #{isEnabled}, #{desc}, #{memo},
+        #{createManCode}, #{createManName}, #{createTime}, #{createMemo},
+        #{lastManCode}, #{lastManName}, #{lastTime}, #{lastMemo})
+    </insert>
+
+    <update id="updateAppGroup" parameterType="AppGroup">
+        update tm_da_app_group
+        set
+        <if test="num !=null and num !=''">
+            F_NUM=#{num},
+        </if>
+         F_NAME=#{name}, F_IS_USE=#{isUse},
+        F_IS_ENABLED=#{isEnabled}, F_DESC=#{desc}, F_MEMO=#{memo}, F_CREATE_MANCODE=#{createManCode}, F_CREATE_MANNAME=#{createManName},
+        F_CREATE_TIME=#{createTime}, F_CREATE_MEMO=#{createMemo}, F_LAST_MANCODE=#{lastManCode}, F_LAST_MANNAME=#{lastManName},
+        F_LAST_TIME=#{lastTime}, F_LAST_MEMO=#{lastMemo}
+        where F_GROUP_ID=#{id}
+    </update>
+
+    <delete id="deleteAppGroup" parameterType="java.lang.String">
+        update tm_da_app_group
+        set F_IS_USE=0
+        where F_GROUP_ID=#{id}
+    </delete>
+    
+    <insert id="addAppToGroup" parameterType="Map">
+        insert into tm_dz_app_group(F_APP_ID, F_GROUP_ID)
+        values (#{appId}, #{groupId})
+    </insert>
+
+    <delete id="deleteAppFromGroup" parameterType="String">
+        delete from tm_dz_app_group
+        where F_APP_ID=#{appId}
+    </delete>
+
+
+    <resultMap id="AppCanvasPositionResultMap" type="AppCanvasPosition">
+        <result column="F_APP_ID" property="appId"/>
+        <result column="F_NUM" property="appNum"/>
+        <result column="F_NAME" property="appName"/>
+        <result column="F_H_AXIS" property="hAxis"/>
+        <result column="F_V_AXIS" property="vAxis"/>
+        <result column="F_GROUP_ID" property="groupId"/>
+    </resultMap>
+
+    <select id="getAppsByGroupId" resultMap="AppCanvasPositionResultMap" parameterType="AppCanvasPosition">
+        SELECT a.F_APP_ID,a.F_NUM,a.F_NAME,ag.F_GROUP_ID,ag.F_H_AXIS,ag.F_V_AXIS
+        FROM tm_da_app a INNER join tm_dz_app_group ag on a.F_APP_ID = ag.F_APP_ID
+        WHERE ag.F_GROUP_ID = #{groupId}
+    </select>
+
+
+    <update id="updateAppCanvasPosition" parameterType="AppCanvasPosition">
+        update tm_dz_app_group
+        set F_H_AXIS=#{hAxis}, F_V_AXIS=#{vAxis}
+        where F_GROUP_ID=#{groupId} AND F_APP_ID = #{appId}
+    </update>
+
+    <resultMap id="AppCanvasLinksResultMap" type="AppCanvasLinks">
+        <result column="F_SOURCE_NUM" property="sourceNum"/>
+        <result column="F_SOURCE_NAME" property="sourceName"/>
+        <result column="F_TARGET_NUM" property="targetNum"/>
+        <result column="F_TARGET_NAME" property="targetName"/>
+        <result column="F_SOURCE_APP_ID" property="source"/>
+        <result column="F_TARGET_APP_ID" property="target"/>
+        <result column="F_GROUP_ID" property="groupId"/>
+    </resultMap>
+
+    <select id="getAppLinksByGroupId" resultMap="AppCanvasLinksResultMap" parameterType="AppCanvasLinks">
+        SELECT al.F_SOURCE_APP_ID,al.F_TARGET_APP_ID,al.F_GROUP_ID,
+        a1.F_NUM F_SOURCE_NUM,a1.F_NAME F_SOURCE_NAME,a2.F_NUM F_TARGET_NUM,a2.F_NAME F_TARGET_NAME
+        FROM tm_dz_app_group ag INNER join tm_app_link al on  al.F_GROUP_ID = ag.F_GROUP_ID AND (al.F_SOURCE_APP_ID = ag.F_APP_ID )
+        INNER JOIN  tm_da_app a1 on a1.F_APP_ID = al.F_SOURCE_APP_ID
+        INNER JOIN tm_da_app a2 on a2.F_APP_ID = al.F_TARGET_APP_ID
+        WHERE al.F_GROUP_ID = #{groupId}
+    </select>
+
+    <select id="existAppLink" resultType="int" parameterType="AppCanvasLinks">
+        SELECT count(0)
+        FROM tm_app_link al
+        WHERE al.F_GROUP_ID = #{groupId} AND al.F_SOURCE_APP_ID = #{source} AND  al.F_TARGET_APP_ID = #{target}
+    </select>
+
+
+    <insert id="addAppLink" parameterType="AppCanvasLinks">
+        insert into tm_app_link(F_GROUP_ID, F_SOURCE_APP_ID,F_TARGET_APP_ID)
+        values (#{groupId}, #{source}, #{target})
+    </insert>
+
+
+
+</mapper>

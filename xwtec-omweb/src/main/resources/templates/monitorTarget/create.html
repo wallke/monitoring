@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="fragments/static :: common_head(~{::title},~{::link},~{::script})">
+    <script th:src="${application.webStaticUrl}+'/static/admin-lte/plugins/select2/select2.js'"></script>
+    <title>欣网管理后台</title>
+    <script>
+        $(function () {
+            jQuery.validator.addMethod( "isValueNull", function( value ) {
+                if($.trim(value) == null || $.trim(value) == '')
+                { return false;}else{ return true;}
+            }, "输入值不能为空" );
+
+            var arr= $("#gridArr").val().split(',');
+
+            $("#grid_code").select2({
+                maximumSelectionLength: 1000  //最多能够选择的个数
+            }).val(arr).trigger('change');
+
+            $(".js-example-basic-single").select2();
+            $(".btnSubmit").on("click", function () {
+                if ($("form").valid()) {
+                    $("form").ajaxSubmit({
+                        success: function (callback) {
+                            // data 保存提交后返回的数据，一般为 json 数据
+                            // 此处可对 data 作相关处理
+                            if (callback.success) {
+                                $.notify.success(callback.message, "", function () {
+                                    location.href = '[[${webUrl}]]/omweb/monitorTarget/index';
+                                });
+                            } else {
+                                $.notify.error(callback.message)
+                            }
+                        }
+                    });
+                }
+                return false;
+            });
+
+            $("form").validate({
+                rules: {
+                    target_name: {
+                        required: true,
+                        isValueNull:true
+                    },
+                    template_name: {
+                        required: true,
+                    },
+                    stat_interval:{
+                        required: true,
+                        isValueNull:true
+                    },
+                    application_name:{
+                        required: true,
+
+                    },
+                    application_ver: {
+                        required: true,
+                        isValueNull:true
+                    },
+                    last_application_name: {
+                        required: true,
+                        isValueNull:true
+                    },
+                    host_ip:{
+                        required: true,
+                    },
+                    host_port:{
+                        required: true,
+                        isValueNull:true
+                    },
+                    node_code: {
+                        required: true,
+                        isValueNull:true,
+                    },
+                    last_node_code: {
+                        required: true,
+                        isValueNull:true,
+                    },
+                    alert_scheme_code:{
+                        required: true,
+                        isValueNull:true
+                    },
+                    grid_code:{
+                        required: true,
+                        isValueNull:true
+                    },
+                    status:{
+                        required: true,
+                        isValueNull:true
+                    },
+                    envir_code:{
+                        required: true,
+                        isValueNull:true
+                    }
+
+                },
+                messages: {
+                    target_name: {
+                        required: "不能为空"
+                    },
+                    template_name: {
+                        required: "不能为空",
+                    },
+                    stat_interval:{
+                        required: "不能为空",
+                    },
+                    application_name:{
+                        required: "不能为空",
+                    },
+                    application_ver: {
+                        required: "不能为空"
+                    },
+                    last_application_name: {
+                        required: "不能为空",
+                    },
+                    host_ip:{
+                        required: "不能为空",
+                    },
+                    host_port:{
+                        required: "不能为空",
+                    },
+                    node_code: {
+                        required: "不能为空",
+                        digits:"请输入整数"
+                    },
+                    last_node_code: {
+                        required: "不能为空",
+                        digits:"请输入整数"
+                    },
+                    alert_scheme_code:{
+                        required: "不能为空",
+                    },
+                    grid_code:{
+                        required: "不能为空",
+                    },
+                    status:{
+                        required: "不能为空",
+                    },
+                    envir_code:{
+                        required: "不能为空",
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body th:replace="fragments/content :: page(~{ :: .content-wrapper })">
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            监听目标维护
+        </h1>
+        <ol class="breadcrumb">
+            <li><a th:href="${homeUrl}"><i class="fa fa-home"></i> 首页</a></li>
+            <li><a th:href="${webUrl} + '/omweb/monitorTarget/index'"><i class="fa fa-users"></i> 监听目标管理中心</a></li>
+            <li class="active">监听目标详情维护</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-6">
+                <!-- general form elements -->
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">监听目标详情维护</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+
+                    <div class="box-body">
+                        <form role="form" method="post">
+                            <input type="hidden" name="actionType" th:value="${actionType}">
+                            <input type="hidden" name="gridArr" id="gridArr" th:value="${monitorTarget.grid_code_list}">
+                            <div class="form-group">
+                                <label for="target_name">监听目标</label>
+                                <input type="text" name="target_name" th:value="${monitorTarget.target_name}"
+                                       class="form-control" id="target_name" placeholder="">
+                            </div>
+                            <div class="form-group">
+                                <label for="monitor_template_id">选择监听模板名称</label>
+                                    <select id="monitor_template_id" name ="monitor_template_id" th:field="*{monitorTarget.monitor_template_id}" class="js-example-basic-single form-control">
+                                        <option th:each="monitorTemplate,monitorTemplateStat:${monitorTemplateList}"
+                                                th:value="${monitorTemplate.monitor_template_id}"
+                                                th:text = "${monitorTemplate.template_name}"></option>
+                                    </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="stat_interval">查询频率间隔(秒)</label>
+                                <input type="text" name="stat_interval" th:value="${monitorTarget.stat_interval}"
+                                          class="form-control" id="stat_interval">
+                            </div>
+                            <div class="form-group">
+                                <label for="target_interval">统计间隔(秒)</label>
+                                <input type="text" name="target_interval" th:value="${monitorTarget.target_interval}"
+                                       class="form-control" id="target_interval">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="application_name">应用程序名称</label>
+                                <select id="application_name" name ="application_name" th:field="*{monitorTarget.application_name}"  class="js-example-basic-single form-control">
+                                    <option value="*">*</option>
+                                    <option th:each="app,appStat:${appList}" th:value="${app.appName}"
+                                            th:text = "${app.appName}"></option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="application_ver">应用程序版本</label>
+                                <input type="text" name="application_ver" th:value="${monitorTarget.application_ver}"
+                                       class="form-control" id="application_ver">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="last_application_name">上级应用程序名称</label>
+                                <input type="text" name="last_application_name" th:value="${monitorTarget.last_application_name}"
+                                       class="form-control" id="last_application_name">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="host_ip">主机IP</label>
+                                <select id="host_ip" name ="host_ip" th:field="*{monitorTarget.host_ip}"  class="js-example-basic-single form-control">
+                                    <option value="*">*</option>
+                                    <option th:each="server,serverStat:${serverList}"
+                                            th:value="${server.hostNum}"
+                                            th:text = "${server.hostNum}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="host_port">节点端口号</label>
+                                <input type="text" name="host_port" th:value="${monitorTarget.host_port}"
+                                       class="form-control" id="host_port">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="node_code">节点编码</label>
+                                <input type="text" name="node_code" th:value="${monitorTarget.node_code}"
+                                       class="form-control" id="node_code">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="last_node_code">上级节点编码</label>
+                                <input type="text" name="last_node_code" th:value="${monitorTarget.last_node_code}"
+                                       class="form-control" id="last_node_code">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="alert_scheme_code">告警方案标识</label>
+                                <select id="alert_scheme_code" name ="alert_scheme_code" th:field="*{monitorTarget.alert_scheme_code}" th:remove="all-but-first" class="js-example-basic-single form-control">
+                                    <option th:each="alarmScheme,alarmSchemeStat:${alarmSchemeList}"
+                                            th:value="${alarmScheme.alert_scheme_code}"
+                                            th:text = "${alarmScheme.alert_scheme_name}"></option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="status">执行状态</label>
+                                <input type="text" name="status" th:value="${monitorTarget.status}"
+                                       class="form-control" id="status">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="envir_code">微环境编码</label>
+                                <input type="text" name="envir_code" th:value="${monitorTarget.envir_code}"
+                                       class="form-control" id="envir_code">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="grid_code">预警网格编码</label>
+                                <select id="grid_code" name ="grid_code"  multiple="multiple"  class="js-example-basic-single form-control">
+                                    <option th:each="grid,gridStat:${gridList}"
+                                            th:value="${grid.grid_code}"
+                                            th:text = "${grid.grid_name}"></option>
+                                </select>
+                            </div>
+
+                        </form>
+                    </div>
+                    <!-- /.box-body -->
+
+                    <div class="box-footer">
+                        <button type="button" class="btn btn-primary btnSubmit">提交</button>
+                    </div>
+
+                </div>
+                <!-- /.box -->
+
+            </div>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

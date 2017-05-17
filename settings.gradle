@@ -1,0 +1,10 @@
+rootProject.name = 'monitoring'
+include 'xwtec-admin'
+include 'xwtec-framework'
+include 'xwtec-jobs'
+include 'xwtec-servercm'
+include 'xwtec-hm'
+include 'xwtec-static'
+include 'xwtec-omweb'
+include 'xwtec-es'
+

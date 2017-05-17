@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.AppCategoryMapper">
+    <!--应用类别信息-->
+    <resultMap id="AppCategoryMap" type="com.xwtech.omweb.model.AppCategory">
+        <result property="categoryId" column="F_CATEGORY_ID"></result>
+        <result property="categoryName" column="F_NAME"></result>
+        <result property="isInherit" column="F_IS_INHERIT"></result>
+        <result property="JBNum" column="F_JB_NUM"  javaType="java.lang.String" jdbcType="VARCHAR"></result>
+        <result property="JB" column="F_JB"></result>
+        <result property="MJ" column="F_MJ"></result>
+        <result property="isUse" column="F_IS_USE" ></result>
+        <result property="isEnabled" column="F_IS_ENABLED" ></result>
+        <result property="desc" column="F_DESC" ></result>
+        <result property="memo" column="F_MEMO" ></result>
+        <result property="createManCode" column="F_CREATE_MANCODE" ></result>
+        <result property="createManName" column="F_CREATE_MANNAME" ></result>
+        <result property="createTime" column="F_CREATE_TIME" ></result>
+        <result property="createMemo" column="F_CREATE_MEMO" ></result>
+        <result property="lastManCode" column="F_LAST_MANCODE" ></result>
+        <result property="lastManName" column="F_LAST_MANNAME" ></result>
+        <result property="lastTime" column="F_LAST_TIME" ></result>
+        <result property="lastMemo" column="F_LAST_MEMO" ></result>
+        <result property="parentId" column="F_PARENT_ID"></result>
+
+    </resultMap>
+
+    <!--查询所有应用类别信息-->
+    <select id="queryCategoryList" parameterType="java.lang.String" resultMap="AppCategoryMap">
+        SELECT
+            CATE.*
+        FROM
+            TM_DA_APP_CATEGORY CATE
+        WHERE
+            CATE.F_IS_USE = '1'
+        <if test="JBNum !=null and JBNum !=''">
+            AND CATE.F_JB_NUM = #{JBNum}
+        </if>
+        <if test="JB !=null and JB !=''">
+            AND CATE.F_JB = #{JB}
+        </if>
+    </select>
+    <select id="getCategoryList" resultMap="AppCategoryMap">
+         SELECT
+            CATE.*
+        FROM
+            TM_DA_APP_CATEGORY CATE
+        WHERE
+            CATE.F_IS_USE = '1'
+            AND  CATE.F_IS_ENABLED = '1'
+    </select>
+    <!--新增应用级别-->
+    <insert id="addAppCategory" parameterType="com.xwtech.omweb.model.AppCategory">
+        INSERT INTO TM_DA_APP_CATEGORY (
+        F_NAME,F_IS_INHERIT,F_JB_NUM,F_JB, F_MJ,
+        F_IS_USE,F_IS_ENABLED,F_DESC,F_MEMO,F_CREATE_MANCODE, F_CREATE_MANNAME,F_CREATE_TIME, F_CREATE_MEMO,F_LAST_MANCODE,
+        F_LAST_MANNAME,F_LAST_TIME, F_LAST_MEMO)
+        VALUES
+        (#{categoryName},#{isInherit},#{JBNum},#{JB},#{MJ}
+        ,'1',#{isEnabled},#{desc},#{memo},
+        #{createManCode},#{createManName},now(),#{createMemo},#{lastManCode},#{lastManName},now(),#{lastMemo})
+    </insert>
+    <!--修改应用级别-->
+    <update id="updateAppCategory" parameterType="com.xwtech.omweb.model.AppCategory">
+        UPDATE  TM_DA_APP_CATEGORY SET
+
+        <if test="categoryName !=null and categoryName !=''">
+            F_NAME =#{categoryName},
+        </if>
+        <if test="isEnabled !=null and isEnabled !=''">
+            F_IS_ENABLED = #{isEnabled},
+        </if>
+        <if test="isInherit !=null and isInherit !=''">
+            F_IS_INHERIT = #{isInherit},
+        </if>
+        <if test="JBNum !=null and JBNum !=''">
+            F_JB_NUM =#{JBNum},
+        </if>
+        <if test="JB !=null and JB !=''">
+            F_JB = #{JB},
+        </if>
+        <if test="MJ !=null and MJ!=''">
+            F_MJ =#{MJ},
+        </if>
+        <if test="isUse !=null and isUse!=''">
+            F_IS_USE = #{isUse},
+        </if>
+        <if test="desc !=null and desc !=''">
+            F_DESC =#{desc},
+        </if>
+        <if test="memo !=null and memo !=''">
+            F_MEMO = #{memo},
+        </if>
+        <if test="lastManCode!=null and lastManCode!=''">
+            F_LAST_MANCODE =#{lastManCode},
+        </if>
+        <if test="lastManName !=null and lastManName!=''">
+            F_LAST_MANNAME =#{lastManName},
+        </if>
+        <if test="lastMemo !=null and lastMemo !=''">
+            F_LAST_MEMO =#{lastMemo},
+        </if>
+        F_LAST_TIME =now()
+        WHERE   F_CATEGORY_ID = #{categoryId}
+    </update>
+    <!--删除应用级别-->
+    <update id="deleteAppCategory" parameterType="java.lang.String">
+          UPDATE  TM_DA_APP_CATEGORY SET
+           F_IS_USE = '0',
+           F_IS_ENABLED ='0'
+          WHERE
+         F_CATEGORY_ID = #{categoryId}
+    </update>
+    <!--查看应用详情-->
+    <select id="queryAppCategoryDetail" parameterType="java.lang.String" resultMap="AppCategoryMap">
+    SELECT
+            CATE.*
+        FROM
+            TM_DA_APP_CATEGORY CATE
+        WHERE
+            CATE.F_IS_USE = '1'
+        AND CATE.F_IS_ENABLED = '1'
+         WHERE
+         F_CATEGORY_ID = #{categoryId}
+    </select>
+
+    <select id="queryChildNode" parameterType="java.lang.String" resultMap="AppCategoryMap">
+         SELECT
+            CATE.*
+        FROM
+            TM_DA_APP_CATEGORY CATE
+        WHERE
+            CATE.F_IS_USE = '1'
+        AND CATE.F_IS_ENABLED = '1'
+        AND CATE.F_JB_NUM LIKE  CONCAT(#{JBNum}, '%')
+        AND CATE.F_JB = #{JB}+ 1
+    </select>
+
+    <!--根据应用类别Id查询下面是否有节点-->
+    <select id="queryAppCategoryCount" parameterType="java.lang.String" resultType="Integer">
+        SELECT COUNT(*) FROM tm_da_app_category cate
+          where cate.F_JB_NUM =#{categoryId} AND cate.F_IS_USE = '1'
+    </select>
+
+
+
+
+</mapper>

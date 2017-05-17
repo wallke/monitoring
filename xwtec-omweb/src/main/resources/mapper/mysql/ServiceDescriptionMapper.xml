@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xwtech.omweb.dao.ServiceDescriptionMapper">
+
+    <!--App信息-->
+    <resultMap id="ServiceDescriptionMap" type="com.xwtech.omweb.model.ServiceDescription">
+        <result property="id" column="f_id"></result>
+        <result property="service" column="f_service"></result>
+        <result property="description" column="f_description"></result>
+    </resultMap>
+
+    <insert id="add" parameterType="com.xwtech.omweb.model.ServiceDescription">
+        INSERT  INTO tm_da_service_description
+        ( F_ID,F_SERVICE, F_DESCRIPTION)
+        VALUES
+        (#{id},#{service},#{description})
+    </insert>
+
+    <delete id="delete" parameterType="java.lang.String">
+        DELETE FROM tm_da_service_description WHERE F_ID = #{id}
+    </delete>
+
+    <select id="get" resultMap="ServiceDescriptionMap" parameterType="ServiceDescription">
+        select
+        F_ID, F_SERVICE, F_DESCRIPTION
+        from tm_da_service_description
+        WHERE  F_SERVICE = #{service}
+    </select>
+
+
+    <select id="getAll" resultMap="ServiceDescriptionMap" parameterType="ServiceDescription">
+        select F_ID, F_SERVICE, F_DESCRIPTION
+        from tm_da_service_description
+        WHERE 1=1
+        <if test="service != null and service != ''">
+            AND F_SERVICE LIKE  CONCAT('%',#{service},'%')
+        </if>
+        <if test="description != null and description != ''">
+            AND F_DESCRIPTION LIKE  CONCAT('%',#{description},'%')
+        </if>
+    </select>
+
+
+
+</mapper>

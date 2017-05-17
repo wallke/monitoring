@@ -1,0 +1,311 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="main-header" th:fragment="top">
+    <!-- Logo -->
+    <div class="logo">
+        <!-- mini logo for sidebar mini 50x50 pixels -->
+        <span class="logo-mini"><i class="fa fa-th"></i></span>
+        <!-- logo for regular state and mobile devices -->
+        <span class="logo-lg">欣网管理后台</span>
+    </div>
+    <!-- Header Navbar: style can be found in header.less -->
+    <nav class="navbar navbar-static-top">
+        <!-- 头部左侧导航 -->
+        <div class="navbar-platform-menu">
+            <ul class="nav navbar-nav">
+                <!-- other platform -->
+                <li class="dropdown platform-menu">
+
+                    <th:block th:each="platform,platformStat:${platforms}">
+                        <a th:if="${platform.current}" th:href="${platform.url}"
+                           class="dropdown-toggle" data-toggle="dropdown">[[${platform.name}]] <i class="fa fa-angle-down"></i></a>
+                    </th:block>
+
+                    <ul class="dropdown-menu">
+                        <li th:each="platform,platformStat:${platforms}">
+                            <a th:if="${!platform.current}" th:href="${platform.url}" th:text="${platform.name}"> </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <!-- //头部左侧导航 -->
+
+        <!-- Navbar Right Menu -->
+        <div class="navbar-custom-menu">
+            <ul class="nav navbar-nav">
+                <!-- Messages: style can be found in dropdown.less-->
+                <li class="dropdown messages-menu hide">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-envelope-o"></i>
+                        <span class="label label-success">4</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="header">您有4条消息</li>
+                        <li>
+                            <!-- inner menu: contains the actual data -->
+                            <ul class="menu">
+                                <li><!-- start message -->
+                                    <a href="#">
+                                        <div class="pull-left">
+                                            <img src="/static/admin-lte/dist/img/user2-160x160.jpg" class="img-circle"
+                                                 alt="User Image">
+                                        </div>
+                                        <h4>
+                                            Support Team
+                                            <small><i class="fa fa-clock-o"></i> 5 mins</small>
+                                        </h4>
+                                        <p>Why not buy a new awesome theme?</p>
+                                    </a>
+                                </li>
+                                <!-- end message -->
+                                <li>
+                                    <a href="#">
+                                        <div class="pull-left">
+                                            <img src="/static/admin-lte/dist/img/user3-128x128.jpg" class="img-circle"
+                                                 alt="User Image">
+                                        </div>
+                                        <h4>
+                                            AdminLTE Design Team
+                                            <small><i class="fa fa-clock-o"></i> 2 hours</small>
+                                        </h4>
+                                        <p>Why not buy a new awesome theme?</p>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <div class="pull-left">
+                                            <img src="/static/admin-lte/dist/img/user4-128x128.jpg" class="img-circle"
+                                                 alt="User Image">
+                                        </div>
+                                        <h4>
+                                            Developers
+                                            <small><i class="fa fa-clock-o"></i> Today</small>
+                                        </h4>
+                                        <p>Why not buy a new awesome theme?</p>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <div class="pull-left">
+                                            <img src="/static/admin-lte/dist/img/user3-128x128.jpg" class="img-circle"
+                                                 alt="User Image">
+                                        </div>
+                                        <h4>
+                                            Sales Department
+                                            <small><i class="fa fa-clock-o"></i> Yesterday</small>
+                                        </h4>
+                                        <p>Why not buy a new awesome theme?</p>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <div class="pull-left">
+                                            <img src="/static/admin-lte/dist/img/user4-128x128.jpg" class="img-circle"
+                                                 alt="User Image">
+                                        </div>
+                                        <h4>
+                                            Reviewers
+                                            <small><i class="fa fa-clock-o"></i> 2 days</small>
+                                        </h4>
+                                        <p>Why not buy a new awesome theme?</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="footer"><a href="#">查看全部</a></li>
+                    </ul>
+                </li>
+                <!-- Notifications: style can be found in dropdown.less -->
+                <li class="dropdown notifications-menu hide">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-bell-o"></i>
+                        <span class="label label-warning">10</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="header">You have 10 notifications</li>
+                        <li>
+                            <!-- inner menu: contains the actual data -->
+                            <ul class="menu">
+                                <li>
+                                    <a href="#">
+                                        <i class="fa fa-users text-aqua"></i> 5 new members joined today
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <i class="fa fa-warning text-yellow"></i> Very long description here that may
+                                        not fit into the
+                                        page and may cause design problems
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <i class="fa fa-users text-red"></i> 5 new members joined
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <i class="fa fa-shopping-cart text-green"></i> 25 sales made
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <i class="fa fa-user text-red"></i> You changed your username
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="footer"><a href="#">查看全部</a></li>
+                    </ul>
+                </li>
+                <!-- Tasks: style can be found in dropdown.less -->
+                <li class="dropdown tasks-menu hide">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-flag-o"></i>
+                        <span class="label label-danger">9</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="header">You have 9 tasks</li>
+                        <li>
+                            <!-- inner menu: contains the actual data -->
+                            <ul class="menu">
+                                <li><!-- Task item -->
+                                    <a href="#">
+                                        <h3>
+                                            Design some buttons
+                                            <small class="pull-right">20%</small>
+                                        </h3>
+                                        <div class="progress xs">
+                                            <div class="progress-bar progress-bar-aqua" style="width: 20%"
+                                                 role="progressbar" aria-valuenow="20" aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                <span class="sr-only">20% Complete</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <!-- end task item -->
+                                <li><!-- Task item -->
+                                    <a href="#">
+                                        <h3>
+                                            Create a nice theme
+                                            <small class="pull-right">40%</small>
+                                        </h3>
+                                        <div class="progress xs">
+                                            <div class="progress-bar progress-bar-green" style="width: 40%"
+                                                 role="progressbar" aria-valuenow="20" aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                <span class="sr-only">40% Complete</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <!-- end task item -->
+                                <li><!-- Task item -->
+                                    <a href="#">
+                                        <h3>
+                                            Some task I need to do
+                                            <small class="pull-right">60%</small>
+                                        </h3>
+                                        <div class="progress xs">
+                                            <div class="progress-bar progress-bar-red" style="width: 60%"
+                                                 role="progressbar" aria-valuenow="20" aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                <span class="sr-only">60% Complete</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <!-- end task item -->
+                                <li><!-- Task item -->
+                                    <a href="#">
+                                        <h3>
+                                            Make beautiful transitions
+                                            <small class="pull-right">80%</small>
+                                        </h3>
+                                        <div class="progress xs">
+                                            <div class="progress-bar progress-bar-yellow" style="width: 80%"
+                                                 role="progressbar" aria-valuenow="20" aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                <span class="sr-only">80% Complete</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                <!-- end task item -->
+                            </ul>
+                        </li>
+                        <li class="footer">
+                            <a href="#">查看全部</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- User Account: style can be found in dropdown.less -->
+                <li class="dropdown user user-menu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <img th:src="${application.webStaticUrl} + '/static/admin-lte/dist/img/timg.jpg'" class="user-image" alt="User Image">
+                        <span class="hidden-xs"><th:block th:text="${currentUser.name}"></th:block></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <!-- User image -->
+                        <li class="user-header">
+                            <img th:src="${application.webStaticUrl} + '/static/admin-lte/dist/img/timg.jpg'" class="img-circle" alt="User Image">
+
+                            <p>
+                                <th:block th:text="${currentUser.name}"></th:block>
+                                <small>
+                                    <th:block th:each="role,roleStat:${currentUser.roles}">
+                                        <th:block th:text="${role}">
+
+                                        </th:block>
+                                    </th:block>
+                                </small>
+                            </p>
+                        </li>
+                        <!-- Menu Body -->
+                        <li class="user-body hide">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <a style="height: 12px;" href="#" data-skin="skin-blue" class="btn btn-flat btn-primary btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-blue-light" class="btn btn-flat btn-primary btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-yellow" class="btn btn-flat btn-warning btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-yellow-light" class="btn btn-flat btn-warning btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-green" class="btn btn-flat btn-success btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-green-light" class="btn btn-flat btn-success btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-purple" class="btn btn-flat bg-purple btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-purple-light" class="btn btn-flat bg-purple btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-red" class="btn btn-flat btn-danger btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-red-light" class="btn btn-flat btn-danger btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-black" class="btn btn-flat bg-black btn-xs"></a>
+                                    <a style="height: 12px;" href="#" data-skin="skin-black-light" class="btn btn-flat bg-black btn-xs"></a>
+                                </div>
+                            </div>
+                            <!-- /.row -->
+                        </li>
+                        <!-- Menu Footer-->
+                        <li class="user-footer">
+                            <div class="pull-left">
+                                <a th:href="${application.globalAuthUrl} + '/user/password'" class="btn btn-default btn-flat">修改密码</a>
+                            </div>
+                            <div class="pull-right">
+                                <a th:href="${application.globalAuthUrl} + '/logout'" class="btn btn-default btn-flat">登出</a>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+
+
+
+            </ul>
+        </div>
+
+    </nav>
+</header>
+
+</body>
+
+</html>
