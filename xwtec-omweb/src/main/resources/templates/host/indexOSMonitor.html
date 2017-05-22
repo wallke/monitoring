@@ -174,7 +174,10 @@
 		
 		if($("select[name=roomInfo] option").size()==1){
 			return;
-		}
+        }else {
+            $("select[name=roomInfo] option")[1].selected=true;
+            $("select[name=roomInfo]").change();
+        }
 		var checkServerId = "";
 		$.ajax({
 			type : "post",
@@ -194,7 +197,7 @@
 						html += 
 							  "<a href=\"javascript:click('"+val.serverId+"');\" class='list-group-item clearfix'  id = '"+val.serverId+"'> "+  
                        		  "	 <div class='pull-left'>"+val.hostName+"</div> "+  
-                       		  "	 <div class='pull-right'>"+val.hostNum+"</div></a>";
+                       		  "	 <div class='pull-right'></div></a>";
 					});
 
 					$("#serviceInfo").append(html);
@@ -404,7 +407,7 @@
                       <div class="list-group">
                         <div class="list-group-item disabled clearfix">
                           <div class="pull-left">主机名称</div>
-                          <div class="pull-right">主机地址</div>
+                          <div class="pull-right"></div>
                         </div>
                         <div id = "serviceInfo">
                         </div>

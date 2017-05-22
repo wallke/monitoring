@@ -15,7 +15,7 @@ public interface INodeService {
     List<Node> getAllNodes();
     List<Node> getNodesByAppId(String appId);
     List<Node> queryNodeList(@Param("appId")String appId, @Param("serverId")String serverId);
-
+    List<Node> queryNodeListByServerId(@Param("serverId")String serverId);
     Node getNodeById(String id);
     Node getNodeByNum(String num);
     Node getNodeByName(String name);

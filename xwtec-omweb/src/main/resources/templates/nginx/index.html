@@ -50,27 +50,34 @@
 		});
 		
 		var $appGroups = $("#appGroups");
-		var $hostInfo = $("#hostInfo");
+        var $hostInfo = $("#hostInfo");
+        var $roomInfo = $("#roomInfo");
 
 		$appGroups.dropdown(function(result) {
 			$("#appGroup_").val(result.value);
 			
 			$.ajax({
 				type : "post",
-				url : '[[${webUrl}]]/omweb/redis/service',
+                url : '[[${webUrl}]]/omweb/host/room',
 				data : {
 					'appGroupId' : result.value
 				},
 				success : function(callback) {
-					$hostInfo.html("");
-					var id = "";
-					name = "请选择主机...";
-					addOption(id, name, $hostInfo);
+                    $roomInfo.html("");
+                    $hostInfo.html("");
+                    var id = "";
+                    var name = "请选择机房...";
+                    addOption(id, name, $roomInfo);
+                    name = "请选择主机...";
+                    addOption(id, name, $hostInfo);
 
 					if (callback.success) {
-						$.each(callback.data,function(i, val) {
-							addOption(val.serverId, val.hostNum, $hostInfo);
-						});
+                        $.each(callback.data,
+                            function(i, val) {
+                                addOption(val.id,val.name,$roomInfo);
+                            });
+                        //查询
+                        query_();
 					} else {
 						$.notify.error("系统异常,请稍后再试...")
 					}
@@ -81,7 +88,36 @@
 		$appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
 		query_();
 	});
-	
+    function initHost() {
+        var roomId = $("#roomInfo").val();
+        //var appGroupId = $("#appGroup_").val();
+        var $hostInfo = $("#hostInfo");
+
+        $.ajax({
+            type : "post",
+            url : '[[${webUrl}]]/omweb/host/service',
+            data : {
+                'roomId' : roomId,
+                'type':'nginx'
+            },
+            success : function(callback) {
+                $hostInfo.html("");
+                var id = "";
+                var name = "请选择主机...";
+                addOption(id, name, $hostInfo);
+                if (callback.success) {
+                    $.each(callback.data, function(i, val) {
+                        addOption(val.serverId, val.hostNum, $hostInfo);
+                    });
+                    //查询
+                    //query_();
+                } else {
+                    $.notify.error("系统异常,请稍后再试...")
+                }
+            }
+        });
+
+    }
 	function addOption(id, name, select) {
 		var option = new Option();
 		option.value = id;
@@ -91,10 +127,16 @@
 	
 	
 	function query_(){
-		var hostIp = $("#hostInfo option:selected").text();
-		if("" ==  $("#hostInfo").val()){
-			hostIp ="";
-		}
+        var hostIp = $("#hostInfo option:selected").text();
+        if("" ==  $("#hostInfo").val()){
+            hostIp ="";
+        }
+        if($("select[name=roomInfo] option").size()==1){
+            return;
+        }else {
+            $("select[name=roomInfo] option")[1].selected=true;
+            $("select[name=roomInfo]").change();
+        }
 		
 		// 总连接数
 		var accepts = [];
@@ -315,6 +357,12 @@
 							  <form class="form-horizontal">
 								<input type="hidden" id="appGroup_" name="appGroup_" value="" />
 								<div class="box-body">
+									<label for="roomInfo" class="col-sm-1 control-label">机房名称</label>
+									<div class="col-sm-2">
+										<select class="form-control" id="roomInfo" name="roomInfo"
+												onchange="initHost();">
+										</select>
+									</div>
 									<label for="hostInfo" class="col-sm-1 control-label">监控主机</label>
 									<div class="col-sm-2">
 										<select class="form-control" id="hostInfo" name="hostInfo">

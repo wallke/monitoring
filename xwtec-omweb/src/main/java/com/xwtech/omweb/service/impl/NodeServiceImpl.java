@@ -44,6 +44,11 @@ public class NodeServiceImpl implements INodeService {
     }
 
     @Override
+    public List<Node> queryNodeListByServerId(String serverId) {
+        return nodeMapper.queryNodeListByServerId(serverId);
+    }
+
+    @Override
     public Node getNodeById(String id) {
         return nodeMapper.getNodeById(id);
     }

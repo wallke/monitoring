@@ -8,6 +8,7 @@
     <script>
         $(document).ready(function(){
             $(".js-example-basic-single").select2();
+            $(".js-example-basic-multiple").select2();
         });
 
         $(function () {
@@ -63,7 +64,11 @@
                     },
                     type:{
                         required: true
+                    },
+                    categorys:{
+                        required: true
                     }
+
                 },
                 messages: {
                     hostNum: {
@@ -77,6 +82,9 @@
                     },
                     type:{
                         required: "请选择主机类型"
+                    },
+                    categorys:{
+                        required: "请选择主机分类"
                     }
                 }
             });
@@ -174,9 +182,18 @@
                                    class="form-control" id="serverInfo.memInfo">
                         </div>
                         <div class="form-group">
-                            <label for="memo">备注</label>
-                            <input type="text" name="memo" maxlength="800" th:value="${server.memo}"
-                                   class="form-control" id="memo">
+                            <label for="memo">主机分类</label>
+
+                            <select id="categorys" name="categorys" class="js-example-basic-multiple  form-control" multiple="multiple ">
+
+                                <option  th:each="partyDa:${serverCategoryList}" th:value="${partyDa.F_SERVER_CATEGORY_ID}"
+                                         th:text="${partyDa.F_SERVER_CATEGORY_NAME}"
+                                         th:selected="${server.Categorys.contains(partyDa.F_SERVER_CATEGORY_ID)}"
+                                ></option>
+                            </select>
+
+
+
                         </div>
                     </div>
                     <div class="col-md-5">
@@ -184,6 +201,11 @@
                             <label for="serverInfo.osInfo">操作系统</label>
                             <input type="text" name="serverInfo.osInfo" maxlength="200" th:value="${server.serverInfo.osInfo}"
                                    class="form-control" id="osInfo.osInfo">
+                        </div>
+                        <div class="form-group">
+                            <label for="memo">备注</label>
+                            <input type="text" name="memo" maxlength="800" th:value="${server.memo}"
+                                   class="form-control" id="memo">
                         </div>
                     </div>
                     <!-- /.col -->

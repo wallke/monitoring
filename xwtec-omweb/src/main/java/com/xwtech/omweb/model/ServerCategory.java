@@ -6,6 +6,14 @@ package com.xwtech.omweb.model;
  */
 public class ServerCategory {
 
+
+    public String serverCategoryId;// F_SERVER_CATEGORY_ID;分类ID
+    public String serverCategoryName;// F_SERVER_CATEGORY_NAME;分类名字
+    public String identification;// F_IDENTIFICATION;标识,默认为1
+    public String bigIco;//F_BIG_ICO;大图标存放地址
+    public String smallIco;//F_SMALL_ICO;小图标存放地址
+    public String  mem;//F_MEM;备注
+
     public String getServerCategoryId() {
         return serverCategoryId;
     }
@@ -14,7 +22,7 @@ public class ServerCategory {
         this.serverCategoryId = serverCategoryId;
     }
 
-    public String serverCategoryId;// F_SERVER_CATEGORY_ID;分类ID
+
 
     public String getServerCategoryName() {
         return serverCategoryName;
@@ -56,10 +64,5 @@ public class ServerCategory {
         this.mem = mem;
     }
 
-    public String serverCategoryName;// F_SERVER_CATEGORY_NAME;分类名字
-    public String identification;// F_IDENTIFICATION;标识,默认为1
-    public String bigIco;//F_BIG_ICO;大图标存放地址
-    public String smallIco;//F_SMALL_ICO;小图标存放地址
-    public String  mem;//F_MEM;备注
 
 }

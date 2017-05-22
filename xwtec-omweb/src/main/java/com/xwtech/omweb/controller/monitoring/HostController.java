@@ -11,6 +11,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.github.pagehelper.StringUtil;
+import com.xwtech.omweb.model.*;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +32,6 @@ import com.xwtech.es.model.HostMonitorBean;
 import com.xwtech.es.model.OSBean;
 import com.xwtech.es.service.SystemLogInfoService;
 import com.xwtech.framework.web.result.JSONResult;
-import com.xwtech.omweb.model.AppGroup;
-import com.xwtech.omweb.model.Room;
-import com.xwtech.omweb.model.Server;
 import com.xwtech.omweb.service.IAppGroupService;
 import com.xwtech.omweb.service.IRoomService;
 import com.xwtech.omweb.service.IServerService;
@@ -119,12 +118,15 @@ public class HostController {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = { "service" })
 	@ResponseBody
-	public JSONResult service(String roomId) {
+	public JSONResult service(String roomId,String type) {
 
 		JSONResult jsonResult = new JSONResult();
 		List<Server> hosts = new ArrayList<Server>();
 		try {
-			hosts = serverService.queryServerListByRoomId(roomId, null);
+			if(StringUtil.isNotEmpty(type))
+			hosts = serverService.queryServerListByRoomIdAndRef(roomId, null,type);
+			else
+				hosts = serverService.queryServerListByRoomId(roomId, null);
 		} catch (Exception e) {
 			logger.debug("初始化机房信息初始化失败..." + e.getMessage());
 			jsonResult.setErrorInfo("系统异常");
@@ -138,6 +140,32 @@ public class HostController {
 
 	}
 
+	/**
+	 * 根据机房获取主机信息
+	 *
+	 *            系统应该ID
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@RequestMapping(value = { "serviceByType" })
+	@ResponseBody
+	public JSONResult serviceByType(String roomId) {
+
+		JSONResult jsonResult = new JSONResult();
+		List<Select2RtnData> hosts =serverService.queryServiceGroupType(roomId);
+		try {
+		} catch (Exception e) {
+			logger.debug("初始化机房信息初始化失败..." + e.getMessage());
+			jsonResult.setErrorInfo("系统异常");
+			e.printStackTrace();
+		}
+
+		jsonResult.setData(hosts);
+		logger.info("jsonResult{}" + jsonResult);
+
+		return jsonResult;
+
+	}
 	/**
 	 * 获取各机房主机信息
 	 *
@@ -276,7 +304,7 @@ public class HostController {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@RequestMapping(value = { "serviceInfos" })
 	@ResponseBody
-	public JSONResult serviceInfos(String appGroupId, String roomId, String roomName, String hostIp) {
+	public JSONResult serviceInfos(String appGroupId, String roomId, String roomName, String hostIp,String type) {
 		JSONResult jsonResult = new JSONResult();
 
 		servers = new ArrayList<Server>();
@@ -284,11 +312,11 @@ public class HostController {
 		if (!StringUtils.isEmpty(hostIp)) {
 			servers = serverService.queryServerListByParam(hostIp);
 		} else if (StringUtils.isEmpty(hostIp) && !StringUtils.isEmpty(roomId)) {
-			servers = serverService.queryServerListByRoomId(roomId, null);
+			servers = serverService.queryServerListByRoomIdAndRef(roomId, null,type);
 		} else if (StringUtils.isEmpty(hostIp) && StringUtils.isEmpty(roomId) && !StringUtils.isEmpty(appGroupId)) {
 			List<Room> rooms = roomService.getRoomsByAppGroupId(appGroupId);
 			rooms.forEach(m -> {
-				List<Server> server = serverService.queryServerListByRoomId(m.getId(), null);
+				List<Server> server = serverService.queryServerListByRoomIdAndRef(m.getId(), null,type);
 				servers.removeAll(server);
 				servers.addAll(server);
 			});

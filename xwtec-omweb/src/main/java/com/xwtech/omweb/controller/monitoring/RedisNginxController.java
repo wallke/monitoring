@@ -128,6 +128,7 @@ public class RedisNginxController {
 		Date startDate = new Date(endDate.getTime()-5*60*1000L);
 		
 		RedisBean bean = new RedisBean();
+
 		bean.setHost_ip(hostIp);
 		bean.setBeginTime(startDate);
 		bean.setEndTime(endDate);

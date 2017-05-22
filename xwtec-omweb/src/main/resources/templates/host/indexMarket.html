@@ -50,6 +50,7 @@
 		});
 		
 		var $appGroups = $("#appGroups");
+		var $roomInfo = $("#roomInfo");
 		var $hostInfo = $("#hostInfo");
 
 		$appGroups.dropdown(function(result) {
@@ -57,20 +58,25 @@
 			
 			$.ajax({
 				type : "post",
-				url : '[[${webUrl}]]/omweb/host/serviceById',
+                url : '[[${webUrl}]]/omweb/host/room',
 				data : {
 					'appGroupId' : result.value
 				},
 				success : function(callback) {
+                    $roomInfo.html("");
 					$hostInfo.html("");
 					var id = "";
+                    var name = "请选择机房...";
+                    addOption(id, name, $roomInfo);
 					name = "请选择主机...";
 					addOption(id, name, $hostInfo);
 					if (callback.success) {
-						$.each(callback.data,function(i, val) {
-							addOption(val.serverId, val.hostNum, $hostInfo);
-						});
-						query_();
+                        $.each(callback.data,
+                            function(i, val) {
+                                addOption(val.id,val.name,$roomInfo);
+                            });
+                        //查询
+                        query_();
 					} else {
 						$.notify.error("系统异常,请稍后再试...")
 					}
@@ -81,7 +87,35 @@
 		$appGroups.find("ul.dropdown-menu>li:eq(0)").trigger("click");
 	
 	});
-	
+    function initHost() {
+        var roomId = $("#roomInfo").val();
+        //var appGroupId = $("#appGroup_").val();
+        var $hostInfo = $("#hostInfo");
+
+        $.ajax({
+            type : "post",
+            url : '[[${webUrl}]]/omweb/host/serviceByType',
+            data : {
+                'roomId' : roomId
+            },
+            success : function(callback) {
+                $hostInfo.html("");
+                var id = "";
+                var name = "请选择主机...";
+                addOption(id, name, $hostInfo);
+                if (callback.success) {
+                    $("#hostInfo").select2({
+                        data:callback.data
+                    })
+                    //查询
+                    //query_();
+                } else {
+                    $.notify.error("系统异常,请稍后再试...")
+                }
+            }
+        });
+
+    }
 	function addOption(id, name, select) {
 		var option = new Option();
 		option.value = id;
@@ -90,13 +124,23 @@
 		select[0].options.add(option);
 	}
 	
-	
+	var load5Avg=0;
+	var freeDiskAvg=0;
+	var uMemoryAvg=0;
+	var inAvg=0;
+	var outAvg=0;
+
 	function query_(){
 		var hostIp = $("#hostInfo option:selected").text();
 		if("" ==  $("#hostInfo").val()){
 			hostIp ="";
 		}
-		
+        if($("select[name=roomInfo] option").size()==1){
+            return;
+        }else {
+            $("select[name=roomInfo] option")[1].selected=true;
+            $("select[name=roomInfo]").change();
+        }
 		window.timeData = [];
 		window.cupData  = [];
 		window.diskData = [];
@@ -114,11 +158,16 @@
 				if (callback.success) {
 					$.each(callback.data,function(i, val) {
 						window.timeData.push(val.key);
-						window.cupData.push(val.load5Avg);
-						window.diskData.push(val.freeDiskAvg);
-						window.memoryData.push(val.uMemoryAvg);
-						window.ioData.push(val.inAvg);
-						window.outData.push(val.outAvg);
+                        load5Avg=val.load5Avg=="0"?load5Avg:val.load5Avg
+                        freeDiskAvg=val.freeDiskAvg=="0"?load5Avg:val.freeDiskAvg
+                        uMemoryAvg= val.uMemoryAvg=="0"?load5Avg:val.uMemoryAvg
+                        inAvg= val.inAvg=="0"?load5Avg:val.inAvg
+                        val.outAvg=="0"?load5Avg:val.outAvg
+						window.cupData.push();
+						window.diskData.push();
+						window.memoryData.push();
+						window.ioData.push();
+						window.outData.push();
 					});
 					
 					drawnCpuOption(window.timeData,window.cupData);
@@ -423,10 +472,19 @@
 							  <form class="form-horizontal">
 								<input type="hidden" id="appGroup_" name="appGroup_" value="" />
 								<div class="box-body">
+									<label for="roomInfo" class="col-sm-1 control-label">机房名称</label>
+									<div class="col-sm-2">
+										<select class="form-control" id="roomInfo" name="roomInfo"
+												onchange="initHost();">
+										</select>
+									</div>
 									<label for="hostInfo" class="col-sm-1 control-label">监控主机</label>
 									<div class="col-sm-2">
-										<select class="form-control" id="hostInfo" name="hostInfo">
+										<select class="js-example-basic-single js-states form-control select2-hidden-accessible" id="hostInfo" name="hostInfo" tabindex="-1" aria-hidden="true">
+
+
 										</select>
+
 									</div>
 									<button class="btn btn-primary" type="button"
 										onclick="query_();">查询</button>

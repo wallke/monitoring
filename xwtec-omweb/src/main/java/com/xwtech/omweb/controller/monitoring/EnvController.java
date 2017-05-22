@@ -102,15 +102,20 @@ public class EnvController {
     public JSONResult ports(String appId, String serverId) {
 
         JSONResult jsonResult = new JSONResult();
-
         List<Node> apps = nodeService.queryNodeList(appId, serverId);
-
         jsonResult.setData(apps);
-
         return jsonResult;
 
     }
+    @RequestMapping(value = {"portsByServerId"})
+    @ResponseBody
+    public JSONResult portsByServerId(String serverId) {
+        JSONResult jsonResult = new JSONResult();
+         List<Node> apps = nodeService.queryNodeListByServerId(serverId);
+         jsonResult.setData(apps);
+        return jsonResult;
 
+    }
 
     /**
      * @param date

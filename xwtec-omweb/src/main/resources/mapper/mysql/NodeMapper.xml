@@ -61,6 +61,15 @@
         </if>
     </select>
 
+    <select id="queryNodeListByServerId" parameterType="java.lang.String"  resultMap="NodeResultMap" >
+        SELECT * FROM tm_da_node t1
+        LEFT JOIN tm_da_server t3 ON t3.F_SERVER_ID = t1.F_SERVER_ID
+        WHERE 1=1
+        <if test="serverId !=null and serverId!=''">
+            AND t1.F_SERVER_ID =#{serverId}
+        </if>
+    </select>
+
     <select id="getAllNodes" resultMap="NodeResultMap">
         select *
         from tm_da_node

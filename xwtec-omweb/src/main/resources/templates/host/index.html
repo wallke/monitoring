@@ -172,7 +172,10 @@
 		
 		if($("select[name=roomInfo] option").size()==1){
 			return;
-		}
+        }else {
+            $("select[name=roomInfo] option")[1].selected=true;
+            $("select[name=roomInfo]").change();
+        }
 		$.ajax({
 					type : "post",
 					url : '[[${webUrl}]]/omweb/host/infos',

@@ -51,6 +51,29 @@ public class Server {
     private String appCount;
 
 
+
+    //主机分类信息
+    private String categorys;
+    //是否选中
+    private String isSelected;
+
+    public String getIsSelected() {
+        return isSelected;
+    }
+
+    public void setIsSelected(String isSelected) {
+        this.isSelected = isSelected;
+    }
+
+
+
+    public String getCategorys() {
+        return categorys;
+    }
+
+    public void setCategorys(String categorys) {
+        this.categorys = categorys;
+    }
     public String getRoomName() {
         return roomName;
     }
