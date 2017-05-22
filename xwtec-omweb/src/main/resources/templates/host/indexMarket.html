@@ -124,11 +124,6 @@
 		select[0].options.add(option);
 	}
 	
-	var load5Avg=0;
-	var freeDiskAvg=0;
-	var uMemoryAvg=0;
-	var inAvg=0;
-	var outAvg=0;
 
 	function query_(){
 		var hostIp = $("#hostInfo option:selected").text();
@@ -157,17 +152,12 @@
 			success : function(callback) {
 				if (callback.success) {
 					$.each(callback.data,function(i, val) {
-						window.timeData.push(val.key);
-                        load5Avg=val.load5Avg=="0"?load5Avg:val.load5Avg
-                        freeDiskAvg=val.freeDiskAvg=="0"?load5Avg:val.freeDiskAvg
-                        uMemoryAvg= val.uMemoryAvg=="0"?load5Avg:val.uMemoryAvg
-                        inAvg= val.inAvg=="0"?load5Avg:val.inAvg
-                        val.outAvg=="0"?load5Avg:val.outAvg
-						window.cupData.push();
-						window.diskData.push();
-						window.memoryData.push();
-						window.ioData.push();
-						window.outData.push();
+                        window.timeData.push(val.key);
+                        window.cupData.push(val.load5Avg);
+                        window.diskData.push(val.freeDiskAvg);
+                        window.memoryData.push(val.uMemoryAvg);
+                        window.ioData.push(val.inAvg);
+                        window.outData.push(val.outAvg);
 					});
 					
 					drawnCpuOption(window.timeData,window.cupData);
