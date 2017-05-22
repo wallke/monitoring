@@ -23,7 +23,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhongxueye on 17-2-10.
@@ -74,15 +76,21 @@ public class ServerController {
 
         Server server = new Server();
         ServerInfo serverInfo = new ServerInfo();
-        server.setServerInfo(serverInfo);
-        List<Room> roomList = sysService.getAllRooms();
 
+        server.setServerInfo(serverInfo);
+        server.setCategorys("false");
+        List<Room> roomList = sysService.getAllRooms();
+        List<Map<String,String>> serverCategoryList = this.serverService.GetAllServerCategory();
         if (StringUtils.isNotEmpty(serverId)) {
             actionType= "modfiy";
             //根据id查看主机详情
             server = serverService.queryServerDetail(serverId);
-        }
-        return new ModelAndView("server/create").addObject("actionType",actionType).addObject("server", server).addObject("roomList",roomList);
+         }
+
+        return new ModelAndView("server/create").addObject("actionType",actionType)
+                .addObject("server", server)
+                .addObject("roomList",roomList)
+                .addObject("serverCategoryList",serverCategoryList);
 
     }
 

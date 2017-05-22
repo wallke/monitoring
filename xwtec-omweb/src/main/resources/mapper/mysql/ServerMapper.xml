@@ -152,6 +152,38 @@
 
     </select>
 
+    <select id="queryServerListByRoomIdAndRef"  parameterType="java.util.HashMap" resultMap="ServerMap">
+
+
+SELECT SVR.*, SVR_INFO.*,ROOM.F_NAME AS F_ROOM_NAME,
+        (SELECT COUNT(*)FROM TM_DA_NODE NODE  WHERE NODE.F_SERVER_ID = SVR.F_SERVER_ID) AS nodeCount,
+        (SELECT COUNT(*)FROM TM_DA_NODE APP WHERE  APP.F_SERVER_ID = SVR.F_SERVER_ID) AS appCount
+FROM TM_DA_SERVER SVR
+LEFT JOIN TM_DA_SERVER_INFO SVR_INFO ON SVR.F_SERVER_ID = SVR_INFO.F_SERVER_ID
+LEFT JOIN TM_DA_SERVER_ROOM ROOM ON SVR.F_ROOM_ID = ROOM.F_ROOM_ID
+INNER join tm_da_server_category_rel rel on SVR.F_SERVER_ID=rel.F_SERVICE_ID
+INNER join tm_da_server_category cat on rel.F_SERVER_CATEGORY_ID=cat.F_SERVER_CATEGORY_ID
+WHERE SVR.F_IS_USE = '1' AND SVR.F_IS_ENABLED = '1'
+AND  SVR.F_ROOM_ID = #{roomId}
+        <if test="ref != null">
+            and cat.F_SERVER_CATEGORY_NAME in
+            <foreach collection="ref" index="index" item="regionNum" open="(" separator="," close=")">
+                #{regionNum, jdbcType=VARCHAR}
+            </foreach>
+        </if>
+
+group by SVR.F_SERVER_ID
+    </select>
+
+    <select id="queryServiceGroupType"  parameterType="java.lang.String" resultMap="ServerMap">
+     SELECT SVR.F_SERVER_ID as F_NUM,SVR.F_NAME as F_NAME,cat.F_SERVER_CATEGORY_NAME as F_MEMO
+     FROM TM_DA_SERVER SVR
+     INNER join tm_da_server_category_rel rel on SVR.F_SERVER_ID=rel.F_SERVICE_ID
+     INNER join tm_da_server_category cat on rel.F_SERVER_CATEGORY_ID=cat.F_SERVER_CATEGORY_ID
+     WHERE SVR.F_IS_USE = '1' AND SVR.F_IS_ENABLED = '1'
+        AND  SVR.F_ROOM_ID = #{roomId} ORDER by cat.F_SERVER_CATEGORY_NAME
+    </select>
+
     <select id="queryServerList" resultMap="ServerMap">
          SELECT
             SVR.*,
@@ -330,4 +362,30 @@
         AND T1.F_IS_USE = '1'
     </select>
 
+
+
+    <!--查询所有主机分类-->
+    <select id="GetAllServerCategory" resultType="java.util.HashMap">
+       select F_SERVER_CATEGORY_ID,F_SERVER_CATEGORY_NAME
+       from tm_da_server_category  where `F_IDENTIFICATION`=1
+    </select>
+
+
+    <!--新增主机分类关联-->
+    <insert id="AddCagegoryRel" parameterType="java.util.HashMap" >
+        INSERT INTO tm_da_server_category_rel
+        (F_SERVICE_ID,F_SERVER_CATEGORY_ID)
+        VALUES (#{F_SERVER_ID},#{F_SERVER_CATEGORY_ID})
+    </insert>
+
+    <!--删除主机分类关联-->
+    <delete id="DelCagegoryRel" parameterType="java.lang.String" >
+        DELETE from tm_da_server_category_rel where F_SERVICE_ID=#{F_SERVER_ID}
+    </delete>
+
+    <!--查询所有主机分类-->
+    <select id="GetCategoryIds" resultType="java.lang.String" parameterType="java.lang.String">
+        select F_SERVER_CATEGORY_ID
+        from tm_da_server_category_rel  where `F_SERVICE_ID`=#{F_SERVER_ID}
+    </select>
 </mapper>

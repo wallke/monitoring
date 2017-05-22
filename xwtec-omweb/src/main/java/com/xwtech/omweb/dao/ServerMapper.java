@@ -1,11 +1,15 @@
 package com.xwtech.omweb.dao;
 
 import com.github.pagehelper.PageInfo;
+import com.xwtech.omweb.model.Select2RtnData;
 import com.xwtech.omweb.model.Server;
+import com.xwtech.omweb.model.ServerCategory;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhongxueye on 17-2-10.
@@ -43,13 +47,23 @@ public interface ServerMapper {
      * @return
      */
     List<Server> queryServerListByRoomId(@Param("roomId")String roomId);
-
+    /**
+     * 根据机房的ID查询所有主机信息
+     * @param map
+     * @return
+     */
+    List<Server> queryServerListByRoomIdAndRef(Map<String, Object>  map);
     /**
      * 查询所有主机列表
      * @return
      */
      List<Server> queryServerList();
-
+    /**
+     * 根据机房的ID查询所有主机信息
+     * @param roomId
+     * @return
+     */
+    List<Server> queryServiceGroupType(@Param("roomId")String roomId);
 
     /**
      * 新增主机信息
@@ -107,6 +121,27 @@ public interface ServerMapper {
      */
     int queryServerNum(@Param("serverNum")String serverNum,@Param("serverId")String serverId);
 
+    /**
+     * 获取所有主机分类
+     * @return
+     */
+    List<Map<String, String>> GetAllServerCategory();
+
+    /**
+     * 获取所有主机分类关联ID
+     * @return
+     */
+    List<String>  GetCategoryIds(String F_SERVER_ID);
+    /**
+     * 删除主机分类关联
+     * @return
+     */
+    int DelCagegoryRel(String F_SERVER_ID);
+    /**
+     * 添加主机分类关联
+     * @return
+     */
+    int AddCagegoryRel(Map<String, String>  map);
 
 
 }
